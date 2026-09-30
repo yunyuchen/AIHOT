@@ -5,7 +5,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { PUBLIC_API_CATEGORY_KEYS } from "@aihot/contracts/taxonomy";
-import { SITE, withSubject } from "@aihot/industry/site";
+import { SITE, siteDaily, withSubject } from "@aihot/industry/site";
 import { config } from "@aihot/backend/config";
 import { MCP_TOOL_NAMES as T } from "@aihot/contracts/mcp";
 import { isValidDate } from "@aihot/contracts/time";
@@ -202,7 +202,7 @@ export function buildMcpServer(): McpServer {
       const res = await recent(`daily:${args.date ?? "latest"}`, () => v1Daily(args.date ?? "latest"));
       if (!res) return fail("not_found", args.date ? `没有 ${args.date} 的公开${withSubject("日报")}。` : `还没有公开的${withSubject("日报")}。`);
       const r = res.report;
-      const lines = [`${SITE.name} ${withSubject("日报")} · ${r.date}`];
+      const lines = [`${siteDaily()} · ${r.date}`];
       if (r.lead) lines.push("", `导语：${r.lead.title}`, r.lead.leadParagraph);
       for (const s of r.sections) {
         lines.push("", `【${s.label}】`);

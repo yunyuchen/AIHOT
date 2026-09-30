@@ -1,4 +1,4 @@
-import { SITE, withSubject } from "@aihot/industry/site";
+import { SITE, siteDaily, withSubject } from "@aihot/industry/site";
 import { Link, useLoaderData } from "react-router";
 import type { ReportIndexEntry } from "@aihot/contracts/site";
 import { apiGet } from "../lib/api.server";
@@ -30,7 +30,7 @@ export default function DailyArchive() {
       <div className="@container">
         <header className="pt-5 lg:pt-0">
           <div className="flex items-center justify-between gap-4 text-[12px] text-ink-4">
-            <span>{SITE.name} · {withSubject("日报")}</span>
+            <span>{siteDaily()}</span>
             <span>
               共 <span className="num">{index.length}</span> 期
             </span>
