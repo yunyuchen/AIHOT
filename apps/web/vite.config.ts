@@ -9,7 +9,7 @@ const API = new URL(process.env.API_BASE_URL || "http://127.0.0.1:3001");
 /** Development stand-in for the production web server: the shared redirect table and api-owned path routing. */
 function devEdge(): Plugin {
   return {
-    name: "aihot-dev-edge",
+    name: "dev-edge",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const raw = req.url ?? "/";

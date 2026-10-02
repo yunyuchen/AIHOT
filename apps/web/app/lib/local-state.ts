@@ -4,11 +4,11 @@ import { useSyncExternalStore } from "react";
 import { beijingDate } from "@aihot/contracts/time";
 
 export const KEYS = {
-  starred: "aihot-starred-items",
-  read: "aihot-read-items",
-  theme: "aihot-theme",
-  changelogSeen: "aihot-changelog-seen-version",
-  feedbackDraft: "aihot-feedback-draft-v1",
+  starred: "hot-starred-items",
+  read: "hot-read-items",
+  theme: "hot-theme",
+  changelogSeen: "hot-changelog-seen-version",
+  feedbackDraft: "hot-feedback-draft-v1",
 } as const;
 
 export const STARRED_LIMIT = 500;

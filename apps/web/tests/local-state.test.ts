@@ -10,7 +10,7 @@ after(() => {
 
 let instance = 0;
 async function reader(stars: unknown[] = []) {
-  const values = new Map<string, string>([["aihot-starred-items", JSON.stringify(stars)]]);
+  const values = new Map<string, string>([["hot-starred-items", JSON.stringify(stars)]]);
   Object.defineProperty(globalThis, "window", {
     configurable: true,
     value: { localStorage: {
