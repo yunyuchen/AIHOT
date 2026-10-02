@@ -52,17 +52,17 @@ export const SIGNAL_SYSTEM = promptText("group-signal");
 
 const RelationSchema = z.enum(RELATIONS).catch("UNRELATED");
 
+// The verdict itself is required in both answers: one that stops after its first sentence is a
+// failed call to retry, not a verdict of "unrelated" (which would found a second event for the same thing).
 export const BatchSchema = z.object({
   query: z.string().max(400).catch(""),
-  decisions: z
-    .array(z.object({ id: z.string(), relation: RelationSchema, confidence: z.coerce.number().min(0).max(1).catch(0.5), note: z.string().max(400).catch("") }))
-    .catch([]),
+  decisions: z.array(z.object({ id: z.string(), relation: RelationSchema, confidence: z.coerce.number().min(0).max(1).catch(0.5), note: z.string().max(400).catch("") })),
 });
 
 export const PairSchema = z.object({
   a: z.string().max(400).catch(""),
   b: z.string().max(400).catch(""),
-  relation: RelationSchema,
+  relation: z.enum(RELATIONS),
   difference: z.string().max(400).catch(""),
   confidence: z.coerce.number().min(0).max(1).catch(0.5),
 });
@@ -75,9 +75,19 @@ function when(at: Date | null): string {
   return at ? `${beijingDate(at)} ${beijingTime(at)}` : "未知";
 }
 
+/**
+ * Double quotes become corner quotes in what the judge reads. The judge restates each report in a
+ * JSON string, and a model in JSON mode that copies 《新型电池产业发展“十五五”规划》 writes the inner
+ * quote as a plain ", which ends the string there: the rest of the answer is lost, the verdict with
+ * it (qwen3.8-max, 2026-10-02: 13 of 31 answers, every one on a quoted name).
+ */
+function cornerQuotes(text: string): string {
+  return text.replace(/“/g, "「").replace(/”/g, "」").replace(/"([^"\n]*)"/g, "「$1」").replace(/"/g, "'");
+}
+
 export function describeReport(r: ReportView, label: string, extra = ""): string {
   const f = r.frame;
-  return [
+  return cornerQuotes([
     `【${label}】${extra}`,
     `标题：${r.title}`,
     `来源：${r.source}${r.firstParty ? "（当事方/官方）" : ""}｜发布时间：${when(r.at)}`,
@@ -87,7 +97,7 @@ export function describeReport(r: ReportView, label: string, extra = ""): string
       : null,
   ]
     .filter(Boolean)
-    .join("\n");
+    .join("\n"));
 }
 
 export const candidateKey = (index: number) => `C${index + 1}`;
