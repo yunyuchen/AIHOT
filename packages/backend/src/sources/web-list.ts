@@ -5,6 +5,7 @@ import { collapseWhitespace, stripTags } from "../lib/text.ts";
 import { readable, type ExtractedBody } from "../content/extract.ts";
 import { sanitizeBody } from "../content/sanitize.ts";
 import { jinaRead } from "../providers/jina.ts";
+import { getPath } from "./json-list.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
 
 const JINA_PREFIX = "https://r.jina.ai/";
@@ -84,7 +85,11 @@ export function allowed(url: string, source: SourceRow): boolean {
 /** A link back to the listing page itself (skip links, in-page anchors such as #paper, #blog). */
 function listingItself(url: string, listing: string): boolean {
   const bare = (x: URL) => `${x.host}${x.pathname.replace(/\/$/, "")}`;
-  return bare(new URL(url)) === bare(new URL(listing));
+  const u = new URL(url);
+  const l = new URL(listing);
+  if (bare(u) !== bare(l)) return false;
+  // A site routed by its query string (/?news/ lists /?news/12.html): the same path is the listing only with the same query.
+  return !l.search || u.search === l.search;
 }
 
 /**
@@ -167,7 +172,11 @@ export function fromHtml(html: string, base: string, source: SourceRow): Candida
     if (!url || seen.has(url) || !allowed(url, source)) continue;
     if (!sectionsArePosts && listingItself(url, listing)) continue;
     const titleEl = c.titleSelector ? (el.is(c.titleSelector) ? el : el.find(c.titleSelector).first()) : linkEl;
-    const title = collapseWhitespace(titleEl.text() || linkEl.attr("title") || "");
+    const shown = collapseWhitespace(titleEl.text());
+    // Link text cut short ("…新能源汽...") whose title attribute carries it whole: the attribute is the title.
+    const attr = collapseWhitespace(linkEl.attr("title") ?? "");
+    const cut = shown.replace(/(?:\.{3,}|…+)$/, "");
+    const title = cut !== shown && attr.length > cut.length && attr.startsWith(cut) ? attr : shown || attr;
     if (!title) continue;
     let publishedAt: Date | null = null;
     if (c.publishedAtSelector) {
@@ -302,8 +311,26 @@ async function fromMimoHome(html: string, base: string, source: SourceRow): Prom
   throw new FetchError("mimo_home: no Blog list in the homepage's chunks");
 }
 
+/**
+ * The HTML a JSON response carries at config.htmlPath. Government sites on the jpaas publishing system
+ * (miit.gov.cn, samr.gov.cn) load their listings from an API that answers {"data": {"html": "<ul>…"}}.
+ */
+function htmlInJson(text: string, path: string): string {
+  let doc: unknown;
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    throw new FetchError(`htmlPath ${path}: response is not JSON`);
+  }
+  const html = getPath(doc, path);
+  if (typeof html !== "string" || !html.trim()) throw new FetchError(`htmlPath ${path} did not resolve to an HTML string`);
+  return html;
+}
+
 export async function fetchWebList(source: SourceRow): Promise<Candidate[]> {
-  const { text, viaJina, base } = await fetchListingText(source);
+  const listing = await fetchListingText(source);
+  const { viaJina, base } = listing;
+  const text = source.config.htmlPath && !viaJina ? htmlInJson(listing.text, String(source.config.htmlPath)) : listing.text;
   const mode = source.config.adapter === "mimo_home" ? "mimo_home" : source.config.parseMode ?? (viaJina ? "markdown" : "html");
   let out: Candidate[];
   if (mode === "mimo_home") out = await fromMimoHome(text, base, source);

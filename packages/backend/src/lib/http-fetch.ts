@@ -120,19 +120,21 @@ async function withinDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise
 }
 
 function decodeBody(body: Buffer, contentType: string | null): string {
-  const m = /charset=([\w-]+)/i.exec(contentType ?? "");
-  let charset = m?.[1]?.toLowerCase() ?? "utf-8";
-  if (!m) {
-    const head = body.subarray(0, 2048).toString("latin1");
-    const meta = /<meta[^>]+charset=["']?([\w-]+)/i.exec(head) ?? /encoding=["']([\w-]+)["']/i.exec(head);
-    if (meta) charset = meta[1]!.toLowerCase();
+  const header = /charset=([\w-]+)/i.exec(contentType ?? "")?.[1];
+  const head = body.subarray(0, 2048).toString("latin1");
+  const meta = (/<meta[^>]+charset=["']?([\w-]+)/i.exec(head) ?? /encoding=["']([\w-]+)["']/i.exec(head))?.[1];
+  // The header's charset; a label no decoder knows (a server's typo such as "gb1323") gives way to the page's own.
+  let text: string | undefined;
+  for (const label of [header, meta]) {
+    if (!label) continue;
+    try {
+      text = new TextDecoder(label.toLowerCase() === "gb2312" ? "gbk" : label).decode(body);
+      break;
+    } catch {
+      continue;
+    }
   }
-  let text: string;
-  try {
-    text = new TextDecoder(charset === "gb2312" ? "gbk" : charset).decode(body);
-  } catch {
-    text = body.toString("utf8");
-  }
+  text ??= body.toString("utf8");
   // A character lost on the way reads as one U+FFFD however many of its bytes were garbled (some
   // feeds send two or three for one character), so text cut to a length keeps the same cut.
   return text.replace(/\uFFFD+/g, "\uFFFD");

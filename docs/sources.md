@@ -38,6 +38,18 @@
 - `parseMode`：`html`（默认，用选择器）、`markdown`（经 Jina 渲染后按 Markdown 读）、`docusaurus_changelog`。
 - `detail`：列表缺日期、标题或摘要时抓详情页补齐（`publishedAtSelector`、`titleSelector`、`summarySelector` 等）。
 - `allowUrlPrefixes` / `denyUrlPrefixes`：只收某些路径下的文章。
+- `htmlPath`：接口返回 JSON、列表是其中某个字段里的一段 HTML 时（工信部、市场监管总局等 jpaas 发布系统的站点），填这个字段的路径，取出的 HTML 再按上面的选择器解析。`url` 填接口地址（直接抓取，经 Jina 的地址不支持）；条目链接是相对路径时用 `baseUrl` 补全。链接文字被截断成“…”或“...”而 `title` 属性是完整标题时，自动取 `title` 属性。
+
+```json
+{
+  "url": "https://www.miit.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?…&pageId=…",
+  "htmlPath": "data.html",
+  "baseUrl": "https://www.miit.gov.cn/",
+  "itemSelector": "li.cf",
+  "linkSelector": "a.fl",
+  "publishedAtRegex": "<span class=\"fr\">(?:<font[^>]*>[^<]*</font>)*(\\d{4}-\\d{2}-\\d{2})"
+}
+```
 
 ### x_search
 
@@ -60,6 +72,7 @@
 - **分级** `tier`：`T1` 官方一手（官网、官方博客、机构）、`T1_5` 官方账号与准官方创作者、`T2` 媒体与个人、`EXCLUDE_MP` 不参与精选。入选门槛按分级不同（`industry/selection.ts`）。
 - **参与方式** `participation_mode`：`editorial` 进精选和全部动态；`hot_signal` 不单独展示，只作为“大家在讨论什么”的热度证据；`isolated` 不进任何公开页面。
 - **一手** `first_party`：来源是当事方自己。事件页会优先展示一手报道。
+- **并成一个来源计数** `signal_group_id`：填了同一个值的几个信源，在事件热度里只算一个参与方。适合同一家出版方的多个频道（同一媒体的几个栏目、几个订阅），以及互相转载同一份通稿的聚合站，免得一份通稿被几处转发就显得很热。不填时每个信源各算一个。在后台信源页填（最长 120 字符），或写在 `industry/sources.json` 的信源里。
 - **全文**：`site_fulltext` 决定站内能不能显示全文，`syndicate_fulltext` 决定全文 RSS 能不能带正文。两者**默认都关**，只显示摘要和原文链接；来源明确允许时再打开。公众号、付费墙内容不会因为技术上抓得到就获得全文展示。
 
 ## 抓取频率

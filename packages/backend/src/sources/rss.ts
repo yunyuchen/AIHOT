@@ -6,6 +6,7 @@ import { sanitizeBody } from "../content/sanitize.ts";
 import { identityKeyForUrl } from "../lib/url.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
+import { parseLooseDate } from "./web-list.ts";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -37,8 +38,12 @@ function arr<T>(v: T | T[] | undefined | null): T[] {
   return Array.isArray(v) ? v : [v];
 }
 
-function parseDate(v: string): Date | null {
+export function parseDate(v: string): Date | null {
   if (!v) return null;
+  // "2026-09-30 09:08:20" without a zone (Chinese feeds): Date.parse would read it in the host's zone
+  // (UTC in Docker), so dates that begin with the year go through the list pages' rule (+08:00 unless zoned).
+  // One that ends in a zone name or AM/PM ("… 09:08:20 EST") stays with Date.parse, which reads those.
+  if (/^\s*\d{4}[-/.年]/.test(v) && !/[A-Za-z]{2,}\s*$/.test(v)) return parseLooseDate(v);
   const t = Date.parse(v);
   if (Number.isFinite(t)) return new Date(t);
   // RFC 822 variants with Chinese weekday or odd zones

@@ -2,6 +2,7 @@
 import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace, stripTags } from "../lib/text.ts";
+import { parseDate } from "./rss.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
 
 export function getPath(obj: unknown, path: string): unknown {
@@ -49,8 +50,8 @@ function toDate(v: unknown, unit: string | undefined): Date | null {
     const d = m ? new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00Z`) : null;
     return d && Number.isFinite(d.getTime()) && d.toISOString().startsWith(`${m![1]}-${m![2]}-${m![3]}`) ? d : null;
   }
-  const t = Date.parse(String(v));
-  return Number.isFinite(t) ? new Date(t) : null;
+  // A date string: read as the feeds read theirs ("2026-09-28 09:03:29" without a zone is +08:00).
+  return parseDate(String(v));
 }
 
 function findKey(obj: unknown, key: string, depth = 0): unknown {
