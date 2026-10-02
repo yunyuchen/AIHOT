@@ -69,7 +69,7 @@ const FEED_IMAGE_SECONDS = 7 * 86400;
  * it quotes, translated too), else a complete Chinese translation of the article, else the original. It
  * ends with an attribution line (also a mark on copies taken from the feed).
  */
-function fullContent(r: FeedRow, aihot: string): string | null {
+function fullContent(r: FeedRow, page: string): string | null {
   let html: string | null = null;
   const x = r.channel === "x" ? xView({ x_post: r.x_post ?? null, zh_text: r.zh_text ?? null, quoted_zh: r.quoted_zh ?? null }) : null;
   if (x?.text) {
@@ -81,24 +81,24 @@ function fullContent(r: FeedRow, aihot: string): string | null {
     html = r.language !== "zh" && r.tr_html && r.tr_complete ? r.tr_html : r.body_html;
   }
   if (!html) return null;
-  return `${proxyBodyImages(html, true, FEED_IMAGE_SECONDS)}<p>—— 本文由 ${escapeXml(SITE.name)} 聚合整理，完整版与更多动态见 <a href="${aihot}">${aihot}</a></p>`;
+  return `${proxyBodyImages(html, true, FEED_IMAGE_SECONDS)}<p>—— 本文由 ${escapeXml(SITE.name)} 聚合整理，完整版与更多动态见 <a href="${page}">${page}</a></p>`;
 }
 
 function itemXml(r: FeedRow, includeContent: boolean): string {
-  const aihot = itemUrl(r.id);
+  const page = itemUrl(r.id);
   const summary = r.summary ?? "";
-  const description = `<p>${escapeXml(summary)}</p>\n<p>🔗 <a href="${escapeXml(r.url)}">阅读原文</a></p>\n<p>via ${escapeXml(SITE.name)} · <a href="${aihot}">${aihot}</a></p>`;
+  const description = `<p>${escapeXml(summary)}</p>\n<p>🔗 <a href="${escapeXml(r.url)}">阅读原文</a></p>\n<p>via ${escapeXml(SITE.name)} · <a href="${page}">${page}</a></p>`;
   const label = r.category ? CATEGORY_LABELS[r.category as PublicApiCategoryKey] : undefined;
   const category = label ? `\n      <category>${escapeXml(label)}</category>` : "";
   let content = "";
   if (includeContent && r.syndicate) {
-    const html = fullContent(r, aihot);
+    const html = fullContent(r, page);
     if (html) content = `\n      <content:encoded>${cdata(html)}</content:encoded>`;
   }
   const pub = r.published_at ?? r.discovered_at;
   return `    <item>
       <title>${cdata(r.title)}</title>
-      <link>${aihot}</link>
+      <link>${page}</link>
       <description>${cdata(description)}</description>${content}${category}
       <pubDate>${rfc822(pub)}</pubDate>
       <guid isPermaLink="false">${escapeXml(r.id)}</guid>
@@ -116,7 +116,7 @@ export async function itemFeed(kind: ItemFeedKind, category: PublicApiCategoryKe
   const scope = kind === "all"
     ? sql`${listedCondition(now)} AND p.eligible AND coalesce(p.published_at, p.discovered_at) > ${now}::timestamptz - interval '7 days'
         AND coalesce(p.published_at, p.discovered_at) <= ${now}`
-    : sql`${selectedCondition(now)} ${categoryCondition(category, true)}
+    : sql`${selectedCondition(now)} ${categoryCondition(category)}
         ${category ? sql`AND coalesce(p.published_at, p.discovered_at) >= ${new Date(now.getTime() - 7 * 86400_000)}` : sql``}`;
   const rows = await sql<FeedRow[]>`
     WITH page AS MATERIALIZED (

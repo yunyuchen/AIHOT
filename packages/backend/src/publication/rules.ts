@@ -15,7 +15,7 @@ export function channelOf(sourceKind: string, hasXPost: boolean): "x" | "news" {
   return sourceKind === "x_search" || hasXPost ? "x" : "news";
 }
 
-/** Public pool (/all): editorial sources, AI relevant, with a Chinese title and summary. */
+/** Public pool (/all): editorial sources, relevant to the industry, with a Chinese title and summary. */
 export function isPoolEligible(input: {
   participationMode: string;
   relevance: string | null;

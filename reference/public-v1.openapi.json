@@ -19,7 +19,7 @@
     "/api/v1/items": {
       "get": {
         "operationId": "items",
-        "summary": "List recent public AI items",
+        "summary": "List recent public items",
         "description": "Start here for feeds, widgets and 'what is new' views. Covers the last 7 days only. Send If-None-Match and you get a 304 with an empty body whenever nothing changed. Do not use this to maintain a complete local copy of the selected set: it is windowed, so anything older than 7 days silently falls out. Use /api/v1/selected/snapshot plus /api/v1/selected/changes for that.",
         "parameters": [
           {
@@ -727,8 +727,8 @@
     "/api/v1/stories/{publicId}": {
       "get": {
         "operationId": "storyByPublicId",
-        "summary": "Get a story (event) with its coverage timeline and AI digest",
-        "description": "One story = one real-world event aggregated from every covering source: a reverse-chronological coverage timeline, an AI digest that is rewritten incrementally as the event evolves (contradictions with earlier reporting are stated explicitly), and links to same-storyline and related stories. Extract ids from the final path segment of a hot-topics links.story HTML URL, or use ids from another story's storyline/related refs; never request links.story as JSON. Merged stories answer with a 308 to the surviving id. Call this endpoint only with an id actually returned by the API; a 404 means the public story layer or that story is unavailable.",
+        "summary": "Get a story (event) with its coverage timeline and model-written digest",
+        "description": "One story = one real-world event aggregated from every covering source: a reverse-chronological coverage timeline, a model-written digest that is rewritten incrementally as the event evolves (contradictions with earlier reporting are stated explicitly), and links to same-storyline and related stories. Extract ids from the final path segment of a hot-topics links.story HTML URL, or use ids from another story's storyline/related refs; never request links.story as JSON. Merged stories answer with a 308 to the surviving id. Call this endpoint only with an id actually returned by the API; a 404 means the public story layer or that story is unavailable.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ActorUserAgent"
@@ -2530,11 +2530,11 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot",
+              "site",
               "original"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               },
@@ -2622,10 +2622,10 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot"
+              "site"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               }
@@ -2812,11 +2812,11 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot",
+              "site",
               "original"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               },
@@ -2924,10 +2924,10 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot"
+              "site"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               },
@@ -2960,11 +2960,11 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot",
+              "site",
               "api"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               },
@@ -3042,10 +3042,10 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot"
+              "site"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               }
@@ -3142,10 +3142,10 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot"
+              "site"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               }
@@ -3159,11 +3159,11 @@
       "DailyContentLinks": {
         "type": "object",
         "required": [
-          "aihot",
+          "site",
           "original"
         ],
         "properties": {
-          "aihot": {
+          "site": {
             "type": [
               "string",
               "null"
@@ -3208,10 +3208,10 @@
           "links": {
             "type": "object",
             "required": [
-              "aihot"
+              "site"
             ],
             "properties": {
-              "aihot": {
+              "site": {
                 "type": "string",
                 "format": "uri"
               }

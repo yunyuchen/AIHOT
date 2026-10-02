@@ -1,45 +1,45 @@
 
-【AI 领域翻译规则 — 本平台 100% 是 AI/ML/LLM 行业内容，严格遵守】
+【制造行业翻译规则 — 本平台内容来自锂电、储能、半导体、薄膜与材料、检测设备等制造行业，严格遵守】
 
-1. 歧义默认值：以下词在中文有非 AI 歧义，**一律按 AI 含义翻译**：
-   - LLM = 大语言模型（绝不译"法学硕士"/"Master of Laws"）
-   - Token / tokens = 模型 token（保留英文；绝不译"代币"/"令牌"）
-   - Transformer = Transformer 架构（保留英文；不译"变压器"）
-   - Diffusion = 扩散模型（AI 生成，不是物理扩散）
-   - Agent / Agentic = AI 智能体 / 智能体的（不译"代理人"/"中介"）
-   - Alignment = 对齐（AI 安全语境）
-   - Inference = 推理（模型生成）
-   - Reasoning = 推理（注意：与 inference 都译"推理"，必要时用"链式推理"区分 CoT；reasoning model 指 o1/o3/R1 这类思考型模型）
-   - Embedding = 嵌入向量（也可保留英文）
-   - Distillation = 知识蒸馏
-   - Hallucination = 模型幻觉
-   - Fine-tune / Fine-tuning = 微调
-   - Pretrain / Pretraining = 预训练
-   - Context window = 上下文窗口
-   - Prompt = 提示词
-   - Skill / Skills = 技能（Claude 等 Agent 框架的能力包，不译"特长"）
+1. 歧义默认值：以下词在中文有别的含义，**一律按制造与材料语境翻译**：
+   - Cell = 电芯（电池语境；不译"细胞"/"单元格"）；Pack = 电池包；Module = 模组
+   - Cathode = 正极；Anode = 负极（不译"阴极"/"阳极"，电镀和电解语境除外）
+   - Separator = 隔膜（不译"分离器"）
+   - Electrolyte = 电解液（固态电池语境为"电解质"）
+   - Current collector = 集流体；Composite current collector = 复合集流体
+   - Coating = 涂布（极片和薄膜工艺；表面处理语境才译"涂层"）
+   - Calendering = 辊压（不译"压延"/"日历"）；Slitting = 分切；Winding = 卷绕；Stacking = 叠片
+   - Dry electrode = 干法电极
+   - Areal density / Coating weight = 面密度（不译"涂层重量"）；Basis weight = 克重
+   - Thickness gauge = 测厚仪（不译"厚度规"）；Gauge 在检测语境译"测量仪"
+   - Wafer = 晶圆；Substrate = 衬底（半导体）/ 基板（封装、陶瓷）；Epitaxy = 外延
+   - Advanced packaging = 先进封装；Front-end / Back-end = 前道 / 后道
+   - Yield = 良率（不译"产量"/"收益"）；Throughput = 产能或节拍，按上下文选
+   - Metrology = 量测；Inspection = 检测；Defect = 缺陷
+   - Nonwoven = 无纺布；Release film = 离型膜；Optical film = 光学膜
+   - Line = 产线；Ramp-up = 爬坡；Mass production = 量产
+   - Recall = 召回；Thermal runaway = 热失控
 
-2. 以下专有名词**一律保留英文原文**，不翻译不加中文括注：
-   - AI 公司：OpenAI / Anthropic / Google DeepMind / xAI / Meta AI / Mistral / DeepSeek / Cohere / HuggingFace（HF）/ Runway / ElevenLabs / Suno / Pika / Midjourney / Perplexity
-   - 模型族（举例 + 通用规则）：GPT / Claude / Gemini / Llama / Qwen / Grok / o 系列 / DeepSeek / Mistral / Mixtral / Phi / Sora / Veo / Imagen
-     **规则**：任何大模型族名、产品代号一律保留英文
-   - 模型版本号（举例 + 通用规则）：GPT-5 / Claude 4.7 / Claude Sonnet 4.6 / Llama 4 / Gemini 3 / o3 / o4 / DeepSeek-V4 / Qwen3.7
-     **规则**：版本号一字不改（包括字母数字后缀如 4o / 4.7 / 405B / V4 / R1），绝不"翻译性扩写"（不要把 "405B" 译成 "4050 亿"，不要把 "V4" 译成 "第 4 代"）
-   - 技术缩写（举例 + 通用规则）：LLM / RAG / RLHF / DPO / LoRA / QLoRA / PEFT / MoE / CoT / ReAct / KV cache / SOTA / AGI / MCP / ADK / NPU / GPU / TPU
-     **规则**：任何 2-5 字母的全大写缩写，默认按 AI/ML 含义保留英文
-   - 评测基准（举例 + 通用规则）：MMLU / GPQA / HumanEval / SWE-bench / SWE-bench Verified / AIME / HLE / ARC-AGI / ARC-AGI 2 / MT-Bench / Chatbot Arena / Aider Polyglot / LiveCodeBench
-     **规则**：以 -bench / -eval 结尾或全大写的评测名一律保留英文
-   - AI 工具/产品：Cursor / Copilot / Codex / Aider / Devin / Cline / Claude Code / Windsurf / Zed / v0 / Bolt / Lovable / Replit Agent
-   - Agent 框架：LangChain / LangGraph / LlamaIndex / CrewAI / AutoGen / Pydantic AI / Vercel AI SDK / DSPy
-   - 推理/部署：Ollama / vLLM / SGLang / TensorRT / Triton / CUDA / ROCm
-   - 通用技术：API / SDK / CLI / IDE / SaaS / CDN / SSO / OAuth / JWT / WebSocket / SSE / gRPC
+2. 以下缩写和单位**一律保留原文**，不翻译不加中文括注：
+   - 容量与能量：GWh / MWh / kWh / Wh/kg / Wh/L / Ah / mAh
+   - 尺寸与精度：nm / μm / mm / ppm / g/m² / mg/cm²
+   - 电池体系与结构：LFP / NCM / NCA / LMFP / CTP / CTB / CTC / BMS / PCS / EMS
+   - 半导体与器件：SiC / GaN / IGBT / MOSFET / MLCC / HBM / CoWoS / TSV / CMP / CVD / PVD / ALD / DUV / EUV
+   - 检测与视觉：CCD / CMOS / CT / AOI / X-ray / NIR / OCR
+   - 质量与管理：IATF 16949 / ISO 9001 / SPC / CPK / 6σ / MES / OEE
+   - **规则**：任何 2-5 字母的全大写缩写，默认按制造与材料行业的含义保留英文（公司名缩写按第 3 条处理）
+   - 标准编号一字不改：GB 38031-2025 / GB/T 36276 / IEC 62619 / UL 9540A / UN 38.3
 
-3. 中国厂商**优先用官方中文品牌名**（首次出现可双标"千问（Qwen3）"，后续选一种保持一致）：
-   - 千问（Qwen）/ 文心一言 / 智谱（GLM）/ 月之暗面（Kimi）/ 深度求索（DeepSeek）/ 阶跃星辰（Step）/ 零一万物（Yi）/ 百川 / 豆包（字节）/ 混元（腾讯）/ 可灵（Kling，快手）/ 即梦（Jimeng，字节）/ MiniMax（不译）/ 美团 LongCat / 昆仑万维 Skywork / 面壁 MiniCPM / 华为昇腾 / 寒武纪
+3. 公司名：有通用中文名的用中文名，没有的保留英文原文：
+   - CATL 写宁德时代；BYD 写比亚迪；FinDreams Battery 写弗迪电池（原文只写 BYD 时不要改写成弗迪电池）；LG Energy Solution / LGES 写 LG新能源；Samsung SDI 写三星SDI；Panasonic 写松下；SK On 保留英文
+   - EVE Energy 写亿纬锂能；Gotion 写国轩高科；CALB 写中创新航；SVOLT 写蜂巢能源；Sunwoda 写欣旺达；Hithium 写海辰储能；REPT 写瑞浦兰钧；AESC 写远景动力
+   - TSMC 写台积电；SMIC 写中芯国际；SK hynix 写 SK 海力士；Samsung Electro-Mechanics 写三星电机
+   - Keyence 写基恩士；Thermo Fisher 写赛默飞；KLA、Northvolt、Wolfspeed 保留英文
+   - **规则**：不要自己音译公司名；拿不准有没有通用中文名时保留英文原文
 
-4. 代码 / 命令 / URL / 数字单位 **一字不改**保留：
-   - 反引号代码 `code` 不翻译
-   - 命令如 /code-review、pip install、npm run 不译（不要译"代码审查"）
+4. 数字 / 单位 / 型号 / URL **一字不改**保留：
+   - 产品型号、标准编号、项目代号原样保留，不要"翻译性扩写"
    - URL 原样
-   - 数字+单位：8k context / 175B params / 3.5x speedup / $3 per M tokens / 99.9%
-   - 金额、参数量、比例、区间必须保留原文的阿拉伯数字和单位；不要把 $10B-$100B 改写成“数百亿至数千亿美元”等中文数量词
+   - 产能、金额、厚度、精度不换算、不四舍五入：20GWh 不要写成"200 亿瓦时"，6μm 不要写成"0.006 毫米"，±0.5μm、3σ、99.5% 原样保留
+   - 金额保留原文币种和单位：$1.2B 不要改写成"约 80 亿元"；"12.5 亿元"不要写成"十多亿元"
+   - 区间和比例保留原文的阿拉伯数字：不要把 10-20GWh 改写成"数十 GWh"等中文数量词

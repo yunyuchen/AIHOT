@@ -51,7 +51,7 @@ export async function v1Items(query: V1ItemsQuery, now = new Date()): Promise<V1
 
   const run = (db: Db) => db<(ApiItemRow & { sort_at: Date })[]>`
     SELECT ${API_ITEM_COLUMNS}, ${sortCol} AS sort_at ${API_ITEM_FROM}
-    WHERE ${scope} ${categoryCondition(query.category, true)} ${publicMatchCondition(terms)}
+    WHERE ${scope} ${categoryCondition(query.category)} ${publicMatchCondition(terms)}
       AND ${sortCol} >= ${windowStart} AND ${sortCol} <= ${now}
       ${after ? sql`AND (${sortCol}, p.article_id) < (${new Date(after.a)}, ${after.i})` : sql``}
     ORDER BY ${sortCol} DESC, p.article_id DESC
@@ -108,7 +108,7 @@ export async function effectiveWatermark(now = new Date()): Promise<number> {
 function minimalOf(item: V1ItemPayload) {
   return {
     id: item.id, title: item.title, source: item.source, publishedAt: item.publishedAt, discoveredAt: item.discoveredAt,
-    category: item.category, score: item.score, selected: item.selected, links: { aihot: item.links.aihot },
+    category: item.category, score: item.score, selected: item.selected, links: { site: item.links.site },
   };
 }
 

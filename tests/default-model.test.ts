@@ -5,7 +5,10 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
 import { upsertMaterial } from "@aihot/backend/content/materials";
-import { analyzeArticle } from "@aihot/backend/editorial/analyze";
+import { analyzeArticle, SCORE_SYSTEM } from "@aihot/backend/editorial/analyze";
+import { PREFILTER_SYSTEM, UNDERSTAND_SYSTEM } from "@aihot/backend/editorial/writing";
+import { SELECTION } from "@aihot/industry/selection";
+import { CATEGORIES, CATEGORY_BY_ITEM_TYPE, ITEM_TYPES } from "@aihot/industry/taxonomy";
 import { stopBoss } from "@aihot/backend/jobs/queue";
 
 // Nothing chosen per step: every capability falls back to the `default` model.
@@ -14,16 +17,19 @@ for (const name of Object.keys(process.env)) if (/_MODEL$/.test(name) && name !=
 const T = tag();
 const SOURCE = `test-default-model-${T}`;
 const seen: Array<{ model: string; system: string }> = [];
+const CATEGORY_TAG = CATEGORY_BY_ITEM_TYPE[ITEM_TYPES[0]]!;
 const provider = await stub((_hit, req) => {
   const body = JSON.parse(req.body) as { model: string; messages: Array<{ role: string; content: unknown }> };
   const system = body.messages[0]!.role === "system" ? String(body.messages[0]!.content) : "";
   const user = String(body.messages.at(-1)!.content);
   seen.push({ model: body.model, system });
+  // Each step is told by its system prompt as the pack renders it; structure is the one other step
+  // with a system prompt, and the title/summary prompt is a single user message.
   const content =
-    system.includes("宽召回") ? { label: "PASS", reason: "测试" }
-    : system.includes("事件注意力评分器") ? { attentionScore: 80 }
-    : system.includes("内容理解编辑") ? { itemType: "product_launch", authorRole: "principal", tags: ["产品更新"], editorialJudgment: "理由", titleZh: "一个模型的标题", summaryZh: "一个模型写的摘要。第二句。" }
-    : system.includes("资料结构化助手") ? { category: "ai-products", tags: ["产品更新"], subjects: [], fact: null }
+    system === PREFILTER_SYSTEM ? { label: "PASS", reason: "测试" }
+    : system === SCORE_SYSTEM ? { attentionScore: Math.min(100, SELECTION.thresholds.T1! + 20) }
+    : system === UNDERSTAND_SYSTEM ? { itemType: ITEM_TYPES[0], authorRole: "principal", tags: [CATEGORY_TAG], editorialJudgment: "理由", titleZh: "一个模型的标题", summaryZh: "一个模型写的摘要。第二句。" }
+    : system ? { category: CATEGORIES[0].key, tags: [CATEGORY_TAG], subjects: [], fact: null }
     : user.includes("title_zh") ? "title_zh: 标题\nsummary_zh: 摘要。"
     : null;
   if (content === null) throw new Error("unexpected request");

@@ -50,7 +50,7 @@ export interface ItemSummary {
   summary: string | null;
   reason: string | null;
   source: SourceRef;
-  links: { aihot: string; original: string };
+  links: { site: string; original: string };
   publishedAt: string | null;
   discoveredAt: string;
   timelineAt: string;

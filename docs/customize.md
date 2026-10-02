@@ -29,8 +29,8 @@
 - `CATEGORIES`：首页和“全部动态”的筛选类别。`key` 会出现在网址和接口里（`/all?category=`、`/feed/category/<key>.xml`），上线后不要改；`label` 是显示名；`section` 是日报里的分节；`guide` 告诉模型怎么归类。
 - `CATEGORY_TAGS`、`TOPIC_TAGS`、`ENTITY_TAGS`：模型打标签时只能从这里选。第一个标签必须是“分类标签”。
 - `ENTITIES`：行业里的主要公司或机构，用于“公司”类主题页。`IDENTITY_LEXICON`、`PUBLISHER_DOMAINS` 用来防止模型在标题摘要里写进原文没提到的公司，别的行业没有这个需要可以清空。
-- `ITEM_TYPES`：内容类型，和评分提示词里的权重表对应，改了要一起改提示词。
-- `topics.json`：主题目录（`/topics`）。分三组：`company`（公司与机构）、`field`（方向）、`genre`（内容形态）。每个主题用 `tags` 或 `entityId` 决定收哪些内容。`slug` 上线后不要改。
+- `ITEM_TYPES`：内容类型。`prompts/content-understanding.md` 里“内容类型”一节列出的类型要和它逐字一致：模型输出的类型不在 `ITEM_TYPES` 里会被代码直接判为无效。`prompts/selection-score.md` 里的类型说明和权重表也要按同样的类型一行一行对应。改了类型就一起改这两份提示词。
+- `topics.json`：主题目录（`/topics`）。每个主题的 `group` 只能是 `company`、`field`、`genre` 三者之一（数据库里有约束）；三组在页面上叫什么、简介写什么，在 `industry/site.ts` 的 `TOPIC_GROUPS` 里改，没有主题的组不显示。每个主题用 `tags` 或 `entityId` 决定收哪些内容。`slug` 上线后不要改。
 
 改完主题后运行 `node --env-file=.env scripts/seed.ts`（Docker 里会在启动时自动运行），主题会更新进数据库。
 

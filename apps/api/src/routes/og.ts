@@ -7,7 +7,7 @@ import { loadItemShare } from "@aihot/backend/publication/og";
 import { loadReport, type ReportKind } from "@aihot/backend/publication/reports";
 import { loadTopic } from "@aihot/backend/publication/topics";
 import { loadStoryDetail, resolveStory } from "@aihot/backend/publication/stories";
-import { SITE, withSubject } from "@aihot/industry/site";
+import { SITE, TOPIC_GROUPS, withSubject } from "@aihot/industry/site";
 import { FEATURES } from "@aihot/industry/features";
 import { config } from "@aihot/backend/config";
 import { ogEtag, renderOg, type OgCard } from "../og/render.ts";
@@ -21,7 +21,7 @@ const PAGES: Record<string, OgCard> = {
   daily: { kicker: withSubject("日报"), title: `每天 8 点，一份读得完的${withSubject("日报")}`, subtitle: `前一天值得关注的${S}动态。` },
   weekly: { kicker: withSubject("周报"), title: "一周大事，一次看清", subtitle: "本周的主线、重要发布与值得回看的讨论。" },
   monthly: { kicker: withSubject("月报"), title: "一个月的变化", subtitle: "月度主线与关键事件回顾。" },
-  topics: { kicker: "主题", title: "长期追踪的方向", subtitle: "公司与机构、专题方向、内容形态。" },
+  topics: { kicker: "主题", title: "长期追踪的方向", subtitle: `${TOPIC_GROUPS.map((g) => g.name).join("、")}。` },
   leaderboard: { kicker: "AI 模型排行榜", title: "多家公开评测的共识排名", subtitle: "综合、编程、推理、知识、专业办公；缺测不补零，价格不影响排名。" },
   "codex-reset": { kicker: "Tibo 重置监控", title: "Codex 额度重置什么时候生效", subtitle: "推算的北京时间窗口、适用范围与 Tibo 原话。", accent: "amber" },
   about: { kicker: "关于", title: `关于 ${SITE.name}`, subtitle: SITE.description },
@@ -70,7 +70,8 @@ export function registerOg(app: FastifyInstance) {
     if (!d) return notFound(reply);
     reply.header("X-Accel-Expires", ARTICLE_IMAGE_ORIGIN_SECONDS);
     return send(req, reply, {
-      kicker: d.category ? CATEGORY_LABELS[d.category] : withSubject("动态"),
+      // An older row can carry a category the current taxonomy no longer has.
+      kicker: (d.category && CATEGORY_LABELS[d.category]) || withSubject("动态"),
       title: d.title,
       subtitle: d.summary,
       meta: `${d.source.name.replace(/（[^）]*）\s*$/, "")} · ${beijingDate(d.timelineAt)}`,
@@ -86,7 +87,7 @@ export function registerOg(app: FastifyInstance) {
     if (!d) return notFound(reply);
     const poster: Poster = {
       url: `${config.siteUrl}/items/${d.id}`,
-      kicker: d.category ? CATEGORY_LABELS[d.category] : withSubject("动态"),
+      kicker: (d.category && CATEGORY_LABELS[d.category]) || withSubject("动态"),
       title: d.title,
       summary: d.summary,
       source: d.source.name.replace(/（[^）]*）\s*$/, ""),

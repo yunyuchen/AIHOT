@@ -8,9 +8,17 @@ import { after, before, test } from "node:test";
 import { sql, closeDb } from "@aihot/backend/db";
 import { getBoss, stopBoss } from "@aihot/backend/jobs/queue";
 import { upsertMaterial } from "@aihot/backend/content/materials";
+import { SCORE_SYSTEM } from "@aihot/backend/editorial/analyze";
+import { PREFILTER_SYSTEM, UNDERSTAND_SYSTEM } from "@aihot/backend/editorial/writing";
+import { SELECTION } from "@aihot/industry/selection";
+import { CATEGORIES, CATEGORY_BY_ITEM_TYPE, ITEM_TYPES } from "@aihot/industry/taxonomy";
 
 const T = tag();
 const SOURCE = `test-analyze-stop-${T}`;
+// A score that selects at the source's T1 threshold, and examples from the industry pack's vocabulary.
+const SCORE = Math.min(100, SELECTION.thresholds.T1! + 20);
+const ITEM_TYPE = ITEM_TYPES[0];
+const CATEGORY_TAG = CATEGORY_BY_ITEM_TYPE[ITEM_TYPE]!;
 type Step = "prefilter" | "score" | "structure" | "understand";
 let active: {
   calls: Step[];
@@ -25,8 +33,9 @@ let active: {
 const provider = await stub(async (_hit, request) => {
   const body = JSON.parse(request.body);
   const system = String(body.messages[0]?.content ?? "");
-  const step: Step = system.includes("宽召回的AI相关性预筛") ? "prefilter" : system.includes("事件注意力评分器") ? "score"
-    : system.includes("资料结构化助手") ? "structure" : "understand";
+  // Each step is told by its system prompt as the pack renders it; structure is the one other step.
+  const step: Step = system === PREFILTER_SYSTEM ? "prefilter" : system === SCORE_SYSTEM ? "score"
+    : system === UNDERSTAND_SYSTEM ? "understand" : "structure";
   active.calls.push(step);
   const count = active.calls.filter(s => s === step).length;
   if (step === "score" && count === 1) {
@@ -35,10 +44,10 @@ const provider = await stub(async (_hit, request) => {
   }
   if (step === "structure" && count === 1) { active.structureAsked.open(); await active.structureAnswer.promise; }
   if (step === "understand" && active.writingAnswer) { active.writingAsked!.open(); await active.writingAnswer.promise; }
-  const content = step === "prefilter" ? { label: "PASS", reason: "AI model release" }
-    : step === "score" ? { attentionScore: 80 }
-      : step === "structure" ? { category: "ai-models", tags: ["模型发布"], subjects: [], fact: { title: "新模型发布" } }
-        : { itemType: "model_release", authorRole: "principal", tags: ["模型发布"], editorialJudgment: "模型有明确的能力提升", titleZh: `新模型发布 ${T}`, summaryZh: "模型发布并提供了评测和价格。" };
+  const content = step === "prefilter" ? { label: "PASS", reason: "新产线投产" }
+    : step === "score" ? { attentionScore: SCORE }
+      : step === "structure" ? { category: CATEGORIES[0].key, tags: [CATEGORY_TAG], subjects: [], fact: { title: "新产线投产" } }
+        : { itemType: ITEM_TYPE, authorRole: "principal", tags: [CATEGORY_TAG], editorialJudgment: "新产线投产带来明确的检测设备需求", titleZh: `新产线投产 ${T}`, summaryZh: "新产线投产并公布了产能和投资额。" };
   return { id: `stub-${active.calls.length}`, choices: [{ message: { content: JSON.stringify(content) } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 } };
 });
 const children = new Set<ReturnType<typeof spawn>>();
@@ -100,8 +109,8 @@ test("SIGTERM during the final paid writing call still commits the complete anal
   const queue = `test.analyze-stop-${T}-final`;
   const boss = await getBoss();
   await boss.createQueue(queue, { policy: "short", retryLimit: 4, retryDelay: 1, expireInSeconds: 120 });
-  const { articleId } = await upsertMaterial({ sourceId: SOURCE, url: `https://example.org/analyze-stop-${T}/final`, title: `Final model release ${T}`,
-    bodyText: `A lab released a new AI model with benchmarks and prices. ${T} ` + "The release explains model capabilities and evaluation results. ".repeat(10),
+  const { articleId } = await upsertMaterial({ sourceId: SOURCE, url: `https://example.org/analyze-stop-${T}/final`, title: `Final production line start ${T}`,
+    bodyText: `A battery maker started a new production line with capacity and investment figures. ${T} ` + "The plant explains its coating, calendering and inline inspection equipment. ".repeat(10),
     bodyStatus: "ok", language: "en", via: "fetch", publishedAt: new Date() });
   const jobId = await boss.send(queue, { articleId }, { singletonKey: articleId });
   const running = worker(queue);
@@ -112,7 +121,7 @@ test("SIGTERM during the final paid writing call still commits the complete anal
   assert.equal((await sql`SELECT state FROM pgboss.job WHERE id=${jobId}`)[0]!.state, "completed");
   assert.equal((await sql`SELECT processing_state FROM articles WHERE id=${articleId}`)[0]!.processing_state, "analyzed");
   const [analysis] = await sql`SELECT selected,score,receipt_ids FROM analyses WHERE article_id=${articleId}`;
-  assert.equal(analysis!.selected, true); assert.equal(analysis!.score, 80); assert.equal(analysis!.receipt_ids.length, 5);
+  assert.equal(analysis!.selected, true); assert.equal(analysis!.score, SCORE); assert.equal(analysis!.receipt_ids.length, 5);
   assert.equal((await sql`SELECT selected FROM publications WHERE article_id=${articleId}`)[0]!.selected, true);
   assert.equal((await sql`SELECT 1 FROM receipts WHERE subject=${`article:${articleId}@1`} AND status='completed'`).length, 5);
 });
@@ -123,8 +132,8 @@ for (const failScore of [false, true]) test(`SIGTERM during ${failScore ? "faile
   const boss = await getBoss();
   // Isolate this real pg-boss worker from articles queued by the other invariant tests.
   await boss.createQueue(queue, { policy: "short", retryLimit: 4, retryDelay: 1, expireInSeconds: 120 });
-  const { articleId } = await upsertMaterial({ sourceId: SOURCE, url: `https://example.org/analyze-stop-${T}/${failScore}`, title: `A new model released ${T} ${failScore}`,
-    bodyText: `A lab released a new AI model with benchmarks and prices. ${T} ${failScore} ` + "The release explains model capabilities and evaluation results. ".repeat(10),
+  const { articleId } = await upsertMaterial({ sourceId: SOURCE, url: `https://example.org/analyze-stop-${T}/${failScore}`, title: `A new production line started ${T} ${failScore}`,
+    bodyText: `A battery maker started a new production line with capacity and investment figures. ${T} ${failScore} ` + "The plant explains its coating, calendering and inline inspection equipment. ".repeat(10),
     bodyStatus: "ok", language: "en", via: "fetch", publishedAt: new Date() });
   await sql`UPDATE articles SET processing_attempts=2,processing_error='prior temporary failure',processing_queued_at=now() WHERE id=${articleId}`;
   const jobId = await boss.send(queue, { articleId }, { singletonKey: articleId });
@@ -152,6 +161,6 @@ for (const failScore of [false, true]) test(`SIGTERM during ${failScore ? "faile
   assert.equal(active.calls.filter(s => s === "score").length, failScore ? 3 : 2, "two ordered successful scores, only a rejected request repeats");
   assert.equal(active.calls.filter(s => s === "understand").length, 1);
   const [result] = await sql`SELECT selected,score,receipt_ids FROM analyses WHERE article_id=${articleId}`;
-  assert.equal(result!.selected, true); assert.equal(result!.score, 80); assert.equal(result!.receipt_ids.length, 5);
+  assert.equal(result!.selected, true); assert.equal(result!.score, SCORE); assert.equal(result!.receipt_ids.length, 5);
   assert.equal((await sql`SELECT processing_attempts FROM articles WHERE id=${articleId}`)[0]!.processing_attempts, 0);
 });

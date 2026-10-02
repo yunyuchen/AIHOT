@@ -12,9 +12,11 @@ import { upsertMaterial } from "@aihot/backend/content/materials";
 import { analyzeArticle, SCORE_SYSTEM, tierThreshold } from "@aihot/backend/editorial/analyze";
 import { queueProcessing } from "@aihot/backend/jobs/content";
 import { QUEUES, stopBoss } from "@aihot/backend/jobs/queue";
-import { compactAnswerFirstSummary, enforceIdentity, parseTranslateOutput, PREFILTER_SYSTEM } from "@aihot/backend/editorial/writing";
+import { compactAnswerFirstSummary, enforceIdentity, parseTranslateOutput, PREFILTER_SYSTEM, UNDERSTAND_SYSTEM } from "@aihot/backend/editorial/writing";
 import { promptText } from "@aihot/backend/editorial/prompts";
 import { SITE } from "@aihot/industry/site";
+import { SELECTION } from "@aihot/industry/selection";
+import { CATEGORIES, CATEGORY_BY_ITEM_TYPE, ENTITIES, ITEM_TYPES, TAG_SYNONYMS, TOPIC_TAGS } from "@aihot/industry/taxonomy";
 
 const T = tag();
 const SOURCE = `test-analyze-${T}`;
@@ -24,12 +26,29 @@ type Step = "prefilter" | "score" | "understand" | "summarize" | "structure";
 interface Req { step: Step; marker: string; system: string; user: string; body: Record<string, any> }
 const requests: Req[] = [];
 const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "推文"];
-const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [70, 70], SENSITIVE: [80, 80], 推文: [40, 40], BARE: [30, 34], VAGUE: [60, 62] };
+// Scores around the T1 threshold (every test source is T1) and the floor for the selected-style writing.
+const T1 = SELECTION.thresholds.T1!;
+const FLOOR = SELECTION.understandFloor;
+const scoreAnswers: Record<string, number[]> = {
+  CLEAR: [T1 + 8, T1 + 2], RESCUE: [FLOOR + 3, FLOOR + 1], LOW: [FLOOR - 5, FLOOR - 10], THIN: [T1 + 5, T1 + 5], SENSITIVE: [T1 + 5, T1 + 5],
+  推文: [FLOOR - 10, FLOOR - 10], BARE: [FLOOR - 20, FLOOR - 16], VAGUE: [T1, T1 + 2],
+};
 
+// Each step is told by its system prompt as the pack renders it today; structure is the one other step
+// with a system prompt, and the title/summary prompt is a single user message.
 const stepOf = (system: string, user: string): Step =>
-  system.includes("宽召回的AI相关性预筛") ? "prefilter" : system.includes("事件注意力评分器") ? "score"
-  : system.includes("内容理解编辑") ? "understand" : system.includes("资料结构化助手") ? "structure"
+  system === PREFILTER_SYSTEM ? "prefilter" : system === SCORE_SYSTEM ? "score"
+  : system === UNDERSTAND_SYSTEM ? "understand" : system ? "structure"
   : user.includes("title_zh") ? "summarize" : (() => { throw new Error("unknown request"); })();
+
+// Examples from the industry pack's vocabulary: a content type and its category tag, a synonym the
+// vocabulary maps onto a topic tag, another topic tag, and a company with a tag of its own.
+const ITEM_TYPE = ITEM_TYPES[0];
+const CATEGORY_TAG = CATEGORY_BY_ITEM_TYPE[ITEM_TYPE]!;
+const CATEGORY = CATEGORIES[0].key;
+const [SYNONYM, SYNONYM_TAG] = Object.entries(TAG_SYNONYMS).find(([word, t]) => word !== t && (TOPIC_TAGS as readonly string[]).includes(t))!;
+const TOPIC = TOPIC_TAGS.find((t) => t !== SYNONYM_TAG)!;
+const [SUBJECT, { displayTag: SUBJECT_TAG }] = Object.entries(ENTITIES).find(([, e]) => e.displayTag)!;
 
 // One stub stands in for DashScope (prefilter, structure), Zhipu (score, understand) and DeepSeek (summarize).
 const provider = await stub((_hit, req) => {
@@ -45,9 +64,9 @@ const provider = await stub((_hit, req) => {
   if (step === "score") return answer({ attentionScore: scoreAnswers[marker]!.shift() });
   if (step === "understand") {
     if (marker === "SENSITIVE") return new Reply(400, { contentFilter: [{ level: 1, role: "user" }], error: { code: "1301", message: "系统检测到输入或生成内容可能包含不安全或敏感内容" } });
-    return answer({ itemType: "model_release", authorRole: "principal", tags: ["模型发布", "开源", "Agent", "不存在的标签"], editorialJudgment: `理由 ${marker}`, titleZh: `理解标题 ${marker}`, summaryZh: `理解摘要 ${marker}。第二句补充一个关键数字。` });
+    return answer({ itemType: ITEM_TYPE, authorRole: "principal", tags: [CATEGORY_TAG, SYNONYM, TOPIC, "不存在的标签"], editorialJudgment: `理由 ${marker}`, titleZh: `理解标题 ${marker}`, summaryZh: `理解摘要 ${marker}。第二句补充一个关键数字。` });
   }
-  if (step === "structure") return answer({ category: "ai-models", tags: ["模型发布", "推理"], subjects: ["anthropic", "unknown-co"], fact: { title: `事实 ${marker}`, subject: "某公司", action: "发布", object: "模型", occurredAt: null } });
+  if (step === "structure") return answer({ category: CATEGORY, tags: [CATEGORY_TAG, TOPIC], subjects: [SUBJECT, "unknown-co"], fact: { title: `事实 ${marker}`, subject: "某公司", action: "发布", object: "模型", occurredAt: null } });
   return answer(`title_zh: 翻译标题 ${marker}\nsummary_zh: 翻译摘要 ${marker}。第二句补充影响。`);
 });
 for (const env of ["DASHSCOPE_BASE_URL", "ZHIPU_BASE_URL", "DEEPSEEK_BASE_URL"]) process.env[env] = `${provider.url}/v1`;
@@ -78,7 +97,7 @@ const row = async (id: string) =>
   (await sql<{ selected: boolean; relevance: string; score: string | null; title_zh: string; reason_zh: string | null; category: string | null; tags: string[]; subjects: string[]; receipt_ids: string[]; output: Record<string, any> }[]>`
     SELECT selected, relevance, score, title_zh, reason_zh, category, tags, subjects, receipt_ids, output FROM analyses WHERE article_id = ${id} ORDER BY id DESC LIMIT 1`)[0]!;
 
-test("every prompt in the pack renders, and the site's name replaces AIHOT's", () => {
+test("every prompt in the pack renders, and the site's name fills {{siteName}}", () => {
   const dir = new URL("../industry/prompts/", import.meta.url);
   const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
   // Every value any prompt asks for, so each renders on its own.
@@ -88,20 +107,23 @@ test("every prompt in the pack renders, and the site's name replaces AIHOT's", (
     const text = promptText(file.slice(0, -3), values);
     assert.ok(text.length > 20 && !/\{\{/.test(text), file);
   }
-  assert.ok(PREFILTER_SYSTEM.startsWith(`为${SITE.name}做宽召回的AI相关性预筛`));
+  // prefilter.md includes no other file, so filling {{siteName}} by hand gives the whole system prompt.
+  const prefilter = readFileSync(new URL("prefilter.md", dir), "utf8");
+  assert.ok(prefilter.includes("{{siteName}}") && PREFILTER_SYSTEM.includes(SITE.name));
+  assert.equal(PREFILTER_SYSTEM, prefilter.replaceAll("{{siteName}}", SITE.name));
 });
 
 test("a selected item: prefilter, two scores, the content understanding and the structure", async () => {
-  assert.equal(tierThreshold("T1"), 60);
+  assert.equal(tierThreshold("T1"), T1);
   const id = await article("CLEAR");
   const res = await analyzeArticle(id);
-  assert.deepEqual([res!.output!.selected, res!.output!.score], [true, 75], "78 + 72 = 150 >= 120");
+  assert.deepEqual([res!.output!.selected, res!.output!.score], [true, T1 + 5], "(T1 + 8) + (T1 + 2) >= 2 × T1");
   assert.deepEqual(calls("CLEAR").sort(), ["prefilter", "score", "score", "structure", "understand"]);
   const r = await row(id);
-  assert.deepEqual([r.title_zh, r.reason_zh, r.category, r.receipt_ids.length], ["理解标题 CLEAR", "理由 CLEAR", "ai-models", 5]);
-  assert.deepEqual(r.tags, ["模型发布", "开源/仓库", "Agent", "Anthropic"], "vocabulary tags (synonyms mapped, unknown dropped) and the subject's tag");
-  assert.deepEqual(r.subjects, ["anthropic"]);
-  assert.deepEqual([r.output.writer, r.output.itemType, r.output.prefilter.label, r.output.fact.title], ["understand", "model_release", "PASS", "事实 CLEAR"]);
+  assert.deepEqual([r.title_zh, r.reason_zh, r.category, r.receipt_ids.length], ["理解标题 CLEAR", "理由 CLEAR", CATEGORY, 5]);
+  assert.deepEqual(r.tags, [CATEGORY_TAG, SYNONYM_TAG, TOPIC, SUBJECT_TAG], "vocabulary tags (synonyms mapped, unknown dropped) and the subject's tag");
+  assert.deepEqual(r.subjects, [SUBJECT]);
+  assert.deepEqual([r.output.writer, r.output.itemType, r.output.prefilter.label, r.output.fact.title], ["understand", ITEM_TYPE, "PASS", "事实 CLEAR"]);
   const score = requests.find((q) => q.marker === "CLEAR" && q.step === "score")!;
   assert.match(score.user, /【标题】\nCLEAR model release/, "the score reads the original title, before any writing");
   assert.deepEqual([score.body.temperature, score.body.reasoning_effort, score.body.max_tokens], [1, "high", 65536]);
@@ -114,7 +136,7 @@ test("a selected item: prefilter, two scores, the content understanding and the 
 
 test("a near-selected item is written like a selected one; below the floor it is translated", async () => {
   const near = await analyzeArticle(await article("RESCUE"));
-  assert.deepEqual([near!.output!.selected, near!.output!.reasonZh], [false, "理由 RESCUE"], "56 + 50 = 106 > 100");
+  assert.deepEqual([near!.output!.selected, near!.output!.reasonZh], [false, "理由 RESCUE"], "(FLOOR + 3) + (FLOOR + 1) > 2 × FLOOR");
   const lowId = await article("LOW");
   const low = await analyzeArticle(lowId);
   assert.deepEqual([low!.output!.selected, low!.output!.titleZh, low!.output!.reasonZh], [false, "翻译标题 LOW", null]);
@@ -122,14 +144,14 @@ test("a near-selected item is written like a selected one; below the floor it is
   const summarize = requests.find((q) => q.marker === "LOW" && q.step === "summarize")!;
   assert.equal(summarize.body.messages.length, 1, "the title/summary prompt is one user message");
   assert.equal(summarize.body.response_format, undefined, "answered in its own text format");
-  assert.deepEqual((await row(lowId)).tags, ["模型发布", "推理", "Anthropic"], "structure tags");
+  assert.deepEqual((await row(lowId)).tags, [CATEGORY_TAG, TOPIC, SUBJECT_TAG], "structure tags");
 });
 
 test("the prefilter's BLOCK stops everything; UNKNOWN goes on like PASS", async () => {
   const off = await analyzeArticle(await article("OFFTOPIC"));
   assert.deepEqual([off!.output!.relevance, off!.output!.selected], ["block", false]);
   assert.deepEqual(calls("OFFTOPIC"), ["prefilter"]);
-  // An UNKNOWN with material is judged and written like a PASS, up to 精选 (60 + 62 ≥ 2 × 60).
+  // An UNKNOWN with material is judged and written like a PASS, up to 精选 (T1 + (T1 + 2) ≥ 2 × T1).
   const vagueId = await article("VAGUE");
   const vague = await analyzeArticle(vagueId);
   assert.deepEqual([vague!.output!.relevance, vague!.output!.selected, vague!.output!.titleZh], ["pass", true, "理解标题 VAGUE"]);
@@ -137,7 +159,7 @@ test("the prefilter's BLOCK stops everything; UNKNOWN goes on like PASS", async 
   // Nothing but a title and no page to fetch: the BLOCK counts as UNKNOWN and is scored, but the
   // translation writes nothing from a bare title, so it waits for material instead of being published.
   const bare = await analyzeArticle(await article("BARE", { bodyText: null, excerpt: null, bodyStatus: "none" }));
-  assert.deepEqual([bare!.output!.relevance, bare!.output!.selected, bare!.output!.score], ["unknown", false, 32]);
+  assert.deepEqual([bare!.output!.relevance, bare!.output!.selected, bare!.output!.score], ["unknown", false, FLOOR - 18]);
   assert.deepEqual(calls("BARE").sort(), ["prefilter", "score", "score", "structure"]);
 });
 
@@ -174,12 +196,12 @@ test("a short post in Chinese is its own copy; a content-filter refusal is trans
 });
 
 test("guards: a company the input does not name is not written in; long summaries are cut at sentences", () => {
-  const input = { title: "某实验室发布新模型", text: "某实验室发布了一个新模型，参数规模和价格都有说明。", sourceKind: "rss" };
-  const guarded = enforceIdentity(input, { titleZh: "OpenAI 发布新模型", summaryZh: "某实验室发布新模型。" });
-  assert.deepEqual([guarded.titleZh, guarded.summaryZh, guarded.identityGuard.outcome], ["某实验室发布新模型", "某实验室发布新模型。", "fallback"]);
+  const input = { title: "某电池企业新基地投产", text: "某电池企业的新基地投产，产能和投资额都有说明。", sourceKind: "rss" };
+  const guarded = enforceIdentity(input, { titleZh: "宁德时代新基地投产", summaryZh: "某电池企业新基地投产。" });
+  assert.deepEqual([guarded.titleZh, guarded.summaryZh, guarded.identityGuard.outcome], ["某电池企业新基地投产", "某电池企业新基地投产。", "fallback"]);
   // The identity lexicon: a Chinese rendering of a company the input names in English is no invention.
-  const alibaba = { title: "Alibaba ships a new coding model", text: "Alibaba released a coding model with pricing details.", sourceKind: "rss" };
-  assert.equal(enforceIdentity(alibaba, { titleZh: "阿里巴巴发布编程模型", summaryZh: "阿里巴巴发布了编程模型并公布价格。" }).identityGuard.outcome, "pass");
+  const catl = { title: "CATL starts production at a new battery plant", text: "CATL started production at a new plant, with capacity and investment details.", sourceKind: "rss" };
+  assert.equal(enforceIdentity(catl, { titleZh: "宁德时代新电池工厂投产", summaryZh: "宁德时代新工厂投产并公布产能。" }).identityGuard.outcome, "pass");
   const long = "第一句交代了谁做了什么以及关键结果，这一句本身已经足够说明核心事件的来龙去脉。".repeat(3) + "第二句补充数字。".repeat(20);
   assert.ok(compactAnswerFirstSummary(long).length <= 190);
   assert.deepEqual(parseTranslateOutput("title_zh: 标题\nsummary_zh: 第一句。\n第二句。"), { titleZh: "标题", summaryZh: "第一句。\n第二句。", bodyZh: "" });
@@ -187,7 +209,7 @@ test("guards: a company the input does not name is not written in; long summarie
 });
 
 test("analysing the same revision again reuses every paid answer", async () => {
-  scoreAnswers.CLEAR = [80, 70];
+  scoreAnswers.CLEAR = [T1 + 8, T1 + 2];
   const id = await article("CLEAR", { url: `https://example.com/CLEAR-again-${T}`, title: `CLEAR model release again ${T}` });
   const first = await analyzeArticle(id);
   assert.equal(first!.reused, false);
