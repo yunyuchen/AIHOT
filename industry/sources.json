@@ -297,6 +297,38 @@
       "signal_group_id": "ofweek"
     },
     {
+      "id": "json-sohu-qd-dcw",
+      "name": "起点锂电（搜狐号）",
+      "kind": "json_list",
+      "config": {
+        "url": "https://v2.sohu.com/author-page-api/author-articles/pc/491253?pNo=1",
+        "itemsPath": "data.pcArticleVOS",
+        "titlePaths": [
+          "title",
+          "mobileTitle"
+        ],
+        "summaryPaths": [
+          "brief"
+        ],
+        "urlTemplate": "https://{raw:link}",
+        "publishedAtPath": "publicTime",
+        "externalIdPath": "id",
+        "sortByPublishedAt": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "web-ab-sm",
       "name": "艾邦半导体网",
       "kind": "web_list",
