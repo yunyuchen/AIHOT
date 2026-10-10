@@ -4,14 +4,14 @@
 
 export const SITE = {
   /** 站名：导航、页面标题、分享图、RSS、MCP、后台都用它。 */
-  name: "Reechi 制造日报",
+  name: "锐奇制造日报",
   /**
    * 行业词：拼进默认说法里，比如“AI 日报”“AI 动态”。
    * 改成“法律”“HR”“黄金”之类，页面上就会变成“法律日报”“法律动态”。
    */
   subject: "制造",
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
-  homeTitle: "Reechi 制造日报 — 锂电、半导体、薄膜等制造业动态 · 每日精选与热点",
+  homeTitle: "锐奇制造日报 — 锂电、半导体、薄膜等制造业动态 · 每日精选与热点",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */
   description: "自动盯住锂电、储能、半导体、薄膜等制造行业的信源，用模型摘要、打分、精选，把同一件事的多篇报道归到一起，每天早上出一份日报。",
   /** 首页左上角和侧边栏下面的一行小字。 */
@@ -33,7 +33,7 @@ export const SITE = {
   icp: null as string | null,
   /** 结构化数据里的网站运营者（搜索引擎用）。 */
   organization: {
-    name: "Reechi 制造日报",
+    name: "锐奇制造日报",
     /** 创始人（选填）：{ name, url, description }。 */
     founder: null as null | { name: string; url?: string; description?: string },
   },
