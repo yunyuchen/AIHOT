@@ -1,17 +1,9 @@
-# 行业包
+# 选中的行业包（生成的，不要手改）
 
-这个站和“行业”有关的一切都在这里。换一个行业，主要就是改这个文件夹，步骤见 [把它改成你的行业](../docs/customize.md)。
+这个文件夹由选择步骤 `scripts/select-industry.ts` 从 [`industry-packs/<名字>/`](../industry-packs/) 复制生成，代码（`@aihot/industry`）从这里读。行业包只在 `industry-packs/` 里改，改完运行 `npm run industry` 重新选一次；在这里改的内容，下次选择就被覆盖。
 
-| 文件 | 内容 |
-|---|---|
-| `site.ts` | 站名、行业词、首页文案、关于页、备案号 |
-| `taxonomy.ts` | 分类、标签、公司与机构、防止模型写错公司的词表 |
-| `topics.json` | 主题目录（`/topics`） |
-| `sources.json` | 首次启动时导入的示范信源 |
-| `prompts/` | 每一步的提示词：预筛、评分、写作、结构化、归组、综述、日报、翻译 |
-| `selection.ts` | 入选门槛 |
-| `features.ts` | 模型榜、Codex 重置监控的开关 |
-| `brand/` | 图标、Logo、日报周报月报的报头字 |
-| `pages/` | 使用规则、隐私说明（模板，上线前按实际情况改写） |
-| `changelog.json` | 更新日志 |
-| `gold.example.jsonl` | 精选评测样本的格式示例 |
+- 选哪一个：`INDUSTRY_PACK`（环境变量或 `.env`），不设就是 `manufacturing`。`npm run dev:*`、`npm run typecheck`、`npm test` 会先自动选；镜像用同名的构建参数。
+- 入库的这一份是 `manufacturing` 行业包，CI 用 `node scripts/select-industry.ts --check manufacturing` 核对，不一致就失败。
+- 只有本文件、`package.json`、`tsconfig.json` 是框架自己的文件，不随行业包走：`package.json` 的 `exports` 是代码和行业包之间的约定，镜像构建在 `npm ci` 之前只拷它；`tsconfig.json` 继承仓库根目录的设置。
+
+行业包里有哪些文件，见 [`industry-packs/README.md`](../industry-packs/README.md)。

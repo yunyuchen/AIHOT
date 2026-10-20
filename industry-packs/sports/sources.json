@@ -1,0 +1,672 @@
+{
+  "$comment": "首次启动时导入的信源（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里增删改。字段说明见 docs/customize.md 和 docs/sources.md。enabled 为 false 的是先备好、默认不采的。运动健康起步是草案（docs/drafts/sports-health-sources-and-criteria.md）的首批：1.1 的 17 个开着，1.2 里和它们同一信号组的 3 个（科普中国·生活百科、光明网、中国奥委会）先备好关着；英文源都不接。2026-10-20 使用者按上线三天的产量调整：开启科普中国·生活百科，新接华奥星空·要闻观点、中国田径协会·通知公告（只收马拉松和大众健身及会员两类）、中国消费者协会·消费警示提示、中国营养学会·科普知识，停用中国健康教育中心·每日科普（全是视频页）；光明网、中国奥委会仍关着。已经导入过的信源不会被这里覆盖，线上的开关要在后台“信源”里改。每个信源的 $comment 写了它的坑和这样配置的理由（2026-10-17 试抓，新接的 2026-10-20 试抓）。信号组：media-reprints 是互相转载的综合媒体（中新网两个 feed、人民网健康、科普中国、中工网、光明网），sport-gov 是体育总局系统同一稿源（总局三个栏目、华奥星空两个栏目、中国奥委会）。",
+  "sources": [
+    {
+      "id": "web-nihe-mrkp",
+      "name": "中国健康教育中心·每日科普",
+      "kind": "web_list",
+      "$comment": "卫健委直属机构，每天约 1 篇。只有 http 可用。列表带完整日期（.time）。2026-10-20 停用：全是视频页，正文只有一个播放 mp4 的 iframe，抓不到文字，预筛从严时一律按缺正文拦下（上线三天 11 篇全拦）；标题里还常有慢病人群减重、骨质疏松这类本该拦的题目。",
+      "config": {
+        "url": "http://www.nihe.org.cn/portal/jkkp/mrkp/A001003002index_1.htm",
+        "itemSelector": "li.newimg-item",
+        "linkSelector": "a",
+        "titleSelector": ".title-text",
+        "publishedAtSelector": ".time",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
+    },
+    {
+      "id": "web-chinacdc-jkts",
+      "name": "中国疾控中心·健康风险提示",
+      "kind": "web_list",
+      "$comment": "每月 1-3 篇。列表没有日期，日期从链接的 t20261009_ 取（publishedAtFromUrl）；列表标题会截成“…”，详情页 h5 才是全标题（detail.titleAuthoritative，发文少，每篇抓一次详情页）。列表里混着专题入口（jkyj/mygh02/index.html），用 allowUrlPrefixes 只收文章。",
+      "config": {
+        "url": "https://www.chinacdc.cn/jkts/",
+        "itemSelector": ".piclistCon dl",
+        "linkSelector": "h6 a",
+        "publishedAtFromUrl": true,
+        "allowUrlPrefixes": [
+          "https://www.chinacdc.cn/jkts/2",
+          "https://www.chinacdc.cn/jkyj/tfggws/"
+        ],
+        "detail": {
+          "maxFetches": 5,
+          "titleSelector": ".containerBox h5",
+          "titleAuthoritative": true
+        },
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-who-zh",
+      "name": "世界卫生组织·中文新闻",
+      "kind": "rss",
+      "$comment": "每周约 2 篇，pubDate 是 UTC（“… 20:19:24 Z”）。一半偏医疗和疫情，只留营养、肥胖、高温等生活方式类，靠模型筛。",
+      "config": {
+        "feedUrl": "https://www.who.int/rss-feeds/news-chinese.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cfsa-zsyd",
+      "name": "国家食品安全风险评估中心·知识园地",
+      "kind": "web_list",
+      "$comment": "官方消费提示，每月约 1 篇，列表带完整日期。草案里的“TLS 偶发失败”查明是源站有一台后端还在发 2026-09-14 已过期的证书（同一地址轮流发过期的和 2027-03 到期的两张），抓取时好时坏，失败的下次重试；试抓 5 次成功 3 次。",
+      "config": {
+        "url": "https://www.cfsa.net.cn/fxjl/zsyd/index.shtml",
+        "itemSelector": "ul.news-list li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-chinanews-life",
+      "name": "中新网 生活",
+      "kind": "rss",
+      "$comment": "每天 4-9 篇，pubDate 带 +0800。和中工网、人民网、光明网、科普中国互相转载，同在 media-reprints 组。",
+      "config": {
+        "feedUrl": "https://www.chinanews.com.cn/rss/life.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "web-people-health",
+      "name": "人民网·健康",
+      "kind": "web_list",
+      "$comment": "频道首页混排，没有统一的列表结构：收全页链接、只留 /n1/ 下的文章。列表没有日期，日期从链接的 /2026/1017/ 取，详情页 #newstime 补上时刻（upgradeDatePrecision）。首页有的链接文字是摘要，标题以详情页为准（每天约 10 篇，每篇抓一次详情页）。sortByPublishedAt 让首次导入取最新的。",
+      "config": {
+        "url": "http://health.people.com.cn/",
+        "allowUrlPrefixes": [
+          "http://health.people.com.cn/n1/"
+        ],
+        "publishedAtFromUrl": true,
+        "sortByPublishedAt": true,
+        "detail": {
+          "maxFetches": 15,
+          "titleSelector": ".rm_txt h1",
+          "titleAuthoritative": true,
+          "publishedAtSelector": "#newstime",
+          "upgradeDatePrecision": true
+        },
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "web-kepuchina-health",
+      "name": "科普中国·健康",
+      "kind": "web_list",
+      "$comment": "列表和文章页都对爬虫的 User-Agent 回 502（草案里的“整站 502”就是这个），带浏览器 UA 正常（headers，抓正文时也带）。列表当天的条目只写时刻“09:49”，更早的写完整日期，所以开 publishedAtPartial。和中新网互相转载，在 media-reprints 组。",
+      "config": {
+        "url": "https://www.kepuchina.cn/list/listinfo?at_id=AT202111191005438501",
+        "headers": {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+        },
+        "itemSelector": ".tuwen_item",
+        "linkSelector": ".tuwen_title a",
+        "publishedAtSelector": ".tuwen_info span",
+        "publishedAtPartial": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "web-kepuchina-piyao",
+      "name": "科普中国·科学辟谣",
+      "kind": "web_list",
+      "$comment": "中国科协的辟谣平台，每天约 1 篇，原创为主，不进转载组。条目外层链接里还嵌着关键词链接，linkSelector 只认 rumordetail。全学科辟谣，涉药辟谣要靠预筛拦。",
+      "config": {
+        "url": "https://piyao.kepuchina.cn/rumor/rumorlist",
+        "itemSelector": ".rumor-list_item",
+        "linkSelector": "a[href*='rumordetail']",
+        "titleSelector": ".rumor-list_item-title",
+        "publishedAtSelector": ".rumor-list_item-date",
+        "allowUrlPrefixes": [
+          "https://piyao.kepuchina.cn/rumor/rumordetail"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cctv-nutrition",
+      "name": "央视网·健康·营养健康",
+      "kind": "web_list",
+      "$comment": "栏目页混排，收全页链接、只留 https://jiankang.cctv.com/20 开头的文章（排除 business/kejiao 频道的组方和奶粉广告）。列表没有日期，日期从链接的 /2026/10/13/ 取。页上还挂着 2025 年的常设专题，sortByPublishedAt 让首次导入取最新的，之后早于首次导入一天以上的都不收。",
+      "config": {
+        "url": "https://jiankang.cctv.com/nutrition/index.shtml",
+        "allowUrlPrefixes": [
+          "https://jiankang.cctv.com/20"
+        ],
+        "publishedAtFromUrl": true,
+        "sortByPublishedAt": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-workercn-health",
+      "name": "中工网·健康",
+      "kind": "web_list",
+      "$comment": "工人日报社，读者就是职工，每天 10-18 篇。列表时间不带时区（2026-10-17 05:11:03），按 +08:00 读。右栏“健康推荐”用同样的 ul.imgtxt1 但没有日期、是旧文，itemSelector 限定在正文列表。大量转载，在 media-reprints 组。",
+      "config": {
+        "url": "https://www.workercn.cn/health/",
+        "itemSelector": ".articles-item-box ul.imgtxt1 li",
+        "linkSelector": "h3 a",
+        "publishedAtSelector": ".info2",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "web-sport-gov-jrtt",
+      "name": "国家体育总局·今日体坛",
+      "kind": "web_list",
+      "$comment": "列表日期只有“10-16”没有年份（publishedAtPartial，补最近的一年），不抓详情页。连续 5-6 次快速请求会 403：总局三个栏目都至少 60 分钟一次（minIntervalMinutes，自适应间隔不会改短），分别只在每小时第 5、25、45 分起的 10 分钟里抓（fetchMinute），首次导入只取 3 条，免得正文抓取一下子打过去。长标题列表里截成“...”。",
+      "config": {
+        "url": "https://www.sport.gov.cn/n20001280/n20745751/index.html",
+        "itemSelector": "ul.newslist li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "publishedAtPartial": true,
+        "_aihot": {
+          "initialBackfillLimit": 3,
+          "minIntervalMinutes": 60,
+          "fetchMinute": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov"
+    },
+    {
+      "id": "web-thecfa-news",
+      "name": "中国足球协会·新闻",
+      "kind": "web_list",
+      "$comment": "每周 3-5 篇，已含“中国之队”栏目。列表带日期时刻（.zln-time），链接里也有 /20261010/，列表缺日期时从链接取。/gfgg/ 公告（裁判选派、集训通知）不收。",
+      "config": {
+        "url": "https://www.thecfa.cn/xwzx/index.html",
+        "itemSelector": ".zln-right ul.clear > li",
+        "linkSelector": ".zln-list h2 a",
+        "publishedAtSelector": ".zln-time",
+        "publishedAtFromUrl": true,
+        "denyUrlPrefixes": [
+          "https://www.thecfa.cn/gfgg/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-chinanews-sports",
+      "name": "中新网 体育",
+      "kind": "rss",
+      "$comment": "主流媒体里唯一现成的体育 RSS，每天 8-12 篇，带时区。和中新网生活同一出版方，在 media-reprints 组。",
+      "config": {
+        "feedUrl": "https://www.chinanews.com.cn/rss/sports.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "json-xinhua-sports",
+      "name": "新华网 体育",
+      "kind": "json_list",
+      "$comment": "一次返回 400 条：按时间排序后首次导入只取 8 条，之后早于首次导入一天以上的都不收。publishTime 不带时区（2026-10-16 10:30:25），按 +08:00 读。summary 是空的，正文靠抓取。",
+      "config": {
+        "url": "https://www.news.cn/sports/ds_ea56bba0c6624a7c8f7c1774dc81010f.json",
+        "itemsPath": "datasource",
+        "titlePaths": [
+          "title",
+          "showTitle"
+        ],
+        "summaryPaths": [
+          "summary"
+        ],
+        "urlTemplate": "https://www.news.cn{raw:publishUrl}",
+        "publishedAtPath": "publishTime",
+        "externalIdPath": "contentId",
+        "sortByPublishedAt": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-sport-gov-jszd",
+      "name": "国家体育总局·健身指导",
+      "kind": "web_list",
+      "$comment": "科学健身、银发健身，来源中国体育报。和今日体坛同一套页面：日期无年份、同样限频，每小时第 25 分起抓。“体医融合”稿偶有医疗说法，靠预筛。",
+      "config": {
+        "url": "https://www.sport.gov.cn/n20001280/n20001265/n20066978/index.html",
+        "itemSelector": "ul.newslist li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "publishedAtPartial": true,
+        "_aihot": {
+          "initialBackfillLimit": 3,
+          "minIntervalMinutes": 60,
+          "fetchMinute": 25
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov"
+    },
+    {
+      "id": "web-sport-gov-qzss",
+      "name": "国家体育总局·群众赛事活动",
+      "kind": "web_list",
+      "$comment": "各地群众赛事，地方性强、入选率会低；没有马拉松赛历。和今日体坛同一套页面：日期无年份、同样限频，每小时第 45 分起抓。",
+      "config": {
+        "url": "https://www.sport.gov.cn/n20001280/n20001265/n20067706/index.html",
+        "itemSelector": "ul.newslist li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "publishedAtPartial": true,
+        "_aihot": {
+          "initialBackfillLimit": 3,
+          "minIntervalMinutes": 60,
+          "fetchMinute": 45
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov"
+    },
+    {
+      "id": "web-sports-cn-jsxx",
+      "name": "华奥星空·健身休闲",
+      "kind": "web_list",
+      "$comment": "中国体育报业总社，首页多数区块停更，只用这个栏目。列表带完整日期。草案记录部署机（香港）要带浏览器 UA，本机不带也能抓，按草案带上（headers）。和总局同稿源，在 sport-gov 组。",
+      "config": {
+        "url": "https://www.sports.cn/tcdt/tcjsxx/",
+        "headers": {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+        },
+        "itemSelector": "ul.list16 li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov"
+    },
+    {
+      "id": "web-kepuchina-life",
+      "name": "科普中国·生活百科",
+      "kind": "web_list",
+      "$comment": "草案 1.2 备选，2026-10-20 使用者决定开启。页面结构同“健康”列表（同样要浏览器 UA、当天只写时刻）；刚发的几条写“N分钟前”，解析不了，发布时间留空、按发现时间算（“健康”列表也一样）；健康相关约一半，其余是泛科学，靠预筛。和“健康”列表同在 media-reprints 组。",
+      "config": {
+        "url": "https://www.kepuchina.cn/list/listinfo?at_id=AT202111161110190394",
+        "headers": {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+        },
+        "itemSelector": ".tuwen_item",
+        "linkSelector": ".tuwen_title a",
+        "publishedAtSelector": ".tuwen_info span",
+        "publishedAtPartial": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints"
+    },
+    {
+      "id": "web-sports-cn-yjgd",
+      "name": "华奥星空·要闻观点",
+      "kind": "web_list",
+      "$comment": "2026-10-20 使用者决定新接。中国体育报的评论和解读（页面面包屑写“业界声音”），讲运动安全、赛事安全、群众体育政策，6 天约 8 篇。列表带日期时刻（.pdtt_trbs span），链接里也有 /2026/1020/。右栏“今日快讯”等是别的栏目的旧文，itemSelector 限定在 #listview，allowUrlPrefixes 只收 /yjgd/。同站的“健身休闲”带浏览器 UA，这里照样带上。和总局同稿源，在 sport-gov 组。",
+      "config": {
+        "url": "https://www.sports.cn/yjgd/",
+        "headers": {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+        },
+        "itemSelector": "#listview .news_li",
+        "linkSelector": "h2 a",
+        "publishedAtSelector": ".pdtt_trbs span",
+        "allowUrlPrefixes": [
+          "https://www.sports.cn/yjgd/20"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov"
+    },
+    {
+      "id": "web-athletics-bulletin",
+      "name": "中国田径协会·通知公告",
+      "kind": "web_list",
+      "$comment": "2026-10-20 使用者决定新接，只收“马拉松”（/bulletin/marathon/）和“大众健身及会员”（/bulletin/member/）两类：路跑赛事规范、大众赛事报名这类通知在这里；竞赛、青少、媒体专区等其余几类不收。通知公告总页把各类分成几个标签页一次给出（ul.news-list li，日期在 span.fr），用 allowUrlPrefixes 挑出这两类，一次请求就够。同一条会在“最新”和分类标签页各出现一次，抓取器按链接去重；顺序是按标签页排的，sortByPublishedAt 让首次导入取最新的。两类合计每月 3-4 篇，多为技术官员选派、单位会员名单、评审公示，靠预筛和评分压。",
+      "config": {
+        "url": "https://www.athletics.org.cn/bulletin/",
+        "itemSelector": "ul.news-list li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span.fr",
+        "allowUrlPrefixes": [
+          "https://www.athletics.org.cn/bulletin/marathon/20",
+          "https://www.athletics.org.cn/bulletin/member/20"
+        ],
+        "sortByPublishedAt": true,
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cca-xfts",
+      "name": "中国消费者协会·消费警示提示",
+      "kind": "web_list",
+      "$comment": "2026-10-20 使用者决定新接。消费警示和消费提示（保健食品、健身预付、净水器会销等），每月 2-3 篇，有的和市场监管总局联合发布。列表带日期（“2026.09.28”），但日期和标题挤在同一个链接里、标题没有单独的元素，标题以详情页 h2 为准（detail.titleAuthoritative，发文少，每篇抓一次详情页）。右栏“投诉维权”“消费监督”是别的栏目，itemSelector 限定在 .module5_list，allowUrlPrefixes 只收 /single/11188/。",
+      "config": {
+        "url": "https://cca.org.cn/channel/list/11188.html",
+        "itemSelector": ".module5_list li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span",
+        "allowUrlPrefixes": [
+          "https://cca.org.cn/single/11188/"
+        ],
+        "detail": {
+          "maxFetches": 5,
+          "titleSelector": ".detail_content h2",
+          "titleAuthoritative": true
+        },
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cnsoc-knowledge",
+      "name": "中国营养学会·科普知识",
+      "kind": "web_list",
+      "$comment": "2026-10-20 使用者决定新接。膳食和营养科普，每月 2-3 篇（最新 09-24）。草案 1.3 记的“境外超时”是从香港访问，大陆直连正常。列表每条一个 .news_info：标题在 .words_title、日期在 .words_time（完整日期），链接只在“MORE”按钮上。偶有“住院了怎么吃”“胰腺炎饮食”这类病人膳食，靠预筛拦。",
+      "config": {
+        "url": "https://www.cnsoc.org/knowledge/",
+        "itemSelector": ".news_info",
+        "linkSelector": ".words_more a",
+        "titleSelector": ".words_title span",
+        "publishedAtSelector": ".words_time span",
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-gmw-health",
+      "name": "光明网·卫生·亚健康",
+      "kind": "web_list",
+      "$comment": "草案 1.2 备选，先备好关着，等 D3。转载为主，每周几批，在 media-reprints 组。服务器默认回 gzip，抓取器自己解压。",
+      "config": {
+        "url": "https://health.gmw.cn/node_9214.htm",
+        "itemSelector": "ul.channel-newsGroup li",
+        "linkSelector": "a",
+        "publishedAtSelector": "span.channel-newsTime",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "媒体"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "media-reprints",
+      "enabled": false
+    },
+    {
+      "id": "web-olympic-focus",
+      "name": "中国奥委会·新闻聚焦",
+      "kind": "web_list",
+      "$comment": "草案 1.2 备选，先备好关着，等 D3。HTML 标签全大写（<LI><A>），解析器不分大小写，选择器照常写小写。列表只写“(16日 09:41)”，日期从链接的 /2026/1016/ 取。草案复核时带浏览器 UA 才有条目，按草案带上。和总局同稿源，在 sport-gov 组。",
+      "config": {
+        "url": "https://www.olympic.cn/news/focus/",
+        "headers": {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+        },
+        "itemSelector": "li",
+        "linkSelector": "a",
+        "allowUrlPrefixes": [
+          "https://www.olympic.cn/news/focus/20"
+        ],
+        "publishedAtFromUrl": true,
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "sport-gov",
+      "enabled": false
+    }
+  ]
+}

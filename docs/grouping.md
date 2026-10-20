@@ -1,6 +1,6 @@
 # 事件归组与关系评测
 
-AIHOT 先用标题和摘要召回最近的候选事实，再让模型判断报道之间的关系。关系定义和生产提示词在 `industry/prompts/group-*.md`，代码入口在 `packages/backend/src/events/relate.ts` 和 `group.ts`。
+AIHOT 先用标题和摘要召回最近的候选事实，再让模型判断报道之间的关系。关系定义和生产提示词在行业包的 `prompts/group-*.md`，代码入口在 `packages/backend/src/events/relate.ts` 和 `group.ts`。
 
 四种关系是：
 
@@ -13,7 +13,7 @@ AIHOT 先用标题和摘要召回最近的候选事实，再让模型判断报�
 
 `scripts/eval-relations.ts` 只评测两篇报道之间的 pairwise relation judgement。它直接复用生产环境的 `PAIR_SYSTEM`、`pairUser()`、`PairSchema` 和 prompt version，因此提示词发生变化时，评测也会随之变化。它不重新跑候选召回，也不把结果写回事件归组。
 
-把自己的标注数据放在 `.data/` 下（该目录不会提交到 Git）。`industry/relation-gold.example.jsonl` 给了四条虚构示例。每行一条：
+把自己的标注数据放在 `.data/` 下（该目录不会提交到 Git）。行业包里的 `relation-gold.example.jsonl` 给了四条虚构示例。每行一条：
 
 ```json
 {"caseId":"release-001","a":{"title":"...","source":"...","firstParty":true,"publishedAt":"2026-09-01T09:00:00+08:00","summary":"..."},"b":{"title":"...","source":"...","firstParty":false,"publishedAt":"2026-09-01T09:20:00+08:00","summary":"..."},"samplingContext":{"benchmarkSplit":"development","samplingStratum":"same-release"},"gold":{"relation":"SAME_OCCURRENCE"}}
@@ -61,7 +61,7 @@ node --env-file=.env scripts/eval-relations.ts \
 | `--concurrency` | `6` | 并发模型请求数 |
 | `--thresholds` | `0.75,0.8` | story-level tie 的 confidence thresholds |
 
-完整报告写到 `.data/eval/relations-*.json`。每个模型会得到：
+完整报告写到 `.data/eval/<行业包>/relations-*.json`（评的是当前选中的行业包的提示词）。每个模型会得到：
 
 - 4 × 4 confusion matrix；
 - 每类 precision / recall / F1 / support；

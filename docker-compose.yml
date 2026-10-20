@@ -1,10 +1,16 @@
 # docker compose up -d --build     → http://localhost:3000   (the admin is at /admin)
 # docker compose --profile https up -d --build   → HTTPS for SITE_DOMAIN through Caddy
-name: aihot
+# Several sites on one machine: each directory's .env sets its own COMPOSE_PROJECT_NAME, IMAGE_NAME and
+# PORT (127.0.0.1:3010 …), and the host's reverse proxy holds 80/443 (docs/deploy.md).
+name: ${COMPOSE_PROJECT_NAME:-aihot}
 
 x-app: &app
-  build: .
-  image: aihot-app
+  build:
+    context: .
+    args:
+      # The industry pack the image is built with (a directory of industry-packs/), from .env or the shell.
+      INDUSTRY_PACK: ${INDUSTRY_PACK:-manufacturing}
+  image: ${IMAGE_NAME:-aihot-app}
   env_file: .env
   restart: unless-stopped
   environment: &app-env
@@ -69,6 +75,7 @@ services:
       <<: *app-env
       WEB_HOST: 0.0.0.0
       WEB_PORT: "3000"
+    # PORT may carry an address: 127.0.0.1:3010 publishes on this machine's loopback only.
     ports:
       - "${PORT:-3000}:3000"
     depends_on:

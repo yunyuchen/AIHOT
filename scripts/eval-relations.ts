@@ -2,6 +2,7 @@
 // Usage: node --env-file=.env scripts/eval-relations.ts --gold .data/relation-gold.jsonl
 //        [--models default,deepseek-flash] [--split development] [--n 200] [--thresholds 0.75,0.8]
 // The same pair prompt/schema as production is used; receipts make identical re-runs reusable.
+// The report goes to .data/eval/<industry pack>/.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -20,6 +21,7 @@ import {
   toReportView,
   type RelationPrediction,
 } from "./eval-relations-core.ts";
+import { selectedPack } from "./select-industry.ts";
 
 const { values } = parseArgs({
   options: {
@@ -32,6 +34,9 @@ const { values } = parseArgs({
     thresholds: { type: "string", default: "0.75,0.8" },
   },
 });
+
+// Before any paid call: the pack whose prompts are judged (it names the report's folder).
+const pack = selectedPack();
 
 async function pmap<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -175,11 +180,12 @@ async function main() {
     };
   }
 
-  const outDir = path.join(REPO_ROOT, ".data/eval");
+  const outDir = path.join(REPO_ROOT, ".data/eval", pack);
   mkdirSync(outDir, { recursive: true });
   const splitName = safeReportNamePart(values.split!);
   const file = path.join(outDir, `relations-${splitName}-${sample.length}-${Date.now()}.json`);
   const meta = {
+    pack,
     split: values.split,
     n: sample.length,
     seed,

@@ -5,17 +5,24 @@
   "workspaces": [
     "packages/*",
     "apps/*",
+    "!apps/miniprogram",
     "industry"
   ],
   "engines": {
     "node": ">=24.11"
   },
   "scripts": {
+    "industry": "node --env-file-if-exists=.env scripts/select-industry.ts",
     "db:migrate": "node --env-file-if-exists=.env scripts/migrate.ts",
+    "predev:api": "npm run industry",
     "dev:api": "npm run dev -w @aihot/api",
+    "predev:worker": "npm run industry",
     "dev:worker": "npm run dev -w @aihot/worker",
+    "predev:web": "npm run industry",
     "dev:web": "npm run dev -w @aihot/web",
+    "pretypecheck": "npm run industry",
     "typecheck": "tsc -p packages/contracts && tsc -p packages/backend && tsc -p apps/api && tsc -p apps/worker && tsc -p tests && npm run typecheck -w @aihot/web",
+    "pretest": "npm run industry",
     "test": "node --test --test-concurrency=1 --test-timeout=120000 \"tests/*.test.ts\""
   },
   "devDependencies": {

@@ -1,6 +1,8 @@
 # Checks on GitHub-hosted runners: install, typecheck, web build, the web and backend tests on a fresh
-# PostgreSQL, the built site's smoke check, and the Docker image brought up with docker compose.
-# Only GitHub-owned actions, pinned to a full commit SHA.
+# PostgreSQL, the built site's smoke check, and the Docker image brought up with docker compose. Both jobs
+# run once per industry pack (the matrix lists the directories of industry-packs/); the check job also
+# makes sure the committed industry/ is the manufacturing pack. Only GitHub-owned actions, pinned to a
+# full commit SHA.
 name: Check
 
 on:
@@ -18,8 +20,13 @@ concurrency:
 
 jobs:
   check:
+    name: check (${{ matrix.pack }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: [manufacturing, sports]
     services:
       postgres:
         image: postgres:17-alpine
@@ -35,6 +42,7 @@ jobs:
       API_BASE_URL: http://127.0.0.1:3001
       SESSION_SECRET: ci-session-secret-0123456789abcdef
       IMG_PROXY_SIGN_SECRET: ci-img-secret-0123456789abcdef
+      INDUSTRY_PACK: ${{ matrix.pack }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -42,6 +50,12 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
+      # Before anything selects a pack: industry/ is generated, and checked in as the manufacturing pack.
+      - name: Committed industry/ is the manufacturing pack
+        if: matrix.pack == 'manufacturing'
+        run: node scripts/select-industry.ts --check manufacturing
+      - name: Select the industry pack
+        run: node scripts/select-industry.ts "$INDUSTRY_PACK"
       - name: Install
         run: npm ci --no-audit --no-fund
       - name: Typecheck
@@ -65,6 +79,17 @@ jobs:
           (cd apps/web && NODE_ENV=production exec node server.ts) > "$RUNNER_TEMP/web.log" 2>&1 &
           for i in $(seq 1 60); do curl -fsS -o /dev/null http://127.0.0.1:3000/api/health 2>/dev/null && break; sleep 1; done
           node scripts/smoke.ts --base http://127.0.0.1:3000
+      # pg_dump has to match the postgres:17 service: the runner ships an older client, which refuses a newer
+      # server. The backup tests run the real pg_dump.
+      - name: PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+          /usr/lib/postgresql/17/bin/pg_dump --version
       # After the smoke check, which reads an empty database: these write their own rows.
       - name: Backend tests
         run: npm test
@@ -73,8 +98,16 @@ jobs:
         run: tail -n 60 "$RUNNER_TEMP/api.log" "$RUNNER_TEMP/web.log" 2>/dev/null || true
 
   docker:
+    name: docker (${{ matrix.pack }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: [manufacturing, sports]
+    env:
+      # docker-compose.yml passes it to the image build.
+      INDUSTRY_PACK: ${{ matrix.pack }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -95,7 +128,12 @@ jobs:
           for i in $(seq 1 90); do curl -fsS -o /dev/null http://127.0.0.1:3000/api/health 2>/dev/null && break; sleep 2; done
           docker compose ps
           docker compose run --rm --no-deps --entrypoint node setup scripts/smoke.ts --base http://web:3000
-          docker compose exec -T db psql -U aihot -d aihot -Atc "select count(*) from sources" | grep -q '^18$'
+          # Every demo source of the selected pack was seeded.
+          sources=$(node -p "require('./industry-packs/$INDUSTRY_PACK/sources.json').sources.length")
+          docker compose exec -T db psql -U aihot -d aihot -Atc "select count(*) from sources" | grep -qx "$sources"
+          # The image holds the selected pack in industry/, and no other.
+          docker compose run --rm --no-deps --entrypoint sh setup -c 'test ! -e industry-packs'
+          docker compose run --rm --no-deps --entrypoint node -v "$PWD/industry-packs:/app/industry-packs:ro" setup scripts/select-industry.ts --check "$INDUSTRY_PACK"
       - name: Logs
         if: failure()
         run: docker compose logs --tail 80

@@ -1,0 +1,80 @@
+{
+  "exportedAt": "2026-10-17",
+  "topics": [
+    {
+      "slug": "who",
+      "name": "世界卫生组织",
+      "group": "company",
+      "entityId": "who",
+      "tags": ["世界卫生组织", "entity:who"],
+      "definition": "世界卫生组织发布的健康生活内容：营养、身体活动、控烟、高温等方面的建议和数据。",
+      "related": ["china-cdc", "guidelines", "health-alerts"]
+    },
+    {
+      "slug": "china-cdc",
+      "name": "中国疾控中心",
+      "group": "company",
+      "entityId": "chinacdc",
+      "tags": ["中国疾控中心", "entity:chinacdc"],
+      "definition": "中国疾控中心的健康风险提示和防护要点：月度提示、节假日与季节性提示。",
+      "related": ["who", "health-alerts", "guidelines"]
+    },
+    {
+      "slug": "sport-gov",
+      "name": "国家体育总局",
+      "group": "company",
+      "entityId": "sport",
+      "tags": ["国家体育总局", "entity:sport"],
+      "definition": "国家体育总局的全民健身政策、科学健身指导和群众赛事活动。",
+      "related": ["running", "methods", "guidelines"]
+    },
+    {
+      "slug": "shift-work",
+      "name": "倒班与久坐",
+      "group": "field",
+      "tags": ["倒班作息", "久坐久站"],
+      "definition": "倒班、夜班和久坐久站人群的作息与防护：研究、官方指导和单位的做法。",
+      "related": ["sleep-stress", "methods", "sport-gov"]
+    },
+    {
+      "slug": "sleep-stress",
+      "name": "睡眠与压力",
+      "group": "field",
+      "tags": ["睡眠", "压力调适"],
+      "definition": "睡眠作息、压力管理与情绪调适的研究和官方建议，只用非临床的说法。",
+      "related": ["shift-work", "methods", "who"]
+    },
+    {
+      "slug": "running",
+      "name": "跑步与马拉松",
+      "group": "field",
+      "tags": ["跑步", "马拉松"],
+      "definition": "能报名的路跑和马拉松：报名时间、名额与规则变化，以及科学跑步的方法与防伤。",
+      "related": ["sport-gov", "methods", "shift-work"]
+    },
+    {
+      "slug": "guidelines",
+      "name": "指南与政策",
+      "group": "genre",
+      "tags": ["指南/政策"],
+      "definition": "官方或学会发布的膳食、运动、劳动保护等指南、标准和政策，以及官方解读。",
+      "related": ["health-alerts", "who", "sport-gov"]
+    },
+    {
+      "slug": "health-alerts",
+      "name": "健康提示",
+      "group": "genre",
+      "tags": ["提示/预警"],
+      "definition": "疾控、卫健、气象、市场监管的季节性健康提示与预警，食品和器材召回，赛事事故的官方通报。",
+      "related": ["guidelines", "china-cdc", "methods"]
+    },
+    {
+      "slug": "methods",
+      "name": "方法与指导",
+      "group": "genre",
+      "tags": ["方法/指导"],
+      "definition": "官方或专业组织给出的作息、动作、饮食和工位防护的具体做法。",
+      "related": ["shift-work", "running", "guidelines"]
+    }
+  ]
+}

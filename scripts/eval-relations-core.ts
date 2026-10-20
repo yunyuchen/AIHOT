@@ -148,7 +148,7 @@ export function sampleRelationGold(
     .map(({ row }) => row);
 }
 
-/** A user-supplied split may contain path separators; report names must stay inside .data/eval. */
+/** A user-supplied split may contain path separators; report names must stay inside .data/eval/<pack>. */
 export function safeReportNamePart(value: string): string {
   const safe = value.trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
   return safe || "all";

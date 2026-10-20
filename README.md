@@ -57,7 +57,7 @@
   <img src="docs/assets/how-light.png" alt="六步：采集、预筛、两次评分、写作、聚簇、热点与成刊" width="100%">
 </picture>
 
-一条资料从信源进来，先判重，再预筛；可能重要的独立打两次分，过了门槛才进精选；然后写中文标题和摘要，和别的报道聚成事件，算进热度，最后进日报。每一步的提示词都在 [`industry/prompts/`](industry/prompts/)，改标准不用改代码。详见 [精选与校准](docs/selection.md)。
+一条资料从信源进来，先判重，再预筛；可能重要的独立打两次分，过了门槛才进精选；然后写中文标题和摘要，和别的报道聚成事件，算进热度，最后进日报。每一步的提示词都在行业包的 `prompts/` 里（[`industry-packs/manufacturing/prompts/`](industry-packs/manufacturing/prompts/)），改标准不用改代码。详见 [精选与校准](docs/selection.md)。
 
 ### 聚簇与热点
 
@@ -130,7 +130,7 @@ docker compose up -d --build
 我关心的是：……（你想盯哪些信源，你觉得什么消息重要、什么不重要，越具体越好）。
 ```
 
-要改的东西几乎都在 [`industry/`](industry/) 这一个文件夹里，代码基本不用动：
+要改的东西几乎都在一个行业包目录（[`industry-packs/<名字>/`](industry-packs/)）里，代码基本不用动。`industry/` 是选择步骤从选中的行业包复制出来的，不要手改（见 [行业包](industry-packs/README.md)）：
 
 | 文件 | 改什么 |
 |---|---|

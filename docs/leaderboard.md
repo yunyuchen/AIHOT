@@ -1,6 +1,6 @@
 # 模型榜与 Codex 重置监控
 
-这两个模块只对 AI 行业有意义。别的行业在 `industry/features.ts` 里关掉即可（见 [把它改成你的行业](customize.md#6-只对-ai-有意义的两个模块industryfeaturests)）。
+这两个模块只对 AI 行业有意义。别的行业在行业包的 `features.ts` 里关掉即可（见 [把它改成你的行业](customize.md#6-只对-ai-有意义的两个模块featurests)）。
 
 ## 模型榜（`/leaderboard`）
 

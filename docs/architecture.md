@@ -19,7 +19,7 @@ flowchart LR
 | worker | `apps/worker/` | pg-boss 任务队列和定时任务：抓信源、调模型、归组、热度、日报、告警、清理 |
 | web | `apps/web/` | React Router 服务端渲染的网页。只通过 HTTP 读 api，不碰数据库 |
 
-业务代码都在 `packages/backend/`，前后端共用的类型和常量在 `packages/contracts/`，行业相关的一切在 `industry/`。
+业务代码都在 `packages/backend/`，前后端共用的类型和常量在 `packages/contracts/`，行业相关的一切在行业包目录 `industry-packs/<名字>/`。本机运行、测试和镜像构建时按 `INDUSTRY_PACK` 选一个复制成 `industry/`，代码从那里读。
 
 ## 几条不变的规则
 
@@ -27,16 +27,18 @@ flowchart LR
 - **页面不调模型**：读者打开页面只读数据库里已经有的结果；模型只在 worker 的任务里调用。
 - **花钱的请求有回执**：每个付费请求（模型、X、公众号、Jina）先记一张回执，拿到结果先存再用。进程重启、任务重试时，复用已经付过钱的结果，不重复花钱（`providers/receipts.ts`）。
 - **预算熔断**：每个付费服务有每分钟、每小时、每天的上限，超过就暂停（后台“设置 → 预算”）。
-- **安全阀**：`COLLECT_ENABLED`、`MODEL_CALLS_ENABLED`、`FEISHU_CONTENT_PUSH_ENABLED`、`FEISHU_INTERNAL_ENABLED`、`INDEXNOW_SUBMIT_ENABLED` 只决定“发不发出去”，不决定走哪套逻辑。开发和测试时关掉。
+- **安全阀**：`COLLECT_ENABLED`、`MODEL_CALLS_ENABLED`、`FEISHU_CONTENT_PUSH_ENABLED`、`FEISHU_INTERNAL_ENABLED`、`INDEXNOW_SUBMIT_ENABLED`、`WECHAT_SUBSCRIBE_PUSH_ENABLED` 只决定“发不发出去”，不决定走哪套逻辑。开发和测试时关掉。
 - **公开内容匿名**：管理员和访客看到的一样；读者的收藏、已读存在浏览器里。后台只允许管理员。
 - **旧文不刷屏**：发现时已发布超过 48 小时的资料、新信源的存量、回灌的推送，按原文时间归档，不进“今天”、不推送。
 - **来源可追溯**：每条精选都链接原文；站内是否显示全文由信源的 `site_fulltext` 决定，默认只显示摘要。
+- **AI 标识**：模型写的字段（条目标题与摘要、推荐理由、译文、事件标题与综述、日报头条与导语、日报和事件页里的条目标题）逐字段带“AI 摘要”。判定只在读取层算（`publication/rules.ts` 的 `writtenByModel`），看底稿是谁写的，编辑改过的照样标；网页只看接口给的 `ai.*`，不自己推。
 
 ## 目录
 
 | 位置 | 内容 |
 |---|---|
-| `industry/` | 行业包：站名文案、分类标签、主题、示范信源、提示词、门槛、品牌、条款页 |
+| `industry-packs/` | 行业包，每个子目录一个：站名文案、分类标签、主题、示范信源、提示词、门槛、品牌、条款页 |
+| `industry/` | 选中的行业包，由 `scripts/select-industry.ts` 生成，不要手改（入库的是制造行业包，CI 核对） |
 | `packages/backend/src/sources/` | 六种信源的读取器，抓取调度（`collect.ts`） |
 | `packages/backend/src/content/` | 资料入库、判重、正文提取和清洗 |
 | `packages/backend/src/editorial/` | 判断与写作：`analyze.ts`（流程）、`prompts.ts`（读提示词）、`models.ts`（每一步用哪个模型） |
@@ -61,6 +63,7 @@ flowchart LR
 | `/feed.xml` `/feed/all.xml` `/feed/full.xml` `/feed/daily.xml` | RSS：精选、全部、全文、日报 |
 | `/api/v1/` | 公开 API，文档在 `/openapi-v1.json`，说明页在 `/agent` |
 | `/api/mcp` | MCP 服务，工具名前缀是 `industry/site.ts` 的 `mcpPrefix` |
+| `/api/mp/` | 小程序出口，路径带版本（`/api/mp/v1/`），契约在 `packages/contracts/src/miniprogram.ts`；不进 `/agent` 和 OpenAPI 文档。后端代码里叫 `miniprogram`，因为 `mp` 已经指公众号信源 |
 | `/llms.txt` `/sitemap.xml` `/robots.txt` | 给大模型和搜索引擎的说明 |
 | `/admin` | 后台 |
 

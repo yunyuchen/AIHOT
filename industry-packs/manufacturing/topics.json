@@ -1,0 +1,550 @@
+{
+  "exportedAt": "2026-10-02",
+  "topics": [
+    {
+      "slug": "catl",
+      "name": "宁德时代",
+      "group": "company",
+      "entityId": "catl",
+      "tags": [
+        "宁德时代",
+        "entity:catl"
+      ],
+      "definition": "宁德时代的全部动态：产能与基地、电池技术路线、客户与订单、公告与经营。",
+      "related": [
+        "byd",
+        "lithium-battery",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "byd",
+      "name": "比亚迪",
+      "group": "company",
+      "entityId": "byd",
+      "tags": [
+        "比亚迪",
+        "entity:byd"
+      ],
+      "definition": "比亚迪及弗迪电池的全部动态：电池产能、技术路线、整车与供应链。",
+      "related": [
+        "catl",
+        "lithium-battery",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "eve",
+      "name": "亿纬锂能",
+      "group": "company",
+      "entityId": "eve",
+      "tags": [
+        "亿纬锂能",
+        "entity:eve"
+      ],
+      "definition": "亿纬锂能的全部动态：动力与储能电池产能、海外基地、订单与经营。",
+      "related": [
+        "catl",
+        "energy-storage",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "gotion",
+      "name": "国轩高科",
+      "group": "company",
+      "entityId": "gotion",
+      "tags": [
+        "国轩高科",
+        "entity:gotion"
+      ],
+      "definition": "国轩高科的全部动态：电池与材料基地、海外合作、技术进展。",
+      "related": [
+        "catl",
+        "lithium-battery",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "calb",
+      "name": "中创新航",
+      "group": "company",
+      "entityId": "calb",
+      "tags": [
+        "中创新航",
+        "entity:calb"
+      ],
+      "definition": "中创新航的全部动态：产能布局、电池产品与客户、经营情况。",
+      "related": [
+        "catl",
+        "lithium-battery",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "sunwoda",
+      "name": "欣旺达",
+      "group": "company",
+      "entityId": "sunwoda",
+      "tags": [
+        "欣旺达",
+        "entity:sunwoda"
+      ],
+      "definition": "欣旺达的全部动态：动力与消费电池产能、客户与订单、质量事件。",
+      "related": [
+        "eve",
+        "lithium-battery",
+        "quality-safety"
+      ]
+    },
+    {
+      "slug": "lges",
+      "name": "LG新能源",
+      "group": "company",
+      "entityId": "lges",
+      "tags": [
+        "LG新能源",
+        "entity:lges"
+      ],
+      "definition": "LG 新能源的全部动态：全球工厂、技术路线、与车企的合作和订单。",
+      "related": [
+        "catl",
+        "solid-state-battery",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "lead",
+      "name": "先导智能",
+      "group": "company",
+      "entityId": "lead",
+      "tags": [
+        "先导智能",
+        "entity:lead"
+      ],
+      "definition": "先导智能的全部动态：锂电与光伏设备订单、新设备出货、海外业务。",
+      "related": [
+        "yinghe",
+        "electrode-process",
+        "equipment-inspection"
+      ]
+    },
+    {
+      "slug": "yinghe",
+      "name": "赢合科技",
+      "group": "company",
+      "entityId": "yinghe",
+      "tags": [
+        "赢合科技",
+        "entity:yinghe"
+      ],
+      "definition": "赢合科技的全部动态：涂布、辊压、卷绕等锂电设备的订单与新品。",
+      "related": [
+        "lead",
+        "electrode-process",
+        "equipment-inspection"
+      ]
+    },
+    {
+      "slug": "semcorp",
+      "name": "恩捷股份",
+      "group": "company",
+      "entityId": "semcorp",
+      "tags": [
+        "恩捷股份",
+        "entity:semcorp"
+      ],
+      "definition": "恩捷股份的全部动态：隔膜产能、涂布线、客户与并购。",
+      "related": [
+        "battery-materials",
+        "film",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "cctc",
+      "name": "三环集团",
+      "group": "company",
+      "entityId": "cctc",
+      "tags": [
+        "三环集团",
+        "entity:cctc"
+      ],
+      "definition": "三环集团的全部动态：陶瓷基板、MLCC 与精密陶瓷部件的产能和产品。",
+      "related": [
+        "ceramics-mlcc",
+        "semiconductor",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "lithium-battery",
+      "name": "锂电",
+      "group": "field",
+      "tags": [
+        "锂电"
+      ],
+      "definition": "动力电池与消费电池的全部动态：扩产、技术路线、质量事件与企业经营。",
+      "related": [
+        "energy-storage",
+        "solid-state-battery",
+        "battery-materials"
+      ]
+    },
+    {
+      "slug": "energy-storage",
+      "name": "储能",
+      "group": "field",
+      "tags": [
+        "储能"
+      ],
+      "definition": "储能电芯、系统与电站：重要项目、技术路线和安全事故。",
+      "related": [
+        "lithium-battery",
+        "sodium-ion-battery",
+        "policy-standards"
+      ]
+    },
+    {
+      "slug": "solid-state-battery",
+      "name": "固态电池",
+      "group": "field",
+      "tags": [
+        "固态电池"
+      ],
+      "definition": "全固态与半固态电池的研发、中试线、量产进度和配套工艺。",
+      "related": [
+        "lithium-battery",
+        "electrode-process",
+        "process-tech"
+      ]
+    },
+    {
+      "slug": "sodium-ion-battery",
+      "name": "钠离子电池",
+      "group": "field",
+      "tags": [
+        "钠离子电池"
+      ],
+      "definition": "钠离子电池的材料体系、产线建设和装车、储能应用。",
+      "related": [
+        "lithium-battery",
+        "energy-storage",
+        "battery-materials"
+      ]
+    },
+    {
+      "slug": "battery-materials",
+      "name": "电池材料",
+      "group": "field",
+      "tags": [
+        "电池材料",
+        "隔膜",
+        "铜箔/铝箔"
+      ],
+      "definition": "正负极、电解液、隔膜、铜箔铝箔等电池材料的扩产、技术与供需。",
+      "related": [
+        "lithium-battery",
+        "film",
+        "semcorp"
+      ]
+    },
+    {
+      "slug": "electrode-process",
+      "name": "极片工艺",
+      "group": "field",
+      "tags": [
+        "涂布/辊压",
+        "干法电极",
+        "复合集流体"
+      ],
+      "definition": "极片涂布、辊压、干法电极、复合集流体等制造工艺的进展，这些环节对厚度和面密度的一致性要求最高。",
+      "related": [
+        "thickness-gauging",
+        "solid-state-battery",
+        "lead"
+      ]
+    },
+    {
+      "slug": "semiconductor",
+      "name": "半导体",
+      "group": "field",
+      "tags": [
+        "半导体"
+      ],
+      "definition": "晶圆制造、封装测试与关键零部件的产线、工艺、良率动态。",
+      "related": [
+        "advanced-packaging",
+        "silicon-carbide",
+        "ceramics-mlcc"
+      ]
+    },
+    {
+      "slug": "advanced-packaging",
+      "name": "先进封装",
+      "group": "field",
+      "tags": [
+        "先进封装"
+      ],
+      "definition": "2.5D/3D 封装、玻璃基板、面板级封装等先进封装产线和工艺进展。",
+      "related": [
+        "semiconductor",
+        "ceramics-mlcc",
+        "process-tech"
+      ]
+    },
+    {
+      "slug": "silicon-carbide",
+      "name": "碳化硅",
+      "group": "field",
+      "tags": [
+        "碳化硅"
+      ],
+      "definition": "碳化硅衬底、外延与器件：大尺寸量产、良率与扩产。",
+      "related": [
+        "semiconductor",
+        "process-tech",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "ceramics-mlcc",
+      "name": "陶瓷基板与 MLCC",
+      "group": "field",
+      "tags": [
+        "陶瓷基板",
+        "MLCC"
+      ],
+      "definition": "陶瓷基板、静电卡盘等精密陶瓷部件和 MLCC 的产能、材料与工艺。",
+      "related": [
+        "semiconductor",
+        "cctc",
+        "thickness-gauging"
+      ]
+    },
+    {
+      "slug": "optical-module",
+      "name": "光模块",
+      "group": "field",
+      "tags": [
+        "光模块"
+      ],
+      "definition": "光模块与光器件的制造、产能和工艺进展。",
+      "related": [
+        "semiconductor",
+        "advanced-packaging",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "film",
+      "name": "薄膜与光学膜",
+      "group": "field",
+      "tags": [
+        "薄膜/光学膜"
+      ],
+      "definition": "塑料薄膜、光学膜、功能膜及涂覆层的产线、材料与工艺。",
+      "related": [
+        "nonwoven-paper",
+        "battery-materials",
+        "thickness-gauging"
+      ]
+    },
+    {
+      "slug": "nonwoven-paper",
+      "name": "无纺布与纸张",
+      "group": "field",
+      "tags": [
+        "无纺布/纸张"
+      ],
+      "definition": "无纺布、卫生用品与造纸行业的产线、工艺和材料动态。",
+      "related": [
+        "film",
+        "thickness-gauging",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "hydrogen",
+      "name": "氢能",
+      "group": "field",
+      "tags": [
+        "氢能"
+      ],
+      "definition": "电解槽、燃料电池与膜电极的制造和项目进展。",
+      "related": [
+        "energy-storage",
+        "perovskite",
+        "policy-standards"
+      ]
+    },
+    {
+      "slug": "perovskite",
+      "name": "钙钛矿",
+      "group": "field",
+      "tags": [
+        "钙钛矿"
+      ],
+      "definition": "钙钛矿光伏的中试线、量产线、效率进展与标准。",
+      "related": [
+        "hydrogen",
+        "film",
+        "process-tech"
+      ]
+    },
+    {
+      "slug": "thickness-gauging",
+      "name": "测厚与面密度",
+      "group": "field",
+      "tags": [
+        "测厚/面密度"
+      ],
+      "definition": "X 射线、β 射线、激光与光学测厚和面密度测量：新设备、应用案例与厂商动态。",
+      "related": [
+        "xray-ct",
+        "machine-vision",
+        "electrode-process"
+      ]
+    },
+    {
+      "slug": "xray-ct",
+      "name": "X 射线与工业 CT",
+      "group": "field",
+      "tags": [
+        "X射线/CT"
+      ],
+      "definition": "X 射线成像、工业 CT 等内部缺陷检测的设备、应用与厂商动态。",
+      "related": [
+        "thickness-gauging",
+        "machine-vision",
+        "quality-safety"
+      ]
+    },
+    {
+      "slug": "machine-vision",
+      "name": "机器视觉",
+      "group": "field",
+      "tags": [
+        "机器视觉"
+      ],
+      "definition": "表面缺陷检测、尺寸测量等机器视觉设备与算法在产线上的应用。",
+      "related": [
+        "thickness-gauging",
+        "xray-ct",
+        "equipment-inspection"
+      ]
+    },
+    {
+      "slug": "capacity",
+      "name": "扩产与新产线",
+      "group": "genre",
+      "tags": [
+        "扩产/投产"
+      ],
+      "definition": "建厂、开工、投产、设备招标与订单：新产线意味着新的检测设备需求。",
+      "related": [
+        "process-tech",
+        "equipment-inspection",
+        "company-news"
+      ]
+    },
+    {
+      "slug": "process-tech",
+      "name": "工艺与技术路线",
+      "group": "genre",
+      "tags": [
+        "工艺/技术"
+      ],
+      "definition": "新工艺、新材料与新产品的量产进展：工艺变了，测量要求跟着变。",
+      "related": [
+        "capacity",
+        "research-data",
+        "solid-state-battery"
+      ]
+    },
+    {
+      "slug": "quality-safety",
+      "name": "质量与安全",
+      "group": "genre",
+      "tags": [
+        "质量/安全"
+      ],
+      "definition": "召回、质量事故、安全事件及其原因分析。",
+      "related": [
+        "policy-standards",
+        "xray-ct",
+        "process-tech"
+      ]
+    },
+    {
+      "slug": "policy-standards",
+      "name": "政策与标准",
+      "group": "genre",
+      "tags": [
+        "政策/标准"
+      ],
+      "definition": "产业政策、规划、行业规范条件、国家标准与强制性标准。",
+      "related": [
+        "quality-safety",
+        "capacity",
+        "research-data"
+      ]
+    },
+    {
+      "slug": "equipment-inspection",
+      "name": "设备与检测",
+      "group": "genre",
+      "tags": [
+        "设备/检测"
+      ],
+      "definition": "检测量测设备与制造设备厂商的新品、订单、融资和应用案例。",
+      "related": [
+        "thickness-gauging",
+        "machine-vision",
+        "capacity"
+      ]
+    },
+    {
+      "slug": "company-news",
+      "name": "公司动态",
+      "group": "genre",
+      "tags": [
+        "公司动态"
+      ],
+      "definition": "融资、并购、财报、合作与人事等公司层面的重要消息。",
+      "related": [
+        "capacity",
+        "catl",
+        "opinion"
+      ]
+    },
+    {
+      "slug": "research-data",
+      "name": "研究与数据",
+      "group": "genre",
+      "tags": [
+        "研究/数据"
+      ],
+      "definition": "论文、技术报告、产销与装车数据、行业统计。",
+      "related": [
+        "process-tech",
+        "opinion",
+        "policy-standards"
+      ]
+    },
+    {
+      "slug": "opinion",
+      "name": "观点与分析",
+      "group": "genre",
+      "tags": [
+        "观点/分析"
+      ],
+      "definition": "行业人物的判断、深度分析与访谈。",
+      "related": [
+        "research-data",
+        "company-news",
+        "process-tech"
+      ]
+    }
+  ]
+}
