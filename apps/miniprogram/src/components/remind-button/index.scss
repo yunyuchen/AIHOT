@@ -1,0 +1,16 @@
+@use "../../styles/tokens" as *;
+
+// 按钮的底色、尺寸由调用方的类名给（日报 daily-btn--ghost），这里只有几种状态。
+// 已订阅：字和铃铛调淡，不能点；正在订阅：整颗调淡。字色写成两个类，压过调用方类名里的字色（daily-btn--ghost 在样式表里排在后面）。
+.remind-button.remind-button--done {
+  color: $iron;
+}
+.remind-button--done image {
+  opacity: 0.5;
+}
+.remind-button--busy {
+  opacity: 0.6;
+}
+.remind-button--down {
+  opacity: 0.6;
+}

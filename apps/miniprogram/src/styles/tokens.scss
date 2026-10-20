@@ -1,0 +1,25 @@
+// 原型 A 版的颜色（docs/design/miniprogram-prototype/a/feed.html 的 :root）。
+// 页面样式 @use 这个文件用 $变量；app.scss 另把它们挂成 page 上的 CSS 变量，给运行时的内联样式用。
+// 星青只做图形、线条、底色和深底上的大数字，不做白底小字。
+
+$ink: #13191c; // 墨：logo 底色，品牌头、标题、节点
+$star: #2ce2e8; // 星青：只做图形和底色，不做字
+$work: #f2f3f5; // 工作灰：微信工作区
+$card: #ffffff; // 卡片白
+$iron: #5d6872; // 铁灰：来源、元数据 5.7:1
+$fog: #a9b4ba; // 雾灰：深色区次要字 8.4:1
+$body: #4a555e; // 正文灰：摘要正文 7.6:1
+$rail: #c5cbd0; // 轴线灰：轴线、挂线
+$tab: #6b757e; // tabBar 未选中的字和图标
+
+// 分类色标：只做小圆点和浅底，字一律墨色。运行时按分类 key 取色走构建配置的配色表（config/boards.ts），这里留一份给静态样式。
+$c-battery: #ff7a45;
+$c-storage: #1fb57a;
+$c-semi: #3b7bf6;
+$c-film: #8f6cf6;
+$c-inspect: #2ce2e8;
+$c-policy: #13191c;
+$c-general: #8a959e;
+
+// 系统字体；数字用等宽数字（.num）。
+$font: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;

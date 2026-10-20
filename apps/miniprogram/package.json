@@ -1,0 +1,52 @@
+{
+  "name": "@reechi/miniprogram",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "锐奇热点微信小程序（Taro）。独立的 npm 包，不在根 workspaces 里。",
+  "engines": {
+    "node": ">=24.11"
+  },
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch --mode dev",
+    "build:weapp": "taro build --type weapp --mode prod",
+    "build:weapp:trial": "taro build --type weapp --mode trial",
+    "build:weapp:dev": "taro build --type weapp --mode dev",
+    "build:weapp:no-sports": "taro build --type weapp --mode prod-no-sports",
+    "typecheck": "tsc -p .",
+    "test": "node --test \"tests/*.test.ts\"",
+    "icons": "node scripts/tab-icons.ts"
+  },
+  "browserslist": [
+    "last 3 versions",
+    "Android >= 4.1",
+    "ios >= 8"
+  ],
+  "dependencies": {
+    "@babel/runtime": "7.29.10",
+    "@tarojs/components": "4.3.0",
+    "@tarojs/helper": "4.3.0",
+    "@tarojs/plugin-framework-react": "4.3.0",
+    "@tarojs/plugin-platform-weapp": "4.3.0",
+    "@tarojs/react": "4.3.0",
+    "@tarojs/runtime": "4.3.0",
+    "@tarojs/shared": "4.3.0",
+    "@tarojs/taro": "4.3.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@babel/preset-react": "7.29.7",
+    "@tarojs/cli": "4.3.0",
+    "@tarojs/taro-loader": "4.3.0",
+    "@tarojs/webpack5-runner": "4.3.0",
+    "@types/node": "24.19.2",
+    "@types/react": "18.3.31",
+    "babel-preset-taro": "4.3.0",
+    "postcss": "8.5.30",
+    "sass": "1.105.2",
+    "typescript": "7.0.2",
+    "webpack": "5.91.0"
+  }
+}

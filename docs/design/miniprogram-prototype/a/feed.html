@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 精选</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做小方块和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px; background: var(--work);
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .scroll {
+    position: absolute; left: 0; top: 0; width: 390px; height: 761px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  .star-g { display: block; }
+
+  /* ---------- 深色仪表盘 ---------- */
+  .dash {
+    background: var(--ink); color: #fff;
+    padding: 47px 16px 60px;
+  }
+  .nav {
+    height: 44px; display: flex; align-items: center;
+    padding-right: 90px; /* 右侧留给微信胶囊 */
+  }
+  .nav svg { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+  .nav h1 { font-size: 17px; font-weight: 600; margin-left: 9px; letter-spacing: .5px; }
+
+  .reading {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .today .k { display: block; font-size: 12px; color: var(--fog); line-height: 17px; }
+  .today strong { display: block; font-size: 22px; font-weight: 700; line-height: 30px; letter-spacing: .3px; }
+  .today strong small { font-size: 13px; font-weight: 500; color: var(--fog); margin-left: 6px; letter-spacing: 0; }
+  .meters { display: flex; }
+  .meter { padding: 0 12px; text-align: left; border-left: 1px solid rgba(255,255,255,.14); }
+  .meter:first-child { border-left: 0; padding-left: 0; }
+  .meter:last-child { padding-right: 0; }
+  .meter b { display: block; font-size: 24px; font-weight: 700; line-height: 28px; }
+  .meter span { display: block; font-size: 12px; color: var(--fog); line-height: 17px; }
+
+  /* 24 小时发布时刻扫描条 */
+  .scan { position: relative; height: 38px; margin-top: 14px; }
+  .scan .cap { position: absolute; left: 0; top: 0; font-size: 11px; line-height: 13px; color: var(--fog); }
+  .scan .base { position: absolute; left: 0; top: 22px; width: 288px; height: 1px; background: rgba(255,255,255,.32); }
+  .scan .future { position: absolute; left: 288px; top: 22px; width: 70px; height: 0; border-top: 1px dashed rgba(255,255,255,.28); }
+  .scan .pip { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.82); }
+  .scan .pip.hot { background: var(--star); width: 5px; height: 5px; }
+  .scan .tick { position: absolute; top: 23px; width: 1px; height: 3px; background: rgba(255,255,255,.32); }
+  .scan .hr { position: absolute; top: 26px; font-size: 11px; line-height: 12px; color: #8d989f; }
+  .scan .cursor { position: absolute; left: 287.5px; top: 2px; width: 1px; height: 21px; background: var(--star); }
+  .scan .cursor svg { position: absolute; left: -4px; top: -3px; width: 9px; height: 9px; fill: var(--star); }
+  .scan .now { position: absolute; left: 295px; top: 0; font-size: 11px; line-height: 13px; color: var(--fog); white-space: nowrap; }
+
+  /* ---------- 今日焦点卡 ---------- */
+  .focus {
+    position: relative; margin: -48px 16px 0;
+    background: var(--card); border-radius: 14px;
+    padding: 14px 16px 14px;
+    box-shadow: 0 14px 28px -10px rgba(19,25,28,.32), 0 2px 6px rgba(19,25,28,.08);
+  }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row .gap { flex: 1; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px;
+    background: var(--star); color: var(--ink); border-radius: 4px;
+    font-size: 12px; font-weight: 700; letter-spacing: .5px;
+  }
+  .flag svg { width: 10px; height: 10px; fill: var(--ink); }
+  .focus h2 {
+    font-size: 20px; line-height: 27px; font-weight: 700; margin-top: 10px; letter-spacing: .2px;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .focus p {
+    font-size: 14px; line-height: 21px; color: var(--body); margin-top: 6px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .focus-foot {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 12px; padding-top: 11px; border-top: 1px solid #eceef0;
+  }
+  .echo { flex: none; display: flex; align-items: center; gap: 6px; }
+  .echo b { font-size: 26px; line-height: 28px; font-weight: 700; }
+  .echo .lbl { display: flex; flex-direction: column; gap: 3px; }
+  .echo .lbl span { font-size: 12px; font-weight: 600; line-height: 14px; }
+  .echo .bars { display: flex; gap: 2px; }
+  .echo .bars i { width: 6px; height: 6px; border-radius: 50%; background: var(--star); box-shadow: inset 0 0 0 1px rgba(19,25,28,.55); }
+  .focus .srcs {
+    flex: 1; min-width: 0; font-size: 12px; line-height: 17px; color: var(--iron);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .when { flex: none; text-align: right; }
+  .when b { display: block; font-size: 15px; line-height: 18px; font-weight: 700; }
+  .when span { display: block; font-size: 11px; line-height: 14px; color: var(--iron); }
+
+  /* ---------- 分类色标、AI 标识、在报 ---------- */
+  .cat {
+    display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px 0 6px;
+    border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap;
+  }
+  .cat i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .cat.battery { background: rgba(255,122,69,.15); } .cat.battery i { background: var(--c-battery); }
+  .cat.semi    { background: rgba(59,123,246,.12); } .cat.semi i    { background: var(--c-semi); }
+  .cat.film    { background: rgba(143,108,246,.13); } .cat.film i   { background: var(--c-film); }
+  .cat.policy  { background: rgba(19,25,28,.08); }   .cat.policy i  { background: var(--c-policy); }
+  .cat.storage { background: rgba(31,181,122,.13); } .cat.storage i { background: var(--c-storage); }
+  .cat.inspect { background: rgba(44,226,232,.18); } .cat.inspect i { background: var(--c-inspect); box-shadow: inset 0 0 0 1px var(--ink); }
+  .cat.general { background: rgba(138,149,158,.15); } .cat.general i { background: var(--c-general); }
+
+  .ai {
+    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px 0 5px;
+    background: var(--ink); color: #fff; border-radius: 4px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .ai svg { width: 8px; height: 8px; fill: var(--star); }
+
+  .echo-chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 7px;
+    background: #eef0f2; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; flex: none;
+  }
+  .echo-chip .bars { display: flex; gap: 2px; }
+  .echo-chip .bars i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); }
+
+  /* ---------- 时间轴 ---------- */
+  .axis { position: relative; padding: 14px 16px 24px 0; }
+  .axis::before { /* 整根轴 */
+    content: ""; position: absolute; left: 23px; top: 14px; bottom: 0; width: 2px; background: var(--rail);
+  }
+  .period { position: relative; }
+  .period.live::before { /* 当前时段这一段轴是青色 */
+    content: ""; position: absolute; left: 23px; top: 8px; bottom: -4px; width: 2px; background: var(--star); z-index: 0;
+  }
+  .phead {
+    position: relative; z-index: 1; display: flex; align-items: center; height: 24px;
+    padding-left: 40px;
+  }
+  .phead .pn {
+    position: absolute; left: 18px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--work); box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  .period.live .phead .pn {
+    left: 15px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); box-shadow: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .period.live .phead .pn svg { width: 11px; height: 11px; fill: var(--star); }
+  .phead strong { font-size: 14px; font-weight: 700; }
+  .phead span { font-size: 12px; color: var(--iron); margin-left: 8px; }
+  .phead em { font-style: normal; font-size: 12px; color: var(--iron); margin-left: auto; }
+
+  .item { position: relative; z-index: 1; margin: 8px 0 0 40px; }
+  .item + .item { margin-top: 12px; }
+  .item .node {
+    position: absolute; left: -21px; top: 17px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink);
+  }
+  .item .hang {
+    position: absolute; left: -13px; top: 20px; width: 13px; height: 2px; background: var(--rail);
+  }
+  .period.live .item .node { background: var(--star); box-shadow: 0 0 0 2px var(--ink); }
+  .period.live .item .hang { background: var(--ink); }
+  .card {
+    background: var(--card); border-radius: 3px 12px 12px 12px;
+    padding: 11px 14px 12px; min-height: 44px;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .card time { font-size: 15px; line-height: 20px; font-weight: 700; margin-right: 2px; }
+  .card h3 {
+    font-size: 16px; line-height: 22px; font-weight: 600; margin-top: 7px; text-wrap: pretty;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card p {
+    font-size: 13px; line-height: 19px; color: var(--body); margin-top: 4px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card .foot { display: flex; align-items: center; gap: 8px; margin-top: 9px; min-height: 20px; }
+  .card .src { font-size: 12px; line-height: 17px; color: var(--iron); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- 原生 tabBar ---------- */
+  .tabbar {
+    position: absolute; left: 0; bottom: 0; width: 390px; height: 83px;
+    background: #fff; box-shadow: inset 0 .5px 0 rgba(0,0,0,.14);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; color: #6b757e; text-decoration: none;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab span { font-size: 10px; line-height: 14px; margin-top: 2px; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="scroll">
+
+    <header class="dash">
+      <div class="nav">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+        <h1>锐奇热点</h1>
+      </div>
+
+      <div class="reading">
+        <div class="today">
+          <span class="k">今日精选</span>
+          <strong class="num">10月16日<small>周五</small></strong>
+        </div>
+        <div class="meters num">
+          <div class="meter"><b>12</b><span>条精选</span></div>
+          <div class="meter"><b>10</b><span>个事件</span></div>
+          <div class="meter"><b>150</b><span>个信源</span></div>
+        </div>
+      </div>
+
+      <!-- 24 小时扫描条：358px = 24 小时，每格 30 分钟（7.46px），每条消息在发布时刻落一个方块，同格堆叠 -->
+      <div class="scan" aria-label="今天各条消息的发布时刻">
+        <span class="cap">发布时刻</span>
+        <i class="pip" style="left:1.7px;top:17px"></i>
+        <i class="pip" style="left:121px;top:17px"></i>
+        <i class="pip" style="left:121px;top:11.5px"></i>
+        <i class="pip" style="left:121px;top:6px"></i>
+        <i class="pip" style="left:203px;top:17px"></i>
+        <i class="pip" style="left:210.6px;top:17px"></i>
+        <i class="pip" style="left:240.4px;top:17px"></i>
+        <i class="pip" style="left:240.4px;top:11.5px"></i>
+        <i class="pip hot" style="left:247.3px;top:16px"></i>
+        <i class="pip" style="left:255.3px;top:17px"></i>
+        <i class="pip" style="left:270.2px;top:17px"></i>
+        <i class="pip" style="left:283px;top:17px"></i>
+        <div class="base"></div><div class="future"></div>
+        <i class="tick" style="left:0"></i><i class="tick" style="left:89.5px"></i><i class="tick" style="left:179px"></i><i class="tick" style="left:268.5px"></i><i class="tick" style="left:357px"></i>
+        <span class="hr num" style="left:0">0时</span>
+        <span class="hr num" style="left:81px">6时</span>
+        <span class="hr num" style="left:168px">12时</span>
+        <span class="hr num" style="left:257px">18时</span>
+        <span class="hr num" style="right:0">24时</span>
+        <div class="cursor"><svg aria-hidden="true"><use href="#star"/></svg></div>
+        <span class="now num">19:18 更新</span>
+      </div>
+    </header>
+
+    <!-- 今日焦点：钉在仪表盘下沿，不进时间顺序 -->
+    <a class="focus" href="item.html" style="display:block;color:inherit;text-decoration:none">
+      <div class="row">
+        <span class="flag"><svg aria-hidden="true"><use href="#star"/></svg>今日焦点</span>
+        <span class="cat semi"><i></i>半导体</span>
+        <span class="gap"></span>
+        <span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span>
+      </div>
+      <h2>英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</h2>
+      <p>新协议把双方原有供应关系从 150mm 衬底技术转为 200mm。英飞凌 COO 表示，协议拓宽了其 200mm 大规模制造的供应基础，并建立在两家公司 20 年供应关系之上。</p>
+      <div class="focus-foot">
+        <div class="echo">
+          <b class="num">4</b>
+          <div class="lbl"><span>家在报</span><div class="bars"><i></i><i></i><i></i><i></i></div></div>
+        </div>
+        <div class="srcs">Compound Semiconductor、Semiconductor Today、SEMI 中国·半导体、第三代半导体产业网</div>
+        <div class="when num"><b>16:57</b><span>10-16 最新</span></div>
+      </div>
+    </a>
+
+    <!-- 时间轴：新的在上 -->
+    <section class="axis">
+
+      <div class="period live">
+        <div class="phead"><i class="pn"><svg aria-hidden="true"><use href="#star"/></svg></i><strong>晚间</strong><span>18 时以后</span><em>2 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">19:18</time><span class="cat battery"><i></i>锂电</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>大众在欧洲为多款 ID. 车型准备高压电芯召回</h3>
+            <p>大众因高压电池电芯可能存在缺陷，正在德国及其他欧洲市场为多款 ID. 系列电动车准备召回，官方建议受影响车辆充电上限设为 80%。</p>
+            <div class="foot"><span class="src">Electrive</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">18:01</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>普雷赛斯完成亿元级A轮融资，用于量产交付与先进封装量检测攻关</h3>
+            <p>公司专注半导体量检测设备与核心光学精密仪器，产品覆盖三维形貌、薄膜厚度、关键尺寸、套刻精度、2D&amp;3D AOI 等检测方案。</p>
+            <div class="foot"><span class="src">第三代半导体产业网</span></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="period">
+        <div class="phead" style="margin-top:14px"><i class="pn"></i><strong>下午</strong><span>12–18 时</span><em>5 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">17:03</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>GlobalFoundries 的 CHIPS 补贴修订，支持纽约和佛蒙特 50 亿美元投资</h3>
+            <p>美国商务部 CHIPS 计划办公室修订其现有补贴，重新分配最多 9.55 亿美元激励资金，用于 Malta 和 Burlington 工厂的现代化与扩建。</p>
+            <div class="foot"><span class="src">Semiconductor Today</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">16:05</time><span class="cat policy"><i></i>政策与标准</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>欧盟电池护照2027年2月强制生效，宁德时代、中创新航披露GBA试点准备进展</h3>
+            <p>2027年2月18日起投放欧盟市场的电动汽车电池、轻型交通工具电池和容量超过2kWh的工业电池必须配备电子电池护照。</p>
+            <div class="foot"><span class="src">OFweek锂电网·锂电池</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">16:04</time><span class="cat battery"><i></i>锂电</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>宝马第六代动力电池沈阳量产，960颗46毫米大圆柱电芯支撑1213公里不补电挑战</h3>
+            <p>电池包采用960颗直径46毫米大圆柱电芯，Cell-to-Pack 无模组设计，电芯级体积能量密度比第五代提升超20%。</p>
+            <div class="foot"><span class="src">OFweek锂电网·锂电池</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">14:19</time><span class="cat battery"><i></i>锂电</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>亿昇达绍兴0.5GWh大圆柱固态电池产线投产</h3>
+            <p>现场达成首批500万只大圆柱电芯的战略框架，面向煤矿等特种装备领域，形成杭州大软包与绍兴大圆柱双基地布局。</p>
+            <div class="foot"><span class="src">电池网</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">13:50</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>北方华创全资收购诺合键维，布局混合键合设备</h3>
+            <p>诺合键维是国内技术领先的混合键合设备公司，产品实现纳米级对准精度，将与北方华创的先进封装装备形成互补。</p>
+            <div class="foot"><span class="src">第三代半导体产业网</span><span class="echo-chip num"><span class="bars"><i></i><i></i></span>2 家在报</span></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="period">
+        <div class="phead" style="margin-top:14px"><i class="pn"></i><strong>上午</strong><span>6–12 时</span><em>3 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">08:00</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>拓荆科技拟25亿元收购无锡尚积100%股权，补齐PVD与刻蚀设备</h3>
+            <p>拓荆科技拟以发行股份及支付现金方式合计25亿元收购无锡尚积100%股权，并募集配套资金不超过18.2亿元。</p>
+            <div class="foot"><span class="src">艾邦半导体网</span><span class="echo-chip num"><span class="bars"><i></i><i></i><i></i></span>3 家在报</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">08:00</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>晶洲装备发布国内首个TGV中试开放平台，提供工艺开发到量产导入一站式验证</h3>
+            <p>平台制孔能力为通孔直径15–200μm、均匀性±0.5μm@50μm，兼容玻璃厚度0.1mm–1.1mm。</p>
+            <div class="foot"><span class="src">艾邦半导体网</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">08:00</time><span class="cat semi"><i></i>半导体</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>玻芯成16层玻璃堆叠GCP下线投产</h3>
+            <p>公司由此从工程样品研发阶段迈入产品级小批量生产阶段，此前已完成6层、8层、22层堆叠工艺技术验证。</p>
+            <div class="foot"><span class="src">艾邦半导体网</span></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="period">
+        <div class="phead" style="margin-top:14px"><i class="pn"></i><strong>凌晨</strong><span>0–6 时</span><em>1 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html" style="display:block;color:inherit;text-decoration:none">
+            <div class="row"><time class="num">00:00</time><span class="cat film"><i></i>薄膜与材料</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>平安电工拟定增13亿元，投建泰国及湖北通城电子布基地</h3>
+            <p>募集资金投向泰国云母绝缘材料基地、泰国电子布基地、国内高性能电子布基地及补充流动资金。</p>
+            <div class="foot"><span class="src">中国粉体网</span></div>
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab on" href="feed.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7.5" r="2.6" fill="#2ce2e8"/><circle cx="7" cy="16.5" r="2.6" fill="#fff"/><path d="M13 7.5h8M13 16.5h6"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab" href="daily.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab" href="sports.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab" href="saved.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab" href="reechi.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

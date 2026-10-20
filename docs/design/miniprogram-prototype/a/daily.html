@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 日报</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做小方块和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px; background: var(--work);
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .scroll {
+    position: absolute; left: 0; top: 0; width: 390px; height: 761px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- 深色仪表盘 ---------- */
+  .dash {
+    background: var(--ink); color: #fff;
+    padding: 47px 16px 60px;
+  }
+  .nav {
+    height: 44px; display: flex; align-items: center;
+    padding-right: 90px; /* 右侧留给微信胶囊 */
+  }
+  .nav svg { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+  .nav h1 { font-size: 17px; font-weight: 600; margin-left: 9px; letter-spacing: .5px; }
+
+  .reading {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .today .k { display: block; font-size: 12px; color: var(--fog); line-height: 17px; }
+  .today strong { display: block; font-size: 22px; font-weight: 700; line-height: 30px; letter-spacing: .3px; }
+  .today strong small { font-size: 13px; font-weight: 500; color: var(--fog); margin-left: 6px; letter-spacing: 0; }
+
+  /* 前一天 / 后一天：44px 触控区，里面是 36px 圆环 */
+  .daynav { display: flex; gap: 4px; margin-right: -4px; margin-bottom: -7px; }
+  .daynav button {
+    width: 44px; height: 44px; padding: 0; border: 0; background: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer;
+  }
+  .daynav button i {
+    width: 36px; height: 36px; border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.26);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .daynav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .daynav button[aria-disabled="true"] { color: rgba(255,255,255,.3); cursor: default; }
+  .daynav button[aria-disabled="true"] i { box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+
+  .meters { display: flex; margin-top: 14px; }
+  .meter { padding: 0 12px; text-align: left; border-left: 1px solid rgba(255,255,255,.14); }
+  .meter:first-child { border-left: 0; padding-left: 0; }
+  .meter:last-child { padding-right: 0; }
+  .meter b { display: block; font-size: 24px; font-weight: 700; line-height: 28px; }
+  .meter span { display: block; font-size: 12px; color: var(--fog); line-height: 17px; }
+
+  /* ---------- 头条卡 ---------- */
+  .focus {
+    position: relative; margin: -48px 16px 0;
+    background: var(--card); border-radius: 14px;
+    padding: 14px 16px 14px;
+    box-shadow: 0 14px 28px -10px rgba(19,25,28,.32), 0 2px 6px rgba(19,25,28,.08);
+  }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row .gap { flex: 1; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px 0 7px;
+    background: var(--star); color: var(--ink); border-radius: 4px;
+    font-size: 12px; font-weight: 700; letter-spacing: .5px;
+  }
+  .flag svg { width: 10px; height: 10px; fill: var(--ink); }
+  .focus h2 {
+    font-size: 20px; line-height: 27px; font-weight: 700; margin-top: 10px; letter-spacing: .2px;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .focus p { /* 日报的导语是正文，不截断 */
+    font-size: 14px; line-height: 21px; color: var(--body); margin-top: 6px;
+    overflow-wrap: anywhere;
+  }
+  .acts {
+    display: flex; gap: 8px;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #eceef0;
+  }
+  .btn {
+    flex: 1; min-width: 0; height: 44px; border: 0; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit; font-size: 14px; font-weight: 600; white-space: nowrap;
+    text-decoration: none; cursor: pointer;
+  }
+  .btn svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .btn.ghost { background: #eef0f2; color: var(--ink); }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.primary svg { stroke: var(--star); }
+
+  /* ---------- AI 标识 ---------- */
+  .ai {
+    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px 0 5px;
+    background: var(--ink); color: #fff; border-radius: 4px;
+    font-size: 11px; font-weight: 600; white-space: nowrap; flex: none;
+  }
+  .ai svg { width: 8px; height: 8px; fill: var(--star); }
+
+  /* ---------- 分节 ---------- */
+  .sections { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 0; }
+  .sec {
+    background: var(--card); border-radius: 14px; padding: 0 16px;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .sec-head { display: flex; align-items: center; height: 46px; }
+  .sec-head i { width: 8px; height: 8px; border-radius: 50%; flex: none; margin-right: 8px; }
+  .sec-head strong { font-size: 15px; font-weight: 700; }
+  .sec-head em { font-style: normal; font-size: 12px; color: var(--iron); margin-left: auto; }
+  .sec.policy  .sec-head i { background: var(--c-policy); }
+  .sec.battery .sec-head i { background: var(--c-battery); }
+  .sec.semi    .sec-head i { background: var(--c-semi); }
+
+  .line {
+    display: flex; flex-direction: column; justify-content: center; gap: 3px;
+    min-height: 44px; padding: 10px 0 11px;
+    border-top: 1px solid #eceef0;
+    color: var(--ink); text-decoration: none;
+  }
+  .line b { font-size: 15px; line-height: 21px; font-weight: 600; overflow-wrap: anywhere; text-wrap: pretty; }
+  .line span { font-size: 12px; line-height: 17px; color: var(--iron); }
+
+  .note { display: flex; align-items: center; gap: 8px; padding: 14px 16px 24px; }
+  .note span:last-child { font-size: 12px; line-height: 17px; color: var(--iron); }
+
+  /* ---------- 原生 tabBar ---------- */
+  .tabbar {
+    position: absolute; left: 0; bottom: 0; width: 390px; height: 83px;
+    background: #fff; box-shadow: inset 0 .5px 0 rgba(0,0,0,.14);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; color: #6b757e; text-decoration: none;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab span { font-size: 10px; line-height: 14px; margin-top: 2px; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="scroll">
+
+    <header class="dash">
+      <div class="nav">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+        <h1>锐奇热点</h1>
+      </div>
+
+      <div class="reading">
+        <div class="today">
+          <span class="k">锐奇制造日报</span>
+          <strong class="num">10月16日<small>周五</small></strong>
+        </div>
+        <div class="daynav">
+          <button type="button" aria-label="前一天"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></i></button>
+          <button type="button" aria-label="后一天" aria-disabled="true"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></i></button>
+        </div>
+      </div>
+
+      <div class="meters num">
+        <div class="meter"><b>6</b><span>个分节</span></div>
+        <div class="meter"><b>17</b><span>条</span></div>
+        <div class="meter"><b>08:00</b><span>出刊</span></div>
+      </div>
+    </header>
+
+    <!-- 头条：钉在仪表盘下沿 -->
+    <article class="focus">
+      <div class="row">
+        <span class="flag"><svg aria-hidden="true"><use href="#star"/></svg>今日头条</span>
+        <span class="gap"></span>
+        <span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span>
+      </div>
+      <h2>七部门印发新型电池产业“十五五”规划</h2>
+      <p>新型电池首次以独立赛道进入国家级顶层设计，竞争范式从产能规模转向产品附加值与产业链现代化水平。同日，工信部副部长熊继军为“十五五”储能划下四条主线。</p>
+      <div class="acts">
+        <button type="button" class="btn ghost">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>提醒我明天的日报
+        </button>
+        <a class="btn primary" href="share.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V4M8 8l4-4 4 4"/></svg>分享日报
+        </a>
+      </div>
+    </article>
+
+    <!-- 分节：每节一张白卡，条目点进条目页 -->
+    <div class="sections">
+
+      <section class="sec policy">
+        <div class="sec-head"><i></i><strong>政策与标准</strong><em class="num">2 条</em></div>
+        <a class="line" href="item.html"><b>工信部副部长熊继军为“十五五”储能划下四条发展主线</b><span>北极星储能网·要闻</span></a>
+        <a class="line" href="item.html"><b>信宇人及实控人因涉嫌信息披露违法违规被证监会立案</b><span>电池网</span></a>
+      </section>
+
+      <section class="sec battery">
+        <div class="sec-head"><i></i><strong>锂电</strong><em class="num">3 条</em></div>
+        <a class="line" href="item.html"><b>宝马在沈阳启动第六代高压电池量产</b><span>Electrive</span></a>
+        <a class="line" href="item.html"><b>天赐材料印尼电解液项目预计 2026 年 12 月试产，规划年产 2 万吨</b><span>电池网</span></a>
+        <a class="line" href="item.html"><b>Sakuu 在 Kavian 制造平台干法打印出 100% 干法碳纤维电池电芯</b><span>Charged EVs</span></a>
+      </section>
+
+      <section class="sec semi">
+        <div class="sec-head"><i></i><strong>半导体</strong><em class="num">3 条</em></div>
+        <a class="line" href="item.html"><b>长飞先进发布高性能 SiC MOSFET 系列芯片及四代技术路线</b><span>第三代半导体产业网</span></a>
+        <a class="line" href="item.html"><b>英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</b><span>Compound Semiconductor</span></a>
+        <a class="line" href="item.html"><b>格罗方德将在纽约州马耳他新建两座 300 毫米晶圆厂</b><span>SEMI 中国·半导体</span></a>
+      </section>
+
+    </div>
+
+    <div class="note">
+      <span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span>
+      <span>日报由模型从当天精选里整理，08:00 出刊</span>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="feed.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7.5" r="2.6" fill="#2ce2e8"/><circle cx="7" cy="16.5" r="2.6" fill="#fff"/><path d="M13 7.5h8M13 16.5h6"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab on" href="daily.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab" href="sports.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab" href="saved.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab" href="reechi.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

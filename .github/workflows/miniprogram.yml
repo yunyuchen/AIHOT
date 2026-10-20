@@ -1,0 +1,95 @@
+# 小程序（apps/miniprogram）的检查：安装、类型检查、单测、按正式配置构建，再确认产物里没有开发地址、主包不超过 2MB。
+# 另按正式配置构建不带运动健康 tab 的四 tab 备用版（规格风险 R11：保证一天内能提审），核对 tab 数，上传成 artifact。
+# 小程序是独立的 npm 包，不在根 workspaces 里，只在它自己、契约包或行业包的分类表（单测拿它核对分类配色）变了时跑；和 check.yml 互不影响。
+# 只用 GitHub 自己的 actions，钉到完整 commit SHA。
+name: Miniprogram
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/miniprogram/**"
+      - "packages/contracts/**"
+      - "industry-packs/*/taxonomy.ts"
+      - ".github/workflows/miniprogram.yml"
+  pull_request:
+    paths:
+      - "apps/miniprogram/**"
+      - "packages/contracts/**"
+      - "industry-packs/*/taxonomy.ts"
+      - ".github/workflows/miniprogram.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: miniprogram-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  miniprogram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/miniprogram
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install
+        # --no-workspaces：让 npm 把这个目录当独立的包装，不往上找根项目的工作区。
+        run: npm ci --no-workspaces --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Tab icons within 40KB
+        run: |
+          big=$(find src/assets/tab -name '*.png' -size +40k)
+          if [ -n "$big" ]; then echo "tabBar 图标超过 40KB：$big"; exit 1; fi
+      - name: Build with the prod config
+        run: npm run build:weapp
+      - name: Build the fallback without the sports tab
+        # 正式配置去掉运动健康板块（--mode prod-no-sports），产物在 dist-no-sports/，不覆盖 dist/。
+        run: npm run build:weapp:no-sports
+      - name: Tabs follow the board list
+        # 完整版五个 tab，备用版四个、没有运动健康的 tab 和页面（tabBar 和页面都由板块列表推出来，见 src/lib/tabs.ts）。
+        run: |
+          node -e '
+            const fs = require("fs");
+            const expect = { dist: 5, "dist-no-sports": 4 };
+            for (const [dir, count] of Object.entries(expect)) {
+              const app = JSON.parse(fs.readFileSync(`${dir}/app.json`, "utf8"));
+              const tabs = app.tabBar.list.map((t) => t.pagePath);
+              const sports = tabs.includes("pages/sports/index") || app.pages.includes("pages/sports/index");
+              console.log(`${dir}: ${tabs.length} 个 tab：${app.tabBar.list.map((t) => t.text).join("、")}`);
+              if (tabs.length !== count || sports !== (count === 5)) { console.error(`${dir} 的 tab 不对`); process.exit(1); }
+            }
+          '
+      - name: No development addresses in the builds
+        run: |
+          if grep -rEn '127\.0\.0\.1|localhost|0\.0\.0\.0' dist dist-no-sports; then echo "构建产物里有开发地址"; exit 1; fi
+      - name: Main package within 2MB
+        # 口径：dist/ 下所有文件的字节数之和（不含目录本身），就是上传给微信的代码包。所有页面都放主包、不分包
+        # （规格“小程序工程”），所以整份算主包；project.config.json 也算在内，偏保守。备用版 dist-no-sports/ 同样算。
+        # 上限 2MB（2097152 字节）超过就失败，目标 1.5MB（1572864 字节）超过只打警告。正式包不该带 source map。
+        run: |
+          for dir in dist dist-no-sports; do
+            if [ -n "$(find "$dir" -name '*.map')" ]; then echo "$dir 里有 source map"; exit 1; fi
+            bytes=$(find "$dir" -type f -printf '%s\n' | awk '{ s += $1 } END { print s + 0 }')
+            echo "$dir 主包 ${bytes} 字节（$((bytes / 1024)) KB）"
+            if [ "$bytes" -gt 2097152 ]; then echo "$dir 主包超过 2MB 上限"; exit 1; fi
+            if [ "$bytes" -gt 1572864 ]; then echo "::warning::$dir 主包 ${bytes} 字节，超过 1.5MB 的目标"; fi
+          done
+      - name: Upload the four-tab fallback
+        # 下载解压后在微信开发者工具里“导入项目”选这个目录即可打开、上传（R11）。uses 的路径从仓库根算，不受上面的 working-directory 影响。
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: miniprogram-no-sports
+          path: apps/miniprogram/dist-no-sports
+          if-no-files-found: error

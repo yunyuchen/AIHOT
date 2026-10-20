@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 运动健康</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做小方块和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px; background: var(--work);
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .scroll {
+    position: absolute; left: 0; top: 0; width: 390px; height: 761px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- 深色头部（比精选矮，没有扫描条） ---------- */
+  .dash {
+    background: var(--ink); color: #fff;
+    padding: 47px 16px 44px;
+  }
+  .nav {
+    height: 44px; display: flex; align-items: center;
+    padding-right: 90px; /* 右侧留给微信胶囊 */
+  }
+  .nav svg { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+  .nav h1 { font-size: 17px; font-weight: 600; margin-left: 9px; letter-spacing: .5px; }
+
+  .reading {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-top: 6px;
+  }
+  .sample { /* 示例内容：虚线框表示占位 */
+    display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px;
+    border: 1px dashed var(--star); background: rgba(44,226,232,.12); border-radius: 4px;
+    color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  }
+  .sample svg { width: 14px; height: 14px; fill: none; stroke: var(--star); stroke-width: 1.8; stroke-linecap: round; }
+  .today strong { display: block; font-size: 24px; font-weight: 700; line-height: 32px; letter-spacing: .3px; margin-top: 6px; }
+  .meters { display: flex; }
+  .meter { padding: 0 12px; text-align: left; border-left: 1px solid rgba(255,255,255,.14); }
+  .meter:first-child { border-left: 0; padding-left: 0; }
+  .meter:last-child { padding-right: 0; }
+  .meter b { display: block; font-size: 24px; font-weight: 700; line-height: 28px; }
+  .meter span { display: block; font-size: 12px; color: var(--fog); line-height: 17px; }
+  .lede { font-size: 13px; line-height: 19px; color: var(--fog); margin-top: 10px; }
+
+  /* ---------- 分类一行：钉在头部下沿 ---------- */
+  .filter {
+    position: relative; display: flex; gap: 2px; margin: -28px 16px 0; padding: 4px;
+    background: var(--card); border-radius: 14px;
+    box-shadow: 0 14px 28px -10px rgba(19,25,28,.32), 0 2px 6px rgba(19,25,28,.08);
+  }
+  .seg {
+    flex: 1 1 0; min-width: 0; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; white-space: nowrap;
+  }
+  .seg.all { flex: none; width: 52px; }
+  .seg.on { background: var(--ink); color: #fff; font-weight: 600; }
+  .seg i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+  /* ---------- 分类色标、AI 标识、在报 ---------- */
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row .gap { flex: 1; }
+  .cat {
+    display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px 0 6px;
+    border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap;
+  }
+  .cat i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  /* 这个行业的四个分类借用基准的色值 */
+  .cat.job   { background: rgba(59,123,246,.12); }  .cat.job i,   .seg .job   { background: var(--c-semi); }
+  .cat.sleep { background: rgba(143,108,246,.13); } .cat.sleep i, .seg .sleep { background: var(--c-film); }
+  .cat.move  { background: rgba(31,181,122,.13); }  .cat.move i,  .seg .move  { background: var(--c-storage); }
+  .cat.race  { background: rgba(255,122,69,.15); }  .cat.race i,  .seg .race  { background: var(--c-battery); }
+
+  .ai {
+    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px 0 5px;
+    background: var(--ink); color: #fff; border-radius: 4px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .ai svg { width: 8px; height: 8px; fill: var(--star); }
+
+  .echo-chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 7px;
+    background: #eef0f2; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; flex: none;
+  }
+  .echo-chip .bars { display: flex; gap: 2px; }
+  .echo-chip .bars i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); }
+
+  /* ---------- 时间轴 ---------- */
+  .axis { position: relative; padding: 14px 16px 24px 0; }
+  .axis::before { /* 整根轴 */
+    content: ""; position: absolute; left: 23px; top: 14px; bottom: 0; width: 2px; background: var(--rail);
+  }
+  .period { position: relative; }
+  .period.live::before { /* 当前时段这一段轴是青色 */
+    content: ""; position: absolute; left: 23px; top: 8px; bottom: -4px; width: 2px; background: var(--star); z-index: 0;
+  }
+  .phead {
+    position: relative; z-index: 1; display: flex; align-items: center; height: 24px;
+    padding-left: 40px;
+  }
+  .phead .pn {
+    position: absolute; left: 18px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--work); box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  .period.live .phead .pn {
+    left: 15px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); box-shadow: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .period.live .phead .pn svg { width: 11px; height: 11px; fill: var(--star); }
+  .phead strong { font-size: 14px; font-weight: 700; }
+  .phead span { font-size: 12px; color: var(--iron); margin-left: 8px; }
+  .phead em { font-style: normal; font-size: 12px; color: var(--iron); margin-left: auto; }
+
+  .item { position: relative; z-index: 1; margin: 8px 0 0 40px; }
+  .item + .item { margin-top: 12px; }
+  .item .node {
+    position: absolute; left: -21px; top: 17px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink);
+  }
+  .item .hang {
+    position: absolute; left: -13px; top: 20px; width: 13px; height: 2px; background: var(--rail);
+  }
+  .period.live .item .node { background: var(--star); box-shadow: 0 0 0 2px var(--ink); }
+  .period.live .item .hang { background: var(--ink); }
+  .card {
+    display: block; color: inherit; text-decoration: none;
+    background: var(--card); border-radius: 3px 12px 12px 12px;
+    padding: 11px 14px 12px; min-height: 44px;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .card h3 {
+    font-size: 16px; line-height: 22px; font-weight: 600; margin-top: 7px; text-wrap: pretty;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card p {
+    font-size: 13px; line-height: 19px; color: var(--body); margin-top: 4px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .card .foot { display: flex; align-items: center; gap: 8px; margin-top: 9px; min-height: 20px; }
+  .card .src { font-size: 12px; line-height: 17px; color: var(--iron); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- 原生 tabBar ---------- */
+  .tabbar {
+    position: absolute; left: 0; bottom: 0; width: 390px; height: 83px;
+    background: #fff; box-shadow: inset 0 .5px 0 rgba(0,0,0,.14);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; color: #6b757e; text-decoration: none;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab span { font-size: 10px; line-height: 14px; margin-top: 2px; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="scroll">
+
+    <header class="dash">
+      <div class="nav">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+        <h1>锐奇热点</h1>
+      </div>
+
+      <div class="reading">
+        <div class="today">
+          <span class="sample"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v4"/><path d="M8 4.8v.01"/></svg>示例内容</span>
+          <strong>运动健康</strong>
+        </div>
+        <div class="meters num">
+          <div class="meter"><b>4</b><span>条示例</span></div>
+          <div class="meter"><b>4</b><span>个分类</span></div>
+        </div>
+      </div>
+      <p class="lede">健康生活与大众运动，每天十来条。<br>不做诊疗建议，不推荐药品和保健品</p>
+    </header>
+
+    <nav class="filter" aria-label="分类">
+      <a class="seg all on" href="#">全部</a>
+      <a class="seg" href="#"><i class="job"></i>职业健康</a>
+      <a class="seg" href="#"><i class="sleep"></i>睡眠营养</a>
+      <a class="seg" href="#"><i class="move"></i>大众运动</a>
+      <a class="seg" href="#"><i class="race"></i>赛事</a>
+    </nav>
+
+    <!-- 时间轴：新的在上。这屏条目全是占位，只演示版式 -->
+    <section class="axis">
+
+      <div class="period live">
+        <div class="phead"><i class="pn"><svg aria-hidden="true"><use href="#star"/></svg></i><strong>今天</strong><span class="num">10月16日</span><em>2 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html">
+            <div class="row"><span class="cat job"><i></i>职业健康</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>[示例标题] 久站工位的腰背负担：三个随时能做的拉伸动作</h3>
+            <p>[示例摘要] 这一条的位置将来放的是模型从信源里挑出并改写的内容。此处只演示版式，不是真实消息。</p>
+            <div class="foot"><span class="src">[示例来源]</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html">
+            <div class="row"><span class="cat sleep"><i></i>睡眠营养</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>[示例标题] 倒班之后怎么补觉，才不会越睡越累</h3>
+            <p>[示例摘要] 健康类内容只转公共卫生机构和专业媒体的生活建议，涉及疾病和用药的不进这个板块。</p>
+            <div class="foot"><span class="src">[示例来源]</span></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="period">
+        <div class="phead" style="margin-top:14px"><i class="pn"></i><strong>昨天</strong><span class="num">10月15日</span><em>2 条</em></div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="story.html">
+            <div class="row"><span class="cat move"><i></i>大众运动</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>[示例标题] 周末跑 5 公里前：配速、热身与补水</h3>
+            <p>[示例摘要] 多家来源说同一件事时也会归成事件，点进去能看到各家怎么说。</p>
+            <div class="foot"><span class="src">[示例来源]</span><span class="echo-chip num"><span class="bars"><i></i><i></i><i></i></span>3 家在报</span></div>
+          </a>
+        </div>
+
+        <div class="item">
+          <i class="node"></i><i class="hang"></i>
+          <a class="card" href="item.html">
+            <div class="row"><span class="cat race"><i></i>赛事</span><span class="gap"></span><span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span></div>
+            <h3>[示例标题] 11 月可报名的马拉松赛事一览</h3>
+            <p>[示例摘要] 要不要职业体育赛果和明星新闻，是草案里留给老板拍板的问题之一。</p>
+            <div class="foot"><span class="src">[示例来源]</span></div>
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="feed.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7.5" r="2.6" fill="#2ce2e8"/><circle cx="7" cy="16.5" r="2.6" fill="#fff"/><path d="M13 7.5h8M13 16.5h6"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab" href="daily.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab on" href="sports.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab" href="saved.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab" href="reechi.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

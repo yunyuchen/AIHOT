@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 锐奇</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做小圆点和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px; background: var(--work);
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .scroll {
+    position: absolute; left: 0; top: 0; width: 390px; height: 761px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- 深色头部（比精选矮） ---------- */
+  .dash {
+    background: var(--ink); color: #fff;
+    padding: 47px 16px 40px;
+  }
+  .nav {
+    height: 44px; display: flex; align-items: center;
+    padding-right: 90px; /* 右侧留给微信胶囊 */
+  }
+  .nav svg { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+  .nav h1 { font-size: 17px; font-weight: 600; margin-left: 9px; letter-spacing: .5px; }
+
+  .brand { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+  .brand svg { flex: none; width: 56px; height: 56px; border-radius: 13px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+  .brand h2 { font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: .5px; }
+  .brand p { font-size: 13px; line-height: 19px; color: var(--fog); margin-top: 1px; }
+
+  /* ---------- 白卡 ---------- */
+  .sheet {
+    position: relative; margin: 10px 16px 0;
+    background: var(--card); border-radius: 12px;
+    padding: 14px 16px 16px;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .sheet.lead { /* 第一张卡压在深色头部下沿，同精选的焦点卡 */
+    margin-top: -24px; border-radius: 14px;
+    box-shadow: 0 14px 28px -10px rgba(19,25,28,.32), 0 2px 6px rgba(19,25,28,.08);
+  }
+  .sheet h3 { font-size: 15px; line-height: 22px; font-weight: 700; letter-spacing: .2px; }
+  .sheet .text { font-size: 14px; line-height: 22px; color: var(--body); margin-top: 6px; overflow-wrap: anywhere; }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+  .tile {
+    min-height: 76px; padding: 12px; border-radius: 10px; background: var(--work);
+    display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+  }
+  .tile svg { width: 22px; height: 22px; fill: none; stroke: var(--iron); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tile span { font-size: 13px; line-height: 18px; color: var(--body); }
+
+  /* ---------- 列表卡 ---------- */
+  .list { padding: 4px 0; }
+  .cell {
+    display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px 0 16px;
+    color: var(--ink); text-decoration: none;
+  }
+  .cell .ico { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .cell .body {
+    flex: 1; min-width: 0; align-self: stretch;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cell + .cell .body { box-shadow: inset 0 1px 0 #eceef0; }
+  .cell .lbl { font-size: 15px; line-height: 21px; white-space: nowrap; }
+  .cell .val { margin-left: auto; font-size: 13px; line-height: 18px; color: var(--iron); white-space: nowrap; }
+  .cell .chev { flex: none; width: 16px; height: 16px; margin-left: auto; fill: none; stroke: var(--iron); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .cell .val + .chev { margin-left: 0; }
+
+  .note { padding: 14px 20px 16px; font-size: 12px; line-height: 19px; color: var(--iron); overflow-wrap: anywhere; }
+
+  /* ---------- 原生 tabBar ---------- */
+  .tabbar {
+    position: absolute; left: 0; bottom: 0; width: 390px; height: 83px;
+    background: #fff; box-shadow: inset 0 .5px 0 rgba(0,0,0,.14);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; color: #6b757e; text-decoration: none;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab span { font-size: 10px; line-height: 14px; margin-top: 2px; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="scroll">
+
+    <header class="dash">
+      <div class="nav">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+        <h1>锐奇热点</h1>
+      </div>
+
+      <div class="brand">
+        <svg viewBox="0 0 512 512" role="img" aria-label="锐奇 logo"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+        <div>
+          <h2>锐奇</h2>
+          <p>[一句话介绍，待客户提供]</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="sheet lead">
+      <h3>关于锐奇</h3>
+      <p class="text">[公司介绍：做什么、服务哪些行业、在哪里。两到三段，待客户提供]</p>
+    </section>
+
+    <section class="sheet">
+      <h3>产品与案例</h3>
+      <div class="tiles">
+        <div class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg>
+          <span>[产品一，待提供]</span>
+        </div>
+        <div class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg>
+          <span>[产品二，待提供]</span>
+        </div>
+      </div>
+    </section>
+
+    <nav class="sheet list" aria-label="更多">
+      <a class="cell" href="#">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5h3l1.6 4.2-2 1.3a10.5 10.5 0 0 0 5.8 5.8l1.3-2 4.2 1.6v3a2 2 0 0 1-2.1 2A16.6 16.6 0 0 1 4.6 5.6a2 2 0 0 1 2-2.1z"/></svg>
+        <span class="body"><span class="lbl">联系我们</span><span class="val">[电话 / 邮箱 / 地址，待提供]</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="cell" href="#">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".4"/></svg>
+        <span class="body"><span class="lbl">关于锐奇热点</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="cell" href="#">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-10z"/><path d="M14 3.5v5h5M8.8 13h6.4M8.8 16.5h4"/></svg>
+        <span class="body"><span class="lbl">用户协议</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="cell" href="#">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l7 2.8v5.2c0 4.4-2.9 8-7 9.6-4.1-1.6-7-5.2-7-9.6V6z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg>
+        <span class="body"><span class="lbl">隐私说明</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="cell" href="#">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h15v10.5h-9l-4 3.5v-3.5h-2z"/><path d="M8.5 9.5h7M8.5 12.5h4.5"/></svg>
+        <span class="body"><span class="lbl">反馈与侵权投诉</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+    </nav>
+
+    <p class="note">本小程序中的中文标题、摘要和日报由人工智能生成，仅作阅读索引，原文版权归各来源所有。不收集个人信息，唯一例外是点“提醒我明天的日报”时临时保存的微信标识；收藏只存在本机。</p>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="feed.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7.5" r="2.6" fill="#2ce2e8"/><circle cx="7" cy="16.5" r="2.6" fill="#fff"/><path d="M13 7.5h8M13 16.5h6"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab" href="daily.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab" href="sports.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab" href="saved.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab on" href="reechi.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

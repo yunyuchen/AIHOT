@@ -1,0 +1,34 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-16T23:16:23Z" },
+  "title": "锐奇热点 原型",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 390, "h": 844, "title": "精选（制造板块）", "is_interactive": true, "radius": 40 },
+    "Item.dc.html": { "x": 470, "y": 0, "w": 390, "h": 844, "title": "条目页", "is_interactive": true, "radius": 40 },
+    "Story.dc.html": { "x": 940, "y": 0, "w": 390, "h": 844, "title": "事件页", "is_interactive": true, "radius": 40 },
+    "Daily.dc.html": { "x": 1410, "y": 0, "w": 390, "h": 844, "title": "日报（仅制造）", "is_interactive": true, "radius": 40 },
+    "Sports.dc.html": { "x": 0, "y": 964, "w": 390, "h": 844, "title": "运动健康板块（示例内容）", "is_interactive": true, "radius": 40 },
+    "Saved.dc.html": { "x": 470, "y": 964, "w": 390, "h": 844, "title": "收藏", "is_interactive": true, "radius": 40 },
+    "Reechi.dc.html": { "x": 940, "y": 964, "w": 390, "h": 844, "title": "锐奇", "is_interactive": true, "radius": 40 },
+    "Share.dc.html": { "x": 1410, "y": 964, "w": 390, "h": 844, "title": "分享卡片" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Item.dc.html",
+    "Story.dc.html",
+    "Daily.dc.html",
+    "Sports.dc.html",
+    "Saved.dc.html",
+    "Reechi.dc.html",
+    "Share.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "锐奇热点 · V1 原型 · 2026-10-17", "kind": "title1", "maxW": 1800 },
+    "s1": { "x": 1880, "y": 0, "w": 280, "text": "底部五个 tab：精选、日报、运动健康、收藏、锐奇。精选、条目、事件、日报是制造板块；运动健康是另一个行业实例的内容流。点各屏的 tab 和条目可以在画板之间跳转。", "fill": "teal" },
+    "s2": { "x": 1880, "y": 964, "w": 280, "text": "运动健康屏里的条目全是示例，信源和标准等老板确认草案后替换。锐奇屏里的公司介绍、联系方式等文案待客户提供。", "fill": "orange" },
+    "s3": { "x": 1880, "y": 1300, "w": 280, "text": "没有画微信自带的状态栏和右上角胶囊。所有摘要带“AI 摘要”标识；条目页只给“复制来源链接”，不在小程序里打开原站。", "fill": "gray" }
+  },
+  "designSystems": []
+}

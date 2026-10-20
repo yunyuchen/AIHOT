@@ -9,3 +9,5 @@ apps/web/.react-router
 .git
 .github
 *.log
+# 小程序是独立的 npm 包，不进后端镜像
+apps/miniprogram

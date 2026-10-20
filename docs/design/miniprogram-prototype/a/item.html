@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 条目页</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做圆点和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px; background: var(--work);
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .scroll {
+    position: absolute; left: 0; top: 0; width: 390px; height: 761px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+  /* ---------- 墨色顶部（下钻页：只放返回和短标题） ---------- */
+  .dash {
+    background: var(--ink); color: #fff;
+    padding: 47px 16px 34px;
+  }
+  .nav {
+    height: 44px; display: flex; align-items: center;
+    padding-right: 90px; /* 右侧留给微信胶囊 */
+  }
+  .back {
+    width: 44px; height: 44px; margin-left: -6px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .back i {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .back svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .nav h1 { font-size: 17px; font-weight: 600; margin-left: 6px; letter-spacing: .5px; }
+
+  /* ---------- 正文主卡：压在墨色下沿，同精选焦点卡 ---------- */
+  .main {
+    position: relative; margin: -22px 16px 0;
+    background: var(--card); border-radius: 14px;
+    padding: 14px 16px 14px;
+    box-shadow: 0 14px 28px -10px rgba(19,25,28,.32), 0 2px 6px rgba(19,25,28,.08);
+  }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row .gap { flex: 1; }
+  .main h2 {
+    font-size: 20px; line-height: 27px; font-weight: 700; margin-top: 10px; letter-spacing: .2px;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .main .summary {
+    font-size: 15px; line-height: 23px; color: var(--body); margin-top: 8px;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+
+  .why {
+    margin-top: 10px; padding: 10px 12px 11px;
+    background: var(--work); border-radius: 10px;
+  }
+  .why .hd { display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; font-weight: 700; }
+  .why .hd i {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--ink); flex: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .why .hd i svg { width: 9px; height: 9px; fill: var(--star); }
+  .why p { font-size: 13px; line-height: 20px; color: var(--body); margin-top: 4px; overflow-wrap: anywhere; }
+
+  .acts { display: flex; gap: 10px; margin-top: 14px; }
+  .btn {
+    flex: 1; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 14px; font-weight: 600;
+  }
+  .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .btn.ghost { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px #d6dbdf; }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.solid svg { stroke: var(--star); }
+
+  /* ---------- 来源卡、事件入口 ---------- */
+  .panel {
+    margin: 12px 16px 0; background: var(--card); border-radius: 12px;
+    padding: 12px 16px 13px;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .source .top { display: flex; align-items: center; gap: 10px; }
+  .source .who { flex: 1; min-width: 0; }
+  .source .who strong { display: block; font-size: 14px; line-height: 20px; font-weight: 600; }
+  .source .who span { display: block; font-size: 12px; line-height: 17px; color: var(--iron); margin-top: 1px; }
+  .copy {
+    flex: none; height: 44px; padding: 0 12px; border-radius: 10px;
+    background: var(--work); color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+  }
+  .copy svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .source .note {
+    margin-top: 10px; padding-top: 9px; border-top: 1px solid #eceef0;
+    font-size: 12px; line-height: 18px; color: var(--iron);
+  }
+
+  .story { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+  .story .txt { flex: 1; min-width: 0; }
+  .story .hd { display: flex; align-items: center; gap: 8px; }
+  .story .hd strong { font-size: 14px; line-height: 20px; font-weight: 700; }
+  .story .bars { display: flex; gap: 3px; }
+  .story .bars i { width: 6px; height: 6px; border-radius: 50%; background: var(--star); box-shadow: inset 0 0 0 1px rgba(19,25,28,.55); }
+  .story p { font-size: 13px; line-height: 19px; color: var(--body); margin-top: 3px; overflow-wrap: anywhere; }
+  .story .go { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--iron); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- 分类色标、AI 标识 ---------- */
+  .cat {
+    display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px 0 6px;
+    border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap;
+  }
+  .cat i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .cat.semi { background: rgba(59,123,246,.12); } .cat.semi i { background: var(--c-semi); }
+
+  .ai {
+    display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px 0 5px;
+    background: var(--ink); color: #fff; border-radius: 4px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .ai svg { width: 8px; height: 8px; fill: var(--star); }
+
+  /* ---------- 原生 tabBar ---------- */
+  .tabbar {
+    position: absolute; left: 0; bottom: 0; width: 390px; height: 83px;
+    background: #fff; box-shadow: inset 0 .5px 0 rgba(0,0,0,.14);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding-top: 6px; color: #6b757e; text-decoration: none;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab span { font-size: 10px; line-height: 14px; margin-top: 2px; }
+  .tab.on { color: var(--ink); }
+  .tab.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="scroll">
+
+    <header class="dash">
+      <div class="nav">
+        <a class="back" href="feed.html" aria-label="返回精选"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></i></a>
+        <h1>条目详情</h1>
+      </div>
+    </header>
+
+    <article class="main">
+      <div class="row">
+        <span class="cat semi"><i></i>半导体</span>
+        <span class="gap"></span>
+        <span class="ai"><svg aria-hidden="true"><use href="#star"/></svg>AI 摘要</span>
+      </div>
+      <h2>英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</h2>
+      <p class="summary">英飞凌与 Wolfspeed 签署新的 200mm SiC 晶圆多年供应协议，将双方原有供应关系从 150mm 衬底技术转为 200mm。英飞凌 COO Alexander Gorski 表示，该协议拓宽了其 200mm 大规模制造的供应基础，并建立在两家公司 20 年供应关系之上。</p>
+
+      <div class="why">
+        <div class="hd"><i><svg aria-hidden="true"><use href="#star"/></svg></i>为什么值得看</div>
+        <p>200mm 衬底供应落地，直接关系碳化硅产线的量产节奏和配套检测需求。</p>
+      </div>
+
+      <div class="acts">
+        <button class="btn ghost" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>收藏
+        </button>
+        <a class="btn solid" href="share.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5v6a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-6M12 15V4M8 8l4-4 4 4"/></svg>分享给同事
+        </a>
+      </div>
+    </article>
+
+    <section class="panel source" aria-label="来源">
+      <div class="top">
+        <div class="who">
+          <strong>Compound Semiconductor</strong>
+          <span class="num">10-15 发布</span>
+        </div>
+        <button class="copy" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>复制来源链接
+        </button>
+      </div>
+      <p class="note">这里只展示摘要，原文版权归来源所有。复制链接后可在浏览器里打开原文。</p>
+    </section>
+
+    <a class="panel story" href="story.html">
+      <div class="txt">
+        <div class="hd"><strong>同一件事，4 家在报</strong><span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+        <p>Semiconductor Today、SEMI 中国、第三代半导体产业网也报道了，看事件脉络</p>
+      </div>
+      <svg class="go" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </a>
+
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab on" href="feed.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v18"/><circle cx="7" cy="7.5" r="2.6" fill="#2ce2e8"/><circle cx="7" cy="16.5" r="2.6" fill="#fff"/><path d="M13 7.5h8M13 16.5h6"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab" href="daily.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab" href="sports.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab" href="saved.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.8l-5.5 3.7z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab" href="reechi.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+// 原生 button 的默认样式（左右内边距、18 号字和 2.56 倍行高、::after 的细边框、按下变灰）去掉，其余由调用方的类名给。
+// 外边距不在这里动：调用方的类名管左边距（两个按钮之间的间隔），在 flex 行里按 flex: 1 撑开时原生的 auto 外边距算作 0。
+.share-button {
+  padding: 0;
+  line-height: normal;
+  border: 0;
+  &::after {
+    display: none;
+  }
+}
+.share-button--down {
+  opacity: 0.75;
+}

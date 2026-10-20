@@ -1,0 +1,107 @@
+@use "../../styles/tokens" as *;
+
+// 长文：一张白卡，正文 15px、行高 26px，标题和段落间距放宽，方便读完。
+.doc {
+  margin: 10px 16px 24px;
+  padding: 20px 16px 24px;
+  background: $card;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba($ink, 0.06);
+}
+.doc__title {
+  display: block;
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.doc__version {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: $work;
+  font-size: 12px;
+  line-height: 18px;
+  color: $iron;
+}
+.doc__facts {
+  margin-top: 16px;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: $work;
+}
+.doc__fact {
+  display: flex;
+  padding: 6px 0;
+}
+.doc__fact-key {
+  flex: none;
+  width: 92px;
+  padding-right: 8px;
+  box-sizing: border-box;
+  font-size: 13px;
+  line-height: 20px;
+  color: $iron;
+}
+.doc__fact-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: $ink;
+  overflow-wrap: break-word;
+}
+.doc__h {
+  display: block;
+  margin-top: 24px;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 700;
+}
+.doc__p {
+  display: block;
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 26px;
+  color: $body;
+  overflow-wrap: break-word;
+}
+// 固定文案 A 这类要突出的整段：浅底，左侧一道星青竖线（星青只做线条）。
+.doc__quote {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid $star;
+  border-radius: 0 8px 8px 0;
+  background: $work;
+  font-size: 15px;
+  line-height: 26px;
+  color: $ink;
+  overflow-wrap: break-word;
+}
+.doc__list {
+  margin-top: 8px;
+}
+.doc__item {
+  display: flex;
+  margin-top: 4px;
+}
+.doc__marker {
+  flex: none;
+  width: 20px;
+  font-size: 15px;
+  line-height: 26px;
+  color: $iron;
+}
+.doc__item-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 26px;
+  color: $body;
+  overflow-wrap: break-word;
+}
+.doc__term {
+  font-weight: 600;
+  color: $ink;
+}

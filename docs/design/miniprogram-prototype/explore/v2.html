@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 精选</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13191c;        /* 墨钛：logo 底色、头条块、正文 */
+  --cyan:#2ce2e8;       /* 读数青：只做图形、线、底色和深底上的大数字 */
+  --steel:#e6edef;      /* 冷轧灰：页面底 */
+  --white:#ffffff;      /* 卡白 */
+  --graphite:#55636a;   /* 石墨：次要文字，白底 6.2:1，灰底 5.3:1 */
+  --rule:#c3ced2;       /* 刻线：时间轴与细线 */
+  --tint:#d5f7f8;       /* 读数青淡底，只配墨钛字 */
+  --d-battery:#1f9d63; --d-storage:#d99a0e; --d-semi:#5867e8; --d-film:#b8509a;
+  --d-inspect:#2ce2e8; --d-policy:#e0533d; --d-misc:#8b979c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 0;background:#cfd3d5;
+  font-family:'PingFang SC','Noto Sans SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:var(--ink);
+  -webkit-font-smoothing:antialiased}
+.phone{position:relative;flex:none;width:390px;height:844px;overflow:hidden;border-radius:32px;background:var(--steel);
+  box-shadow:0 1px 3px rgba(0,0,0,.16),0 24px 48px -24px rgba(0,0,0,.4)}
+.screen{position:absolute;inset:0 0 83px 0;overflow:hidden}
+.num{font-variant-numeric:tabular-nums}
+
+/* 导航：上 47px 留给状态栏，右侧 90px 留给胶囊 */
+.nav{display:flex;align-items:center;gap:8px;height:44px;margin-top:47px;padding:0 106px 0 16px}
+.nav svg{width:28px;height:28px;flex:none}
+.nav b{font-size:17px;font-weight:600;letter-spacing:.5px}
+
+.dateline{display:flex;align-items:baseline;justify-content:space-between;height:40px;padding:6px 16px 0}
+.dateline .d{font-size:22px;font-weight:800;letter-spacing:-.2px}
+.dateline .w{margin-left:6px;font-size:13px;font-weight:500;color:var(--graphite)}
+.dateline .n{font-size:12px;color:var(--graphite)}
+.dateline .n em{font-style:normal;font-weight:700;color:var(--ink);margin:0 2px}
+
+/* 时间轴 */
+.tl{position:relative;padding:0 16px 24px}
+.tl::before{content:"";position:absolute;left:44px;top:0;bottom:0;width:2px;background:var(--rule)}
+.slot{position:relative;display:grid;grid-template-columns:58px 1fr;margin-top:14px}
+.track{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+.t{position:relative;padding:3px 2px;background:var(--steel);font-size:19px;line-height:22px;font-weight:800;letter-spacing:-.3px}
+.s{position:relative;padding:0 2px 4px;background:var(--steel);font-size:11px;line-height:14px;font-weight:500;color:var(--graphite)}
+.cards{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+.card{position:relative;padding:12px 14px;border-radius:12px;background:var(--white);
+  box-shadow:0 0 0 .5px rgba(19,25,28,.07),0 1px 2px rgba(19,25,28,.16),0 3px 6px -3px rgba(19,25,28,.2)}
+/* 同一时段里的后续卡：轴上一个小环 + 一根刻线短桩 */
+.cards > .card:not(:first-child)::before{content:"";position:absolute;left:-33px;top:16px;width:8px;height:8px;border-radius:50%;
+  background:var(--steel);border:2px solid var(--ink)}
+.cards > .card:not(:first-child)::after{content:"";position:absolute;left:-25px;top:20px;width:25px;height:1px;background:var(--rule)}
+.row1{display:flex;align-items:center;justify-content:space-between;height:18px}
+.cat{display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:16px;font-weight:600}
+.cat i{width:7px;height:7px;border-radius:50%;background:var(--dot);box-shadow:0 0 0 1px rgba(19,25,28,.08)}
+.ai{height:18px;padding:0 5px;border:1px solid var(--rule);border-radius:4px;font-size:11px;line-height:16px;font-weight:500;color:#3f4c52;white-space:nowrap}
+.ttl{margin-top:6px;font-size:16px;line-height:22px;font-weight:600;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sum{margin-top:3px;font-size:13px;line-height:18px;color:var(--graphite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;line-height:18px;font-weight:500;color:var(--graphite)}
+.meta .src{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.meta .many{flex:none;padding:0 7px;border-radius:9px;background:var(--tint);font-size:11px;font-weight:600;color:var(--ink)}
+.meta time{flex:none;margin-left:auto}
+
+/* 头条：整页唯一的深色块，横跨轨道，青星就是轴的起点 */
+.head{position:relative;z-index:1;display:grid;grid-template-columns:58px 1fr;padding:16px 16px 16px 0;border-radius:18px;
+  background:var(--ink);color:#fff;box-shadow:0 1px 2px rgba(19,25,28,.35),0 8px 16px -8px rgba(19,25,28,.5)}
+.head .track{padding-top:0}
+.head .star{width:22px;height:22px;display:block}
+.head .focus{margin-top:6px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:1px}
+.head .track::after{content:"";flex:1;width:2px;margin:8px 0 -16px;background:#2e3f45}
+.head .cat{color:#e6eef0}
+.head .ai{border-color:#41545b;color:#cfdde1}
+.head h2{margin-top:8px;font-size:19px;line-height:25px;font-weight:700}
+.head p{margin-top:6px;font-size:13px;line-height:19px;color:#b3c2c7;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ro{margin-top:14px}
+.ro-top{display:flex;align-items:baseline;justify-content:space-between}
+.ro-n{font-size:30px;line-height:30px;font-weight:800;color:var(--cyan)}
+.ro-n small{margin-left:4px;font-size:12px;font-weight:600;color:#fff}
+.ro-span{font-size:12px;color:#b3c2c7}
+.ro-bar{display:block;width:100%;height:16px;margin-top:6px}
+.ro-ends{display:flex;justify-content:space-between;gap:12px;margin-top:4px;font-size:11px;line-height:15px;color:#9fb2b8}
+.ro-ends > span:last-child{text-align:right}
+.ro-ends b{display:block;font-weight:500;color:#e6eef0}
+
+/* 08:00 日报出刊 */
+.issue{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:1px solid var(--rule);border-radius:12px}
+.issue svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.issue div{flex:1;min-width:0}
+.issue small{display:block;font-size:11px;line-height:15px;color:var(--graphite)}
+.issue strong{display:block;font-size:13px;line-height:19px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* tabBar：49px + 34px 安全区 */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:83px;padding-bottom:34px;display:flex;background:#fff;box-shadow:0 -.5px 0 #cbd2d5}
+.tab{flex:1;height:49px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:10px;line-height:14px;font-weight:500;color:#5f6b70}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="screen">
+    <header class="nav">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+      <b>锐奇热点</b>
+    </header>
+
+    <div class="dateline">
+      <div><span class="d num">10月16日</span><span class="w">周五</span></div>
+      <div class="n">从<em class="num">150</em>个信源选出<em class="num">12</em>条</div>
+    </div>
+
+    <main class="tl">
+      <!-- 焦点：置顶，不占时间轴上的时刻 -->
+      <article class="head">
+        <div class="track">
+          <svg class="star" viewBox="92 92 328 328" aria-hidden="true"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+          <span class="focus">焦点</span>
+        </div>
+        <div>
+          <div class="row1">
+            <span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span>
+            <span class="ai">AI 摘要</span>
+          </div>
+          <h2>英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</h2>
+          <p>双方原有供货关系从 150mm 衬底转向 200mm，直接支持英飞凌向 200mm 碳化硅制造转型，并增强供应链韧性。</p>
+          <div class="ro">
+            <div class="ro-top">
+              <span class="ro-n num">4<small>家在报</small></span>
+              <span class="ro-span num">持续 33 小时</span>
+            </div>
+            <!-- 4 个刻度 = 4 家来源的真实报道时间（10-15 08:00 → 10-16 16:57） -->
+            <svg class="ro-bar" viewBox="0 0 284 16" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="1" y="7" width="282" height="2" fill="#2ce2e8"/>
+              <rect x="0" y="2" width="2" height="12" fill="#2ce2e8"/>
+              <rect x="125.6" y="2" width="2" height="12" fill="#2ce2e8"/>
+              <rect x="205.4" y="2" width="2" height="12" fill="#2ce2e8"/>
+              <rect x="281" y="0" width="3" height="16" fill="#2ce2e8"/>
+            </svg>
+            <div class="ro-ends num">
+              <span>首报 10-15 08:00<b>Compound Semiconductor</b></span>
+              <span>最新 10-16 16:57<b>Semiconductor Today</b></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="slot">
+        <div class="track"><span class="t num">19:18</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-battery)"><i></i>锂电</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">大众在欧洲为多款 ID. 车型准备高压电芯召回</h3>
+            <p class="sum">大众因高压电池电芯可能存在缺陷，正在德国及其他欧洲市场为多款 ID. 系列电动车准备召回，官方建议充电上限设为 80%。</p>
+            <div class="meta"><span class="src">Electrive</span><time class="num">19:18</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">18:01</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">普雷赛斯完成亿元级A轮融资，用于量产交付与先进封装量检测攻关</h3>
+            <p class="sum">专注半导体量检测设备，覆盖三维形貌、薄膜厚度、关键尺寸、套刻精度、2D&amp;3D AOI 等检测方案。</p>
+            <div class="meta"><span class="src">第三代半导体产业网</span><time class="num">18:01</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">17:03</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">GlobalFoundries 的 CHIPS 补贴修订，支持纽约和佛蒙特 50 亿美元投资</h3>
+            <p class="sum">美国商务部重新分配最多 9.55 亿美元激励资金，用于 Malta 和 Burlington 工厂的现代化与扩建。</p>
+            <div class="meta"><span class="src">Semiconductor Today</span><time class="num">17:03</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">16:05</span><span class="s">2 条</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-policy)"><i></i>政策与标准</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">欧盟电池护照2027年2月强制生效，宁德时代、中创新航披露GBA试点准备进展</h3>
+            <p class="sum">2027年2月18日起投放欧盟市场的电动汽车电池、轻型交通工具电池和 2kWh 以上工业电池须配备电子电池护照。</p>
+            <div class="meta"><span class="src">OFweek锂电网·锂电池</span><time class="num">16:05</time></div>
+          </article>
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-battery)"><i></i>锂电</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">宝马第六代动力电池沈阳量产，960颗46毫米大圆柱电芯支撑1213公里不补电挑战</h3>
+            <p class="sum">采用 4695 和 46120 两种规格大圆柱电芯，Cell-to-Pack 无模组设计，电芯级体积能量密度比第五代提升超20%。</p>
+            <div class="meta"><span class="src">OFweek锂电网·锂电池</span><time class="num">16:04</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">14:19</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-battery)"><i></i>锂电</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">亿昇达绍兴0.5GWh大圆柱固态电池产线投产</h3>
+            <p class="sum">现场达成首批500万只大圆柱电芯的战略框架，面向煤矿等特种装备领域。</p>
+            <div class="meta"><span class="src">电池网</span><time class="num">14:19</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">13:50</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">北方华创全资收购诺合键维，布局混合键合设备</h3>
+            <p class="sum">诺合键维的混合键合设备实现纳米级对准精度，将与北方华创先进封装装备形成互补。</p>
+            <div class="meta"><span class="src">第三代半导体产业网</span><time class="num">13:50</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">08:00</span><span class="s">出刊</span></div>
+        <div class="cards">
+          <a class="issue">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3.5h9.5l3.5 3.5v13.5h-13z"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/></svg>
+            <div><small class="num">10-16 日报已出刊，头条</small><strong>七部门印发新型电池产业“十五五”规划</strong></div>
+            <span class="ai">AI 摘要</span>
+          </a>
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">拓荆科技拟25亿元收购无锡尚积100%股权，补齐PVD与刻蚀设备</h3>
+            <p class="sum">以发行股份及支付现金方式收购，并募集配套资金不超过18.2亿元。</p>
+            <div class="meta"><span class="src">艾邦半导体网</span><span class="many">3 家在报</span><time class="num">08:00</time></div>
+          </article>
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">晶洲装备发布国内首个TGV中试开放平台，提供工艺开发到量产导入一站式验证</h3>
+            <p class="sum">制孔通孔直径15–200μm，均匀性±0.5μm@50μm，兼容玻璃厚度0.1mm–1.1mm。</p>
+            <div class="meta"><span class="src">艾邦半导体网</span><time class="num">08:00</time></div>
+          </article>
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">玻芯成16层玻璃堆叠GCP下线投产</h3>
+            <p class="sum">从工程样品研发阶段迈入产品级小批量生产阶段，此前已完成6层、8层、22层堆叠工艺验证。</p>
+            <div class="meta"><span class="src">艾邦半导体网</span><time class="num">08:00</time></div>
+          </article>
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-semi)"><i></i>半导体</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">北方华创4.05亿元全资收购混合键合设备商诺合键维</h3>
+            <p class="sum">拟以现金约4.05亿元收购装备二期基金持有的诺合键维100%股权，双方于10月15日签署协议。</p>
+            <div class="meta"><span class="src">SEMI 中国·半导体</span><span class="many">2 家在报</span><time class="num">08:00</time></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="slot">
+        <div class="track"><span class="t num">00:00</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="row1"><span class="cat" style="--dot:var(--d-film)"><i></i>薄膜与材料</span><span class="ai">AI 摘要</span></div>
+            <h3 class="ttl">平安电工拟定增13亿元，投建泰国及湖北通城电子布基地</h3>
+            <p class="sum">投向泰国云母绝缘材料基地、泰国电子布基地、国内高性能电子布基地及补充流动资金。</p>
+            <div class="meta"><span class="src">中国粉体网</span><time class="num">00:00</time></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab on">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5v17"/><rect x="10" y="4" width="10.5" height="6.5" rx="1.6" fill="#2ce2e8"/><rect x="10" y="13.5" width="10.5" height="6.5" rx="1.6"/><circle cx="6" cy="7.25" r="2" fill="#13191c"/><circle cx="6" cy="16.75" r="2" fill="#fff"/></svg>
+      <span>精选</span>
+    </a>
+    <a class="tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 3.5h9.5l3.5 3.5v13.5h-13z"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/></svg>
+      <span>日报</span>
+    </a>
+    <a class="tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-8-4.9-8-10.6A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 8 2.6c0 5.7-8 10.6-8 10.6z"/><path d="M7 12.6h2.4l1.3-2.2 2.2 4.2 1.3-2h2.8"/></svg>
+      <span>运动健康</span>
+    </a>
+    <a class="tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10a1 1 0 0 1 1 1v16l-6-4.2-6 4.2v-16a1 1 0 0 1 1-1z"/></svg>
+      <span>收藏</span>
+    </a>
+    <a class="tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 6.8C12.5 10.1 13.9 11.5 17.2 12C13.9 12.5 12.5 13.9 12 17.2C11.5 13.9 10.1 12.5 6.8 12C10.1 11.5 11.5 10.1 12 6.8Z"/></svg>
+      <span>锐奇</span>
+    </a>
+  </nav>
+</div>
+</body>
+</html>

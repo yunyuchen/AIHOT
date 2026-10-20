@@ -1,0 +1,23 @@
+{
+  "include": ["src", "types", "config", "tests", "scripts"],
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "types": ["node"],
+    // 契约类型直接读契约包的源文件，只用 import type，构建时被擦掉，不进 npm 依赖（见 README）。
+    "paths": {
+      "@aihot/contracts/miniprogram": ["../../packages/contracts/src/miniprogram.ts"]
+    }
+  }
+}

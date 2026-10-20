@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 精选 v3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&display=swap">
+<style>
+  :root {
+    --ink: #13191c;      /* 墨：字、顶栏、头条卡 */
+    --cyan: #2ce2e8;     /* 锐青：时间轨、角标、星，只做图形和底色 */
+    --signal: #e8642c;   /* 信号橙：与锐青同为 S80% L54%，只给政策与标准做底色 */
+    --paper: #ffffff;    /* 纸白：今天这一页 */
+    --mist: #f1f5f6;     /* 雾：普通卡底 */
+    --ink2: #56626a;     /* 灰墨：次要字，白底 6.3:1，雾底 5.7:1 */
+    --tint: #d3f6f8;     /* 锐青浅底：分类签 */
+    --line: #e1e7e9;
+    --sys: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #dcdfe0;
+    font-family: var(--sys);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    overflow: hidden;
+    border-radius: 40px;
+    background: var(--ink);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 24px 60px rgba(19,25,28,.18);
+  }
+
+  /* 顶栏：放大的 logo，墨底青星 */
+  .top { padding: 47px 16px 0; color: #fff; }
+  .nav { height: 44px; display: flex; align-items: center; gap: 8px; padding-right: 90px; }
+  .nav svg { width: 26px; height: 26px; display: block; border-radius: 7px; box-shadow: 0 0 0 1px rgba(255,255,255,.22); }
+  .nav b { font-size: 17px; font-weight: 600; letter-spacing: .5px; }
+  .day { display: flex; align-items: flex-end; gap: 12px; padding: 4px 0 24px; }
+  .day .num {
+    font-family: 'Noto Sans SC', var(--sys);
+    font-weight: 900; font-size: 42px; line-height: 40px;
+    letter-spacing: -1px; font-variant-numeric: tabular-nums;
+  }
+  .day .num i { font-style: normal; color: var(--cyan); margin: 0 2px; font-weight: 700; }
+  .day .side { padding-bottom: 1px; }
+  .day .wk { font-size: 14px; line-height: 18px; font-weight: 700; }
+  .day .say { font-size: 12px; line-height: 17px; color: #b3c0c3; }
+
+  /* 今天这一页：压在墨底上的白页 */
+  .sheet {
+    position: absolute; left: 0; right: 0; top: 141px; bottom: 83px;
+    background: var(--paper);
+    border-radius: 16px 16px 0 0;
+    overflow-y: auto; scrollbar-width: none;
+  }
+  .sheet::-webkit-scrollbar { display: none; }
+  .tl { position: relative; margin: 0 16px; padding: 10px 0 24px; }
+  .tl::before {                       /* 时间轨 */
+    content: ""; position: absolute; left: 53px; top: 18px; bottom: 60px;
+    width: 2px; background: var(--cyan);
+  }
+
+  .hour { position: relative; height: 16px; display: flex; align-items: center; padding-left: 66px; }
+  .hour span {
+    position: absolute; left: 0; width: 42px; text-align: right;
+    font-size: 11px; line-height: 16px; font-weight: 700; color: var(--ink2);
+    font-variant-numeric: tabular-nums;
+  }
+  .hour::before { content: ""; position: absolute; left: 47px; width: 14px; height: 2px; background: var(--ink); top: 7px; }
+  .hour::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .void { position: relative; height: 44px; display: flex; align-items: center; padding-left: 66px; font-size: 12px; color: var(--ink2); }
+  .void::before { content: ""; position: absolute; left: 49px; width: 10px; top: 0; bottom: 0; background: var(--paper); }
+  .void::after {
+    content: ""; position: absolute; left: 53px; width: 2px; top: 0; bottom: 0;
+    background: repeating-linear-gradient(to bottom, var(--cyan) 0 3px, transparent 3px 7px);
+  }
+
+  .item { position: relative; padding-left: 66px; }
+  .tm {
+    position: absolute; left: 0; top: 10px; width: 42px; text-align: right;
+    font-size: 13px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .tm small { display: block; font-size: 10px; line-height: 14px; font-weight: 500; color: var(--ink2); }
+  .node { position: absolute; left: 47px; top: 12px; width: 14px; height: 14px; overflow: visible; }
+  .node path { fill: var(--ink); stroke: var(--paper); stroke-width: 70; paint-order: stroke; }
+
+  .item::before { content: ""; position: absolute; left: 58px; top: 18px; width: 8px; height: 2px; background: var(--ink); }
+  .card { display: block; background: var(--mist); border-radius: 3px 12px 12px 12px; padding: 10px 12px; min-height: 44px; }
+  .meta { display: flex; align-items: center; gap: 8px; height: 18px; min-width: 0; }
+  .chip {
+    flex: none; height: 18px; padding: 0 6px; border-radius: 4px;
+    font-size: 11px; line-height: 18px; font-weight: 500; background: var(--tint); color: var(--ink);
+  }
+  .chip.policy { background: var(--signal); color: var(--ink); font-weight: 600; }
+  .src { min-width: 0; font-size: 12px; line-height: 18px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .many { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink); }
+  .many s { display: inline-flex; gap: 2px; text-decoration: none; }
+  .many s b { width: 5px; height: 5px; border-radius: 1px; background: var(--ink); }
+  .ai {
+    flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 3px;
+    height: 18px; padding: 0 7px 0 5px; border-radius: 9px;
+    background: var(--ink); color: #fff; font-size: 11px; line-height: 1; font-weight: 500;
+  }
+  .ai svg { width: 9px; height: 9px; }
+  .ai svg path { fill: var(--cyan); }
+  .title {
+    margin: 5px 0 0; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--ink);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+  .sum {
+    margin: 3px 0 0; font-size: 12px; line-height: 17px; color: var(--ink2);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;
+  }
+
+  /* 头条：一次视觉检测命中 */
+  .lead .logo { position: absolute; left: 42px; top: 0; width: 24px; height: 24px; }
+  .lead .tm { top: 3px; }
+  .lead::before { display: none; }
+  .lead .card { position: relative; background: var(--ink); border-radius: 12px; padding: 0 14px 12px; color: #fff; }
+  .lead .tag {
+    position: absolute; left: 0; top: 0; height: 24px; padding: 0 10px 0 12px;
+    border-radius: 12px 0 10px 0; background: var(--cyan); color: var(--ink);
+    font-size: 12px; line-height: 24px; font-weight: 700;
+  }
+  .lead .frame {
+    position: absolute; inset: 6px; pointer-events: none;
+    background:
+      linear-gradient(var(--cyan), var(--cyan)) right top / 12px 2px no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) right top / 2px 12px no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) left bottom / 12px 2px no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) left bottom / 2px 12px no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) right bottom / 12px 2px no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) right bottom / 2px 12px no-repeat;
+  }
+  .lead .meta { height: 24px; padding-left: 78px; padding-right: 6px; }
+  .lead .chip { background: rgba(255,255,255,.12); color: #fff; }
+  .lead .ai { background: rgba(255,255,255,.12); }
+  .lead .title { margin-top: 10px; font-size: 19px; line-height: 25px; font-weight: 700; color: #fff; }
+  .lead .sum { margin-top: 6px; font-size: 12.5px; line-height: 18px; color: #b7c4c7; -webkit-line-clamp: 2; }
+  .lead .foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; height: 18px; min-width: 0; padding-right: 6px; }
+  .lead .many { color: #fff; font-size: 12px; }
+  .lead .many em { font-style: normal; font-size: 15px; font-weight: 700; }
+  .lead .many s b { width: 6px; height: 6px; background: var(--cyan); }
+  .lead .src { color: #b7c4c7; }
+
+  .end { padding: 18px 0 0 66px; font-size: 12px; color: var(--ink2); }
+
+  /* tabBar：微信原生样式 */
+  .tabbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 83px;
+    background: #fff; border-top: 1px solid rgba(0,0,0,.1);
+    padding-bottom: 34px; display: flex;
+  }
+  .tab {
+    flex: 1; height: 49px; display: flex; flex-direction: column; align-items: center;
+    padding-top: 5px; gap: 3px; font-size: 10px; line-height: 14px; color: #5f696d;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.on { color: var(--ink); font-weight: 600; }
+  .tab.on svg .f { fill: var(--cyan); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+  <symbol id="logo" viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></symbol>
+</svg>
+
+<div class="phone">
+  <header class="top">
+    <div class="nav">
+      <svg aria-hidden="true"><use href="#logo"/></svg>
+      <b>锐奇热点</b>
+    </div>
+    <div class="day">
+      <div class="num">10<i>/</i>16</div>
+      <div class="side">
+        <div class="wk">周五</div>
+        <div class="say">模型今天从 150 个信源里挑了 13 条</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="sheet">
+    <div class="tl">
+      <div class="hour"><span>20:00</span></div>
+
+      <div class="item" style="margin-top:16px">
+        <div class="tm">19:18</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">锂电</span><span class="src">Electrive</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">大众在欧洲为多款 ID. 车型准备高压电芯召回</h3>
+          <p class="sum">大众因高压电池电芯可能存在缺陷，正在德国及其他欧洲市场为多款 ID. 系列电动车准备召回，官方建议充电上限设为 80%。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:23px">
+        <div class="tm">18:01</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">第三代半导体产业网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">普雷赛斯完成亿元级A轮融资，用于量产交付与先进封装量检测攻关</h3>
+          <p class="sum">公司专注半导体量检测设备，产品覆盖三维形貌、薄膜厚度、关键尺寸、套刻精度等检测方案。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:20px">
+        <div class="tm">17:03</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">Semiconductor Today</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">GlobalFoundries 的 CHIPS 补贴修订，支持纽约和佛蒙特 50 亿美元投资</h3>
+          <p class="sum">美国商务部与 GlobalFoundries 修订现有补贴，重新分配最多 9.55 亿美元激励资金用于两座工厂扩建。</p>
+        </article>
+      </div>
+
+      <div class="item lead" style="margin-top:9px">
+        <div class="tm">16:57<small>最新</small></div>
+        <svg class="logo" aria-hidden="true"><use href="#logo"/></svg>
+        <article class="card">
+          <span class="tag">今日头条</span>
+          <span class="frame"></span>
+          <div class="meta"><span class="chip">半导体</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</h3>
+          <p class="sum">英飞凌与 Wolfspeed 签署新的 200mm SiC 晶圆多年供应协议，将双方原有供应关系从 150mm 衬底技术转为 200mm。</p>
+          <div class="foot">
+            <span class="many"><s><b></b><b></b><b></b><b></b></s><em>4</em>家在报</span>
+            <span class="src">Semiconductor Today、SEMI 中国·半导体、第三代半导体产业网、Compound Semiconductor</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:18px">
+        <div class="tm">16:05</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip policy">政策与标准</span><span class="src">OFweek锂电网·锂电池</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">欧盟电池护照2027年2月强制生效，宁德时代、中创新航披露GBA试点准备进展</h3>
+          <p class="sum">2027年2月18日起投放欧盟市场的电动汽车电池和容量超过2kWh的工业电池必须配备电子电池护照。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:8px">
+        <div class="tm">16:04</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">锂电</span><span class="src">OFweek锂电网·锂电池</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">宝马第六代动力电池沈阳量产，960颗46毫米大圆柱电芯支撑1213公里不补电挑战</h3>
+          <p class="sum">电池包采用960颗直径46毫米大圆柱电芯，Cell-to-Pack无模组设计，体积能量密度比第五代提升超20%。</p>
+        </article>
+      </div>
+
+      <div class="hour" style="margin-top:6px"><span>16:00</span></div>
+
+      <div class="item" style="margin-top:14px">
+        <div class="tm">14:19</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">锂电</span><span class="src">电池网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">亿昇达绍兴0.5GWh大圆柱固态电池产线投产</h3>
+          <p class="sum">绍兴工厂建成0.5GWh大圆柱固态电池产线，现场达成首批500万只大圆柱电芯的战略框架。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:14px">
+        <div class="tm">13:50</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">第三代半导体产业网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">北方华创全资收购诺合键维，布局混合键合设备</h3>
+          <p class="sum">诺合键维是国内技术领先的混合键合设备公司，产品实现纳米级对准精度。</p>
+        </article>
+      </div>
+
+      <div class="hour" style="margin-top:12px"><span>12:00</span></div>
+      <div class="void">这 5 小时 50 分没有入选</div>
+      <div class="hour"><span>08:00</span></div>
+
+      <div class="item" style="margin-top:10px">
+        <div class="tm">08:00</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">艾邦半导体网</span>
+            <span class="many"><s><b></b><b></b><b></b></s>3 家在报</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">拓荆科技拟25亿元收购无锡尚积100%股权，补齐PVD与刻蚀设备</h3>
+          <p class="sum">拓荆科技拟以发行股份及支付现金方式合计25亿元收购无锡尚积100%股权，并募集配套资金不超过18.2亿元。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:6px">
+        <div class="tm">08:00</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">艾邦半导体网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">晶洲装备发布国内首个TGV中试开放平台，提供工艺开发到量产导入一站式验证</h3>
+          <p class="sum">平台制孔能力为通孔直径15–200μm、均匀性±0.5μm@50μm，兼容玻璃厚度0.1mm–1.1mm。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:6px">
+        <div class="tm">08:00</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">艾邦半导体网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">玻芯成16层玻璃堆叠GCP下线投产</h3>
+          <p class="sum">公司称由此从工程样品研发阶段迈入产品级小批量生产阶段。</p>
+        </article>
+      </div>
+
+      <div class="item" style="margin-top:6px">
+        <div class="tm">08:00</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">半导体</span><span class="src">SEMI 中国·半导体</span>
+            <span class="many"><s><b></b><b></b></s>2 家在报</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">北方华创4.05亿元全资收购混合键合设备商诺合键维</h3>
+          <p class="sum">北方华创微电子拟以现金约4.05亿元收购装备二期基金持有的诺合键维100%股权。</p>
+        </article>
+      </div>
+
+      <div class="hour" style="margin-top:12px"><span>04:00</span></div>
+      <div class="void">这 8 小时没有入选</div>
+      <div class="hour"><span>00:00</span></div>
+
+      <div class="item" style="margin-top:10px">
+        <div class="tm">00:00</div>
+        <svg class="node" viewBox="92 92 328 328"><use href="#star"/></svg>
+        <article class="card">
+          <div class="meta"><span class="chip">薄膜与材料</span><span class="src">中国粉体网</span>
+            <span class="ai"><svg viewBox="92 92 328 328"><use href="#star"/></svg>AI 摘要</span></div>
+          <h3 class="title">平安电工拟定增13亿元，投建泰国及湖北通城电子布基地</h3>
+          <p class="sum">拟募集资金上限13亿元，投向泰国云母绝缘材料基地、泰国电子布基地和国内高性能电子布基地。</p>
+        </article>
+      </div>
+
+      <div class="end">10 月 16 日的精选到这里</div>
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <div class="tab on">
+      <svg viewBox="0 0 24 24"><path class="f" d="M12 2.5C12.87 8.7 15.3 11.13 21.5 12C15.3 12.87 12.87 15.3 12 21.5C11.13 15.3 8.7 12.87 2.5 12C8.7 11.13 11.13 8.7 12 2.5Z"/></svg>
+      精选
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      日报
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/><path d="M7.5 12.5h2.6l1.3-2.3 1.9 4 1.2-1.7h2"/></svg>
+      运动健康
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><path d="M7 3.5h10a1 1 0 0 1 1 1V20.5l-6-4-6 4v-16a1 1 0 0 1 1-1z"/></svg>
+      收藏
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24"><path d="M3.5 20.5V10.5l5 3v-3l5 3v-3l5 3V4h2.5v16.5z"/><path d="M2.5 20.5h19"/></svg>
+      锐奇
+    </div>
+  </nav>
+</div>
+</body>
+</html>

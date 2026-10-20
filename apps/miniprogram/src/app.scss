@@ -1,0 +1,40 @@
+@use "./styles/tokens" as *;
+
+page {
+  --ink: #{$ink};
+  --star: #{$star};
+  --work: #{$work};
+  --card: #{$card};
+  --iron: #{$iron};
+  --fog: #{$fog};
+  --body: #{$body};
+  --rail: #{$rail};
+  --tab: #{$tab};
+  --c-battery: #{$c-battery};
+  --c-storage: #{$c-storage};
+  --c-semi: #{$c-semi};
+  --c-film: #{$c-film};
+  --c-inspect: #{$c-inspect};
+  --c-policy: #{$c-policy};
+  --c-general: #{$c-general};
+  min-height: 100%;
+  background: $work;
+  color: $ink;
+  font-family: $font;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+// 还没做内容的 tab 页：只有一个标题。
+.tab-empty {
+  padding: 24px 16px;
+}
+.tab-empty__title {
+  display: block;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}

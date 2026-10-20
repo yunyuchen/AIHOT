@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 分享卡片</title>
+<style>
+  :root {
+    --ink: #13191c;        /* 墨：logo 底色，品牌头、标题、节点 */
+    --star: #2ce2e8;       /* 星青：只做图形和底色，不做字 */
+    --work: #f2f3f5;       /* 工作灰：微信工作区 */
+    --card: #ffffff;
+    --iron: #5d6872;       /* 铁灰：来源、元数据 5.7:1 */
+    --fog: #a9b4ba;        /* 雾灰：深色区次要字 8.4:1 */
+    --body: #4a555e;       /* 摘要正文 7.6:1 */
+    --rail: #c5cbd0;       /* 轴线、挂线 */
+    /* 分类色标：只做小方块和浅底，字一律墨色 */
+    --c-battery: #ff7a45;
+    --c-storage: #1fb57a;
+    --c-semi: #3b7bf6;
+    --c-film: #8f6cf6;
+    --c-inspect: #2ce2e8;
+    --c-policy: #13191c;
+    --c-general: #8a959e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #d9dcdf;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px 0;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+  .phone {
+    position: relative; width: 390px; height: 844px; flex: none;
+    overflow: hidden; border-radius: 40px;
+    background: #ededed; /* 微信会话灰：这屏是聊天窗口，不是小程序页面 */
+    box-shadow: 0 30px 60px -20px rgba(19,25,28,.35), 0 0 0 1px rgba(19,25,28,.08);
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- 说明 ---------- */
+  .board { position: absolute; left: 0; top: 0; width: 390px; padding: 30px 16px 0; }
+  .intro h1 { font-size: 18px; line-height: 25px; font-weight: 700; letter-spacing: .3px; }
+  .intro p { font-size: 12px; line-height: 18px; color: var(--iron); margin-top: 3px; overflow-wrap: anywhere; }
+
+  .share { margin-top: 16px; }
+
+  /* ---------- 微信小程序分享卡 ---------- */
+  .wx {
+    display: block; width: 300px; background: var(--card); border-radius: 12px;
+    overflow: hidden; color: var(--ink); text-decoration: none;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .wx .t {
+    padding: 9px 12px 6px; font-size: 14px; line-height: 20px; font-weight: 500;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .poster {
+    position: relative; margin: 0 12px; width: 276px; aspect-ratio: 5 / 4;
+    border-radius: 6px; overflow: hidden;
+  }
+  .wx .mp {
+    display: flex; align-items: center; gap: 6px;
+    margin: 7px 12px 0; padding: 6px 0 7px; border-top: 1px solid #eceef0;
+    font-size: 12px; line-height: 16px; color: var(--iron);
+  }
+  .wx .mp svg { width: 14px; height: 14px; flex: none; }
+
+  /* 分类色标：深底变体，色点仍是圆形 */
+  .cat {
+    display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px 0 6px;
+    border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap;
+  }
+  .cat i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .cat.semi { background: rgba(59,123,246,.12); } .cat.semi i { background: var(--c-semi); }
+  .poster.dark .cat { background: rgba(255,255,255,.1); color: #fff; }
+
+  /* ---------- 图一：单条精选，墨色底 ---------- */
+  .poster.dark {
+    background: var(--ink); color: #fff; padding: 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .poster.dark .big {
+    position: absolute; right: 14px; top: 12px; width: 44px; height: 44px; fill: var(--star);
+  }
+  .p-top { display: flex; align-items: center; gap: 8px; padding-right: 56px; }
+  .p-top .logo { width: 18px; height: 18px; border-radius: 5px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); flex: none; }
+  .p-top strong { font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: .5px; margin-right: 2px; }
+  .poster.dark h4 {
+    font-size: 20px; line-height: 27px; font-weight: 700; letter-spacing: .2px;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .p-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .p-src span { display: block; font-size: 12px; line-height: 17px; color: var(--fog); }
+  .p-src b { display: block; font-size: 13px; line-height: 18px; font-weight: 600; }
+  .echo { flex: none; display: flex; align-items: center; gap: 6px; }
+  .echo b { font-size: 28px; line-height: 30px; font-weight: 700; color: var(--star); }
+  .echo .lbl { display: flex; flex-direction: column; gap: 4px; }
+  .echo .lbl span { font-size: 12px; font-weight: 600; line-height: 14px; }
+  .echo .bars { display: flex; gap: 3px; }
+  .echo .bars i { width: 6px; height: 6px; border-radius: 50%; background: var(--star); }
+
+  /* ---------- 图二：一期日报，青色底，字一律墨色 ---------- */
+  .poster.cyan {
+    background: var(--star); color: var(--ink); padding: 14px 16px;
+    display: flex; flex-direction: column;
+  }
+  .d-head {
+    display: flex; align-items: center; gap: 6px;
+    padding-bottom: 9px; border-bottom: 1px solid rgba(19,25,28,.24);
+  }
+  .d-head svg { width: 14px; height: 14px; fill: var(--ink); flex: none; }
+  .d-head strong { font-size: 15px; line-height: 20px; font-weight: 700; letter-spacing: .4px; }
+  .d-head .date { margin-left: auto; font-size: 13px; line-height: 18px; font-weight: 600; }
+  .d-head .date small { font-size: 12px; font-weight: 500; margin-left: 4px; }
+  .poster.cyan h4 {
+    margin-top: 9px; font-size: 15px; line-height: 21px; font-weight: 700;
+    overflow-wrap: anywhere; text-wrap: pretty;
+  }
+  .lead {
+    display: inline-flex; align-items: center; height: 18px; padding: 0 5px; margin-right: 6px;
+    background: var(--ink); color: #fff; border-radius: 4px;
+    font-size: 11px; font-weight: 600; vertical-align: 2px;
+  }
+  .poster.cyan ul { list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+  .poster.cyan li { position: relative; padding-left: 11px; font-size: 12px; line-height: 17px; overflow-wrap: anywhere; }
+  .poster.cyan li i { position: absolute; left: 0; top: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); }
+  .d-foot { margin-top: auto; display: flex; align-items: center; font-size: 12px; line-height: 16px; }
+  .d-foot span + span { margin-left: 10px; padding-left: 10px; border-left: 1px solid rgba(19,25,28,.3); }
+  .d-foot b { font-weight: 700; margin-right: 2px; }
+
+  /* ---------- 回到精选 ---------- */
+  .back {
+    position: absolute; left: 16px; bottom: 22px;
+    display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 18px 0 12px;
+    background: var(--card); border-radius: 22px; color: var(--ink); text-decoration: none;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 1px 2px rgba(19,25,28,.06);
+  }
+  .back svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="92 92 328 328"><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z"/></symbol>
+</svg>
+
+<div class="phone">
+  <div class="board">
+
+    <div class="intro">
+      <h1>分享到会话时的卡片</h1>
+      <p>微信小程序卡片：标题 + 5:4 图 + 小程序名。图由现有的分享图服务直接出</p>
+    </div>
+
+    <section class="share" aria-label="单条精选的分享卡片">
+      <a class="wx" href="item.html">
+        <div class="t">英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</div>
+        <div class="poster dark">
+          <svg class="big" aria-hidden="true"><use href="#star"/></svg>
+          <div class="p-top">
+            <svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+            <strong>锐奇热点</strong>
+            <span class="cat semi"><i></i>半导体</span>
+          </div>
+          <h4>英飞凌与 Wolfspeed 签署 200mm SiC 晶圆多年供应协议</h4>
+          <div class="p-foot">
+            <div class="p-src"><span>Compound Semiconductor</span><b class="num">10-15</b></div>
+            <div class="echo">
+              <b class="num">4</b>
+              <div class="lbl"><span>家在报</span><div class="bars"><i></i><i></i><i></i><i></i></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mp">
+          <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+          <span>小程序 · 锐奇热点</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="share" aria-label="一期日报的分享卡片">
+      <a class="wx" href="daily.html">
+        <div class="t">锐奇制造日报 10 月 16 日：七部门印发新型电池产业“十五五”规划</div>
+        <div class="poster cyan">
+          <div class="d-head">
+            <svg aria-hidden="true"><use href="#star"/></svg>
+            <strong>锐奇制造日报</strong>
+            <span class="date num">10月16日<small>周五</small></span>
+          </div>
+          <h4><span class="lead">头条</span>七部门印发新型电池产业“十五五”规划</h4>
+          <ul>
+            <li><i></i>英飞凌与 Wolfspeed 扩大延长 SiC 晶圆供应协议</li>
+            <li><i></i>拓荆科技拟 25 亿元收购无锡尚积</li>
+            <li><i></i>海辰储能 200GWh 产能达产</li>
+          </ul>
+          <div class="d-foot num"><span><b>6</b> 个分节</span><span><b>17</b> 条</span><span><b>08:00</b> 出刊</span></div>
+        </div>
+        <div class="mp">
+          <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+          <span>小程序 · 锐奇热点</span>
+        </div>
+      </a>
+    </section>
+
+  </div>
+
+  <a class="back" href="feed.html">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>
+    回到精选
+  </a>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+@use "../../styles/tokens" as *;
+
+.category-tag {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 20px;
+  padding: 0 7px 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: $ink;
+  white-space: nowrap;
+}
+.category-tag__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+}

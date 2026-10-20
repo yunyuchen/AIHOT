@@ -1,0 +1,337 @@
+@use "../../styles/tokens" as *;
+
+// 尺寸照原型 A 版 item.html。原型自己画了状态栏和导航（返回、“条目详情”），这里由原生导航栏承担（D33），
+// 下面只留原型 .dash 下沿那 34 的墨色，正文主卡往上压 22。原型的 flex gap 换成外边距。
+.item {
+  padding-bottom: 24px;
+}
+.item-top {
+  height: 34px;
+  background: $ink;
+}
+
+// ---------- 正文主卡 ----------
+.item-main {
+  position: relative;
+  margin: -22px 16px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: $card;
+  box-shadow:
+    0 14px 28px -10px rgba(19, 25, 28, 0.32),
+    0 2px 6px rgba(19, 25, 28, 0.08);
+}
+.item-main__status {
+  display: block;
+  padding: 24px 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: $iron;
+  text-align: center;
+}
+.item-main__row {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+.item-main__gap {
+  flex: 1;
+  min-width: 6px;
+}
+.item-main__title {
+  display: block;
+  margin-top: 10px;
+  font-size: 20px;
+  line-height: 27px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  overflow-wrap: break-word;
+}
+.item-main__summary {
+  display: block;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 23px;
+  color: $body;
+  overflow-wrap: break-word;
+}
+
+// “为什么值得看”：工作灰底，块标题前一个墨色圆里的星青小星，按 ai.reason 在右边标“AI 摘要”。
+.item-why {
+  margin-top: 10px;
+  padding: 10px 12px 11px;
+  border-radius: 10px;
+  background: $work;
+}
+.item-why__head {
+  display: flex;
+  align-items: center;
+}
+.item-why__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: $ink;
+}
+.item-why__star {
+  width: 9px;
+  height: 9px;
+}
+.item-why__title {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+.item-why__text {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 20px;
+  color: $body;
+  overflow-wrap: break-word;
+}
+
+.item-acts {
+  display: flex;
+  margin-top: 14px;
+}
+// “分享给同事”是原生 button（components/share-button 去掉了它的默认样式），外边距在这里清掉，间隔只由 --solid 给。
+.item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 44px;
+  margin: 0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.item-btn--solid {
+  margin-left: 10px;
+  background: $ink;
+  color: #fff;
+}
+.item-btn__icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+}
+
+// ---------- 来源卡、正文、事件入口 ----------
+.item-panel {
+  margin: 12px 16px 0;
+  padding: 12px 16px 13px;
+  border-radius: 12px;
+  background: $card;
+  box-shadow: 0 1px 2px rgba(19, 25, 28, 0.06);
+}
+.item-source {
+  display: flex;
+  align-items: center;
+}
+.item-source__who {
+  flex: 1;
+  min-width: 0;
+  margin-right: 10px;
+}
+.item-source__name {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.item-source__date {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 17px;
+  color: $iron;
+}
+.item-copy {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: $work;
+  color: $ink;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.item-copy--down {
+  opacity: 0.6;
+}
+.item-copy__icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+.item-source__note {
+  display: block;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid #eceef0;
+  font-size: 12px;
+  line-height: 18px;
+  color: $iron;
+}
+
+// 站内全文：块标题（“正文”或“译文”）、模型译文时的“AI 摘要”，下面是 rich-text。字号 15、行高 1.7 由这里给，
+// 段间距和标题、列表、引用、表格的样子写在节点的行内样式里（lib/item.ts 的 bodyNodes），图片接口已带 max-width:100%。
+.item-body {
+  padding-bottom: 14px;
+}
+.item-body__head {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+.item-body__title {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+.item-body__hint {
+  display: block;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: $work;
+  font-size: 12px;
+  line-height: 18px;
+  color: $iron;
+}
+.item-body__text {
+  display: block;
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: $ink;
+  overflow-wrap: break-word;
+}
+
+.item-story {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.item-story--down {
+  opacity: 0.6;
+}
+.item-story__text {
+  flex: 1;
+  min-width: 0;
+  margin-right: 10px;
+}
+.item-story__head {
+  display: flex;
+  align-items: center;
+}
+.item-story__title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+.item-story__bars {
+  display: flex;
+  margin-left: 8px;
+}
+.item-story__bar {
+  width: 6px;
+  height: 6px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: $star;
+  box-shadow: inset 0 0 0 1px rgba(19, 25, 28, 0.55);
+  &:first-child {
+    margin-left: 0;
+  }
+}
+.item-story__line {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 19px;
+  color: $body;
+  overflow-wrap: break-word;
+}
+.item-story__go {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+// ---------- 整屏状态：白卡同样压在墨色条下沿 ----------
+// page-state 自带 16 的外边距，往上再提 22 + 16。
+.item-state {
+  position: relative;
+  margin-top: -38px;
+}
+
+// ---------- 剪切板写不进时的兜底弹层 ----------
+.link-sheet {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  background: rgba(19, 25, 28, 0.55);
+}
+.link-sheet__card {
+  width: 100%;
+  padding: 18px 16px 16px;
+  border-radius: 14px;
+  background: $card;
+}
+.link-sheet__title {
+  display: block;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.link-sheet__hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 19px;
+  color: $iron;
+}
+.link-sheet__url {
+  display: block;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: $work;
+  font-size: 13px;
+  line-height: 20px;
+  color: $ink;
+  word-break: break-all;
+}
+.link-sheet__close {
+  margin-top: 14px;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 10px;
+  background: $ink;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+.link-sheet__close--down {
+  opacity: 0.75;
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锐奇热点 · A 版全部画面</title>
+<style>
+  body { margin: 0; background: #e9ebec; font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; color: #13191c; }
+  header { padding: 28px 32px 8px; }
+  header h1 { margin: 0 0 6px; font-size: 20px; font-weight: 700; }
+  header p { margin: 0; font-size: 13px; color: #5b666b; }
+  .row { display: flex; gap: 40px; padding: 20px 32px 24px; overflow-x: auto; align-items: flex-start; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; flex: none; }
+  figcaption { font-size: 14px; font-weight: 600; }
+  figcaption span { display: block; font-size: 12px; font-weight: 400; color: #5b666b; margin-top: 2px; }
+  iframe { width: 390px; height: 844px; border: 0; border-radius: 40px; background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,0.08), 0 18px 40px rgba(19,25,28,0.18); }
+</style>
+</head>
+<body>
+<header>
+  <h1>锐奇热点 · A 版，全部画面</h1>
+  <p>390×844。第一排是制造板块的四屏，第二排是另外三个 tab 和分享卡片。画面里的 tab 和条目可以点着走。本地文件，没有上传。</p>
+</header>
+<div class="row">
+  <figure><figcaption>精选<span>制造板块首页</span></figcaption><iframe src="feed.html" title="精选"></iframe></figure>
+  <figure><figcaption>条目页<span>从精选点进来</span></figcaption><iframe src="item.html" title="条目页"></iframe></figure>
+  <figure><figcaption>事件页<span>同一件事的各家报道</span></figcaption><iframe src="story.html" title="事件页"></iframe></figure>
+  <figure><figcaption>日报<span>仅制造板块</span></figcaption><iframe src="daily.html" title="日报"></iframe></figure>
+</div>
+<div class="row">
+  <figure><figcaption>运动健康<span>示例内容，等草案确认</span></figcaption><iframe src="sports.html" title="运动健康"></iframe></figure>
+  <figure><figcaption>收藏<span>只存本机</span></figcaption><iframe src="saved.html" title="收藏"></iframe></figure>
+  <figure><figcaption>锐奇<span>公司页，文案待客户提供</span></figcaption><iframe src="reechi.html" title="锐奇"></iframe></figure>
+  <figure><figcaption>分享卡片<span>分享到会话时的样子</span></figcaption><iframe src="share.html" title="分享卡片"></iframe></figure>
+</div>
+</body>
+</html>

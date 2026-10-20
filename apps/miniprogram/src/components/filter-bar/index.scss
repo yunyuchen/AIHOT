@@ -1,0 +1,54 @@
+@use "../../styles/tokens" as *;
+
+// 尺寸照原型 sports.html 的 .filter、.seg：白卡往上压 28，内边距 4，每格高 44（触控区够大）。原型的 flex gap 换成外边距。
+.filter-bar {
+  position: relative;
+  display: flex;
+  margin: -28px 16px 0;
+  padding: 4px;
+  border-radius: 14px;
+  background: $card;
+  box-shadow:
+    0 14px 28px -10px rgba(19, 25, 28, 0.32),
+    0 2px 6px rgba(19, 25, 28, 0.08);
+}
+.filter-bar__scroll {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.filter-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin-left: 2px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $ink;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.filter-seg--all {
+  flex: none;
+  width: 52px;
+  margin-left: 0;
+  padding: 0;
+}
+.filter-seg--on {
+  background: $ink;
+  color: #fff;
+  font-weight: 600;
+}
+.filter-seg--down {
+  background: $work;
+}
+.filter-seg__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+}

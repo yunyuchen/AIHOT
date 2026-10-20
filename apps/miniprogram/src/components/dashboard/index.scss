@@ -1,0 +1,110 @@
+@use "../../styles/tokens" as *;
+
+// 尺寸照原型 A 版 .dash；顶部的状态栏和胶囊由原生导航栏承担（D33），这里不再留。
+.dash {
+  background: $ink;
+  color: #fff;
+  padding: 10px 16px 20px;
+}
+// 焦点卡往上压 48，下沿留 60（原型）。
+.dash--focus {
+  padding-bottom: 60px;
+}
+// 分类筛选条往上压 28，下沿留 44（原型 sports.html）。
+.dash--filter {
+  padding-bottom: 44px;
+}
+.dash__brand {
+  display: flex;
+  align-items: center;
+  height: 32px;
+}
+.dash__logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+.dash__title {
+  margin-left: 9px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.dash__stamp {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 12px;
+  line-height: 17px;
+  color: $fog;
+  white-space: nowrap;
+}
+.dash__reading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.dash__k {
+  display: block;
+  font-size: 12px;
+  line-height: 17px;
+  color: $fog;
+}
+.dash__date {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 30px;
+  letter-spacing: 0.3px;
+}
+// 按天看的板块：大字板块名（原型 sports.html 的 .today strong）。
+.dash__board {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: 0.3px;
+}
+.dash__weekday {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $fog;
+  letter-spacing: 0;
+}
+.dash__meters {
+  display: flex;
+}
+.dash__meter {
+  padding: 0 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+  &:last-child {
+    padding-right: 0;
+  }
+}
+.dash__value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 28px;
+}
+.dash__unit {
+  display: block;
+  font-size: 12px;
+  line-height: 17px;
+  color: $fog;
+}
+// 板块说明：读数下面，一句一行（原型 sports.html 的 .lede）。
+.dash__lede {
+  margin-top: 10px;
+}
+.dash__lede-line {
+  display: block;
+  font-size: 13px;
+  line-height: 19px;
+  color: $fog;
+}

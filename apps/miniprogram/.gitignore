@@ -1,0 +1,5 @@
+node_modules/
+dist/
+dist-no-sports/
+.swc/
+project.private.config.json
