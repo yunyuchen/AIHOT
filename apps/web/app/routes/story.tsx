@@ -7,7 +7,7 @@ import { data as routeData } from "react-router";
 import { breadcrumbLd, pageMeta, titled } from "../lib/seo";
 import { beijingDate, beijingTime, monthDayTime, relativeTime, shortSourceName } from "../lib/format";
 import { HeatChart } from "../features/story/HeatChart";
-import { Badge, SelectedBadge } from "../components/ui/Badge";
+import { AiBadge, Badge, SelectedBadge } from "../components/ui/Badge";
 import { PillTabs } from "../components/ui/Tabs";
 import { Select } from "../components/ui/Controls";
 import { IconArrowLeft, IconChevronRight, IconClock, IconDoc, IconUsers } from "../components/icons";
@@ -51,6 +51,16 @@ const SECTIONS = { overview: "event-overview", reports: "event-reports", heat: "
 type SectionKey = keyof typeof SECTIONS;
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** A block's title with the "AI 摘要" mark beside it when a model wrote what the block shows. */
+function Marked({ ai, children }: { ai: boolean; children: ReactNode }) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      {children}
+      {ai && <AiBadge />}
+    </span>
+  );
+}
 
 /** A main-column card: 17px title, 24px padding. */
 function Panel({ id, title, sub, right, children, className = "" }: { id?: string; title: ReactNode; sub?: ReactNode; right?: ReactNode; children: ReactNode; className?: string }) {
@@ -179,12 +189,15 @@ export default function StoryPage() {
     return out;
   }, [story.timeline, filter, order]);
   const newest = story.timeline.reduce<StoryReportView | null>((a, b) => (!a || Date.parse(b.publishedAt) > Date.parse(a.publishedAt) ? b : a), null);
+  // Marks come from the read layer, field by field (an edge-cached page from before the marks has none).
+  const marks = { title: !!story.ai?.title, digest: !!story.ai?.digest };
+  const anyTitle = (reports: StoryReportView[]) => reports.some((r) => r.ai?.title);
   const overview = story.digest
-    ? { label: "AI 综述", text: story.digest, note: story.digestUpdatedAt ? `AI 根据报道生成 · ${relativeTime(story.digestUpdatedAt)}更新` : "AI 根据报道生成" }
+    ? { label: "综述", text: story.digest, note: story.digestUpdatedAt ? `AI 根据报道生成 · ${relativeTime(story.digestUpdatedAt)}更新` : "AI 根据报道生成", ai: marks.digest }
     : story.summary
-      ? { label: "事实说明", text: story.summary, note: null }
+      ? { label: "事实说明", text: story.summary, note: null, ai: marks.digest }
       : story.excerpt
-        ? { label: "报道摘要", text: story.excerpt.text, note: `摘自 ${story.excerpt.sourceName}` }
+        ? { label: "报道摘要", text: story.excerpt.text, note: `摘自 ${story.excerpt.sourceName}`, ai: !!story.excerpt.ai?.summary }
         : null;
   const showOfficial = () => {
     setFilter("official");
@@ -205,6 +218,7 @@ export default function StoryPage() {
         <div className="flex items-center gap-2 text-[12px] text-ink-4">
           热点事件
           <Badge tone={status.tone}>{status.label}</Badge>
+          {marks.title && <AiBadge />}
         </div>
         <h1 className="mt-2.5 text-[27px] font-bold leading-[1.5] tracking-[-0.01em] text-ink lg:mt-3 lg:text-[36px] lg:font-[730]">{story.title}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12.5px] text-ink-3">
@@ -243,7 +257,7 @@ export default function StoryPage() {
       <div className="mt-5 grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* On phones the main column dissolves so the rail's cards can sit between its sections. */}
         <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
-          <Panel id={SECTIONS.overview} title="先了解这件事" right={overview?.label} className="order-1">
+          <Panel id={SECTIONS.overview} title="先了解这件事" right={overview && <Marked ai={overview.ai}>{overview.label}</Marked>} className="order-1">
             {overview ? (
               <>
                 <p className="whitespace-pre-line text-[15px] leading-[1.85] text-ink-2">{overview.text}</p>
@@ -275,7 +289,7 @@ export default function StoryPage() {
           </Panel>
 
           {story.developments.length > 1 && (
-            <Panel title="事件进展" right={`${story.developments.length} 个进展`} className="order-3">
+            <Panel title={<Marked ai={anyTitle(story.developments.map((d) => d.representative))}>事件进展</Marked>} right={`${story.developments.length} 个进展`} className="order-3">
               <ol className="relative space-y-4 pl-5 before:absolute before:bottom-2 before:left-[3px] before:top-2 before:w-px before:bg-line">
                 {story.developments.map((d, i) => (
                   <li key={d.factId} className="relative">
@@ -297,7 +311,7 @@ export default function StoryPage() {
 
           <Panel
             id={SECTIONS.reports}
-            title="报道时间线"
+            title={<Marked ai={anyTitle(story.timeline)}>报道时间线</Marked>}
             sub="沿着报道，了解事件的不同侧面。"
             className="order-4"
             right={
@@ -385,7 +399,7 @@ export default function StoryPage() {
             </RailCard>
           )}
           {story.officialReports.length > 0 && (
-            <RailCard title="官方一手" right={`${counts.official || story.officialReports.length} 篇`}>
+            <RailCard title={<Marked ai={anyTitle(story.officialReports.slice(0, 5))}>官方一手</Marked>} right={`${counts.official || story.officialReports.length} 篇`}>
               <p className="text-[12px] text-ink-4">直接了解当事方的说法</p>
               <ul className="mt-1 divide-y divide-line-soft">
                 {story.officialReports.slice(0, 5).map((r) => (

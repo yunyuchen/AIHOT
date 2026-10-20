@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import { IntentLink } from "../../components/ui/IntentLink";
 import type { GroupInfo, FeedItemSummary, TimelineFilters } from "@aihot/contracts/site";
 import { CATEGORY_LABELS } from "@aihot/contracts/taxonomy";
-import { SelectedBadge } from "../../components/ui/Badge";
+import { AiBadge, SelectedBadge } from "../../components/ui/Badge";
 import { ScoreLabel } from "../../components/ui/Score";
 import { MediaThumbs, SourceLine, StarButton } from "./parts";
 import { GroupDevelopments, GroupSources, LatestDevelopment } from "./ReadingGroup";
@@ -29,6 +29,8 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
   const tags = showTags ? item.tags.slice(0, 3) : [];
   // Older rows can carry a category the current taxonomy no longer has; show no link for those.
   const categoryLabel: string | undefined = showTags && item.category ? CATEGORY_LABELS[item.category] : undefined;
+  // One mark for the card's model-written text. A card restored from a session snapshot older than the marks has none.
+  const aiWritten = !!(item.ai?.title || item.ai?.summary || item.ai?.reason);
 
   return (
     <article className="relative min-w-0 lg:card lg:card-hover lg:px-[18px] lg:pb-[14px] lg:pt-[15px]" data-item-id={item.id}>
@@ -39,6 +41,7 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
             <SelectedBadge />
           </span>
         )}
+        {aiWritten && <AiBadge />}
         <span className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
           <span className="hidden lg:inline-flex">
             <ScoreLabel score={item.score} />

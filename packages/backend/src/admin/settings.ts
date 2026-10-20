@@ -1,12 +1,14 @@
 // Operator settings: about-page QR codes (replaced without a release), notification targets
-// (switching a group on records enabled_at so older content is never back-filled) and per-service
-// request budgets (the circuit breaker paid calls check before sending).
+// (switching a group on records enabled_at so older content is never back-filled), per-service
+// request budgets (the circuit breaker paid calls check before sending) and the mini program's
+// placeholder switch (整改开关, ADR 0002).
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { config } from "../config.ts";
 import { sql } from "../db.ts";
 import { sha256 } from "../lib/ids.ts";
+import { forgetRectification, loadRectification, RECTIFICATION_KEY, type Rectification } from "../publication/miniprogram.ts";
 import { loadContact, type ContactSettings } from "../site/contact.ts";
 import { audit } from "./auth.ts";
 
@@ -68,4 +70,25 @@ export async function updateBudget(service: string, input: { perMinute: number; 
     RETURNING service, per_minute, per_hour, per_day`;
   await audit(actor, "budget.update", `budget:${service}`, input.reason, before ?? null, after);
   return after;
+}
+
+/** The placeholder switch as the admin shows it: normal or placeholder, and who changed it, when and why. */
+export const loadRectificationSetting = () => loadRectification({ fresh: true });
+
+/**
+ * Turns the mini program exit to the placeholder (every operation but meta answers 403 section_paused)
+ * or back to normal. Only for a rectification order, never to hide content during a review (ADR 0002).
+ * A reason is required; the audit keeps who, when, why and the status before and after.
+ */
+export async function switchRectification(input: { status: string; reason: string }, actor: string): Promise<Rectification> {
+  if (input.status !== "normal" && input.status !== "placeholder") throw Object.assign(new Error("status is normal or placeholder"), { statusCode: 400 });
+  const reason = String(input.reason ?? "").trim();
+  if (!reason) throw Object.assign(new Error("a reason is required"), { statusCode: 400 });
+  const before = await loadRectification({ fresh: true });
+  const next: Rectification = { status: input.status, reason, changedBy: actor, changedAt: new Date().toISOString() };
+  await sql`INSERT INTO settings (key, value, updated_by) VALUES (${RECTIFICATION_KEY}, ${sql.json({ ...next })}, ${actor})
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = now()`;
+  forgetRectification();
+  await audit(actor, "settings.rectification", `settings:${RECTIFICATION_KEY}`, reason, { status: before.status }, { status: next.status });
+  return next;
 }

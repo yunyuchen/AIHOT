@@ -4,19 +4,18 @@
 // waiting behind an unreleased item leaves new snapshots at once, and snapshots answer conditional requests.
 import { config } from "@aihot/backend/config";
 import { CATEGORY_LABELS } from "@aihot/contracts/taxonomy";
-import { CATEGORIES } from "@aihot/industry/taxonomy";
+import { FEATURES } from "@aihot/industry/features";
 import { withSubject } from "@aihot/industry/site";
 import { beijingDate } from "@aihot/contracts/time";
 import { ogEtag } from "../apps/api/src/og/render.ts";
 import { posterEtag } from "../apps/api/src/og/poster.ts";
 import { tag } from "./setup.ts";
+import { released, seeds } from "./seed.ts";
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
-import { setVisibility } from "@aihot/backend/admin/content";
+import { overrideFields, setVisibility } from "@aihot/backend/admin/content";
 import { updateSource } from "@aihot/backend/admin/sources";
-import { upsertMaterial } from "@aihot/backend/content/materials";
 import { stopBoss } from "@aihot/backend/jobs/queue";
 import { publishArticle, republishSource } from "@aihot/backend/publication/publish";
 import { computeHotRanking } from "@aihot/backend/events/hot";
@@ -27,45 +26,25 @@ import { buildApp } from "../apps/api/src/app.ts";
 const T = tag();
 const SOURCE = `test-publication-${T}`;
 const BODY = `FULLTEXT-${T} `.repeat(40);
-const REPORT_KEY = `2099-12-${String(10 + Math.floor(Math.random() * 19))}`;
+const seed = seeds(T, SOURCE);
+let report: { key: string; remove: () => Promise<void> } | null = null;
 const app = await buildApp();
 
 before(async () => {
   // An interrupted earlier run may have left entries behind the release gate, holding the watermark.
   await sql`UPDATE selected_ledger SET visible_at = now() WHERE visible_at > now()`;
-  await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, site_fulltext, syndicate_fulltext, next_fetch_at)
-            VALUES (${SOURCE}, 'Test publication', 'rss', 'T1', 'editorial', true, true, '2100-01-01')`;
+  await seed.source(SOURCE, { name: "Test publication" });
 });
 after(async () => {
-  await sql`DELETE FROM reports WHERE kind = 'daily' AND key = ${REPORT_KEY}`;
+  await report?.remove();
   await app.close();
   await stopBoss();
   await closeDb();
 });
 
-let n = 0;
 /** A selected article with full text and a summary. */
-async function article(): Promise<string> {
-  n += 1;
-  const { articleId } = await upsertMaterial({
-    sourceId: SOURCE, url: `https://example.com/${T}-${n}`, title: `Test ${n}`, bodyText: BODY, bodyHtml: `<p>${BODY}</p>`, bodyStatus: "ok", via: "fetch", publishedAt: new Date(),
-  });
-  await sql`INSERT INTO analyses (article_id, input_revision, origin, relevance, category, title_zh, summary_zh, reason_zh, score, selected)
-            VALUES (${articleId}, 1, 'rule', 'pass', ${CATEGORIES[0].key}, ${`标题${n}-${T}`}, ${`SUMMARY-${n}-${T}`}, '理由', 90, true)`;
-  return articleId;
-}
-
-async function storyFor(id: string, role: "report" | "mention" = "report"): Promise<string> {
-  const publicId = randomUUID();
-  const [story] = await sql<{ id: number }[]>`
-    INSERT INTO stories (public_id, title, first_report_at, latest_at) VALUES (${publicId}, ${`STORY-${T}`}, now(), now()) RETURNING id`;
-  const [fact] = await sql<{ id: number }[]>`
-    INSERT INTO facts (public_id, story_id, title) VALUES (${`fact-${publicId}`}, ${story!.id}, ${`FACT-${T}`}) RETURNING id`;
-  await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${fact!.id}, ${id}, ${role})`;
-  return publicId;
-}
-
-const released = () => ({ releasedAt: new Date(Date.now() - 60_000) });
+const article = () => seed.selected({ bodyText: BODY });
+const storyFor = (id: string, role: "report" | "mention" = "report") => seed.storyFor(id, role);
 async function get(url: string, headers: Record<string, string> = {}) {
   const res = await app.inject({ method: "GET", url, headers });
   return { status: res.statusCode, body: res.body, etag: res.headers.etag as string | undefined };
@@ -74,7 +53,7 @@ async function get(url: string, headers: Record<string, string> = {}) {
 test("site reading sends one language while exports retain both, including after withdrawal", async () => {
   const id = await article();
   await sql`UPDATE articles SET language = 'en', body_html = '<h2>Original heading</h2><p>Original full body</p>' WHERE id = ${id}`;
-  await sql`INSERT INTO translations (article_id, revision, body_html, body_text, origin) VALUES (${id}, 1, '<h2>译文标题</h2><p>中文完整正文</p>', '中文完整正文', 'source')`;
+  await seed.translation(id, { origin: "source", bodyHtml: "<h2>译文标题</h2><p>中文完整正文</p>", bodyText: "中文完整正文" });
   await publishArticle(id, released());
   const normal = JSON.parse((await get(`/api/site/items/${id}`)).body);
   const original = JSON.parse((await get(`/api/site/items/${id}/original`)).body);
@@ -98,6 +77,8 @@ test("revoking a source's licence takes its articles off every exit", async () =
   await publishArticle(id, released());
   const story = await storyFor(id);
   assert.equal((await get(`/api/site/items/${id}`)).status, 200);
+  assert.equal((await get(`/api/mp/v1/items/${id}`)).status, 200);
+  assert.equal((await get(`/og/mp/items/${id}.png`)).status, 200);
   assert.equal((await get(`/api/site/stories/${story}`)).status, 200);
   assert.ok((await get("/feed/full.xml")).body.includes(`FULLTEXT-${T}`), "full feed carries the body before");
   assert.ok((await get("/api/v1/items?mode=selected")).body.includes(id), "v1 lists the item before");
@@ -111,6 +92,8 @@ test("revoking a source's licence takes its articles off every exit", async () =
   const result = await republishSource(SOURCE); // what the queued job runs
   assert.ok(result.reduced >= 1);
   assert.equal((await get(`/api/site/items/${id}`)).status, 404);
+  assert.equal((await get(`/api/mp/v1/items/${id}`)).status, 404, "the mini program's item page too");
+  assert.equal((await get(`/og/mp/items/${id}.png`)).status, 404, "and its 5:4 share image");
   assert.equal((await get(`/items/${id}/markdown`)).status, 404);
   assert.equal((await get(`/api/site/stories/${story}`)).status, 404, "the story drops an isolated source's last report");
   assert.equal((await get(`/api/v1/stories/${story}`)).status, 404);
@@ -120,6 +103,27 @@ test("revoking a source's licence takes its articles off every exit", async () =
   await sql`UPDATE sources SET participation_mode = 'editorial', site_fulltext = true, syndicate_fulltext = true WHERE id = ${SOURCE}`;
 });
 
+test("summary-only takes the body off the site, v1, the full feed and the mini program, and keeps the summary", async () => {
+  const id = await article();
+  await publishArticle(id, released());
+  const fullText = () => get("/feed/full.xml").then((r) => r.body.includes(`FULLTEXT-${T}`));
+  assert.ok(JSON.parse((await get(`/api/site/items/${id}`)).body).body, "the site shows the body before");
+  assert.equal(JSON.parse((await get(`/api/mp/v1/items/${id}`)).body).fullText.allowed, true, "the mini program may show it before");
+  assert.ok(await fullText(), "the full feed carries it before");
+
+  await setVisibility(id, { visibility: "summary-only", reason: "test", version: 0 }, "test");
+  const site = JSON.parse((await get(`/api/site/items/${id}`)).body);
+  assert.equal(site.readingMode, "summary-only");
+  assert.equal(site.body, null);
+  assert.ok(site.summary, "the summary stays");
+  const mp = JSON.parse((await get(`/api/mp/v1/items/${id}`)).body);
+  assert.deepEqual(mp.fullText, { allowed: false, html: null, translated: false, complete: false });
+  assert.ok(mp.summary, "the summary stays");
+  for (const url of ["/api/v1/items?mode=selected", "/api/v1/items?mode=all&limit=100", "/feed/full.xml"]) {
+    assert.ok(!(await get(url)).body.includes(`FULLTEXT-${T}`), `${url} carries the body`);
+  }
+});
+
 test("a withdrawn item leaves every report exit", async () => {
   const id = await article();
   await publishArticle(id, released());
@@ -127,16 +131,28 @@ test("a withdrawn item leaves every report exit", async () => {
     sections: [{ label: "模型", items: [{ itemId: id, title: `LEAD-${T}`, summary: `QUOTED-${T}`, sourceUrl: `https://example.com/original-${T}`, sourceName: "Test" }] }],
     flashes: [],
   };
-  await sql`INSERT INTO reports (kind, key, window_start, window_end, content, generated_at, origin)
-            VALUES ('daily', ${REPORT_KEY}, now() - interval '1 day', now(), ${sql.json(content as never)}, now(), 'manual')
-            ON CONFLICT (kind, key) DO UPDATE SET content = EXCLUDED.content`;
+  report = await seed.report(content);
+  const REPORT_KEY = report.key;
   assert.ok((await get(`/api/v1/dailies/${REPORT_KEY}`)).body.includes(`QUOTED-${T}`), "the report quotes the item before");
+  // The mini program's daily (where the industry pack has one) lists titles only, so the title is what it carries before.
+  const miniprogram = FEATURES.reports ? `/api/mp/v1/dailies/${REPORT_KEY}` : null;
+  if (miniprogram) assert.ok((await get(miniprogram)).body.includes(`LEAD-${T}`), "the mini program's daily lists the item before");
+  // Its 5:4 share image draws the title as the headline; a different image after is one without it.
+  const poster = FEATURES.reports ? `/og/mp/dailies/${REPORT_KEY}.png` : null;
+  const posterBefore = poster ? await get(poster) : null;
+  if (posterBefore) assert.equal(posterBefore.status, 200, "the mini program's daily has a share image before");
 
   await setVisibility(id, { visibility: "withdrawn", reason: "test", version: 0 }, "test");
-  for (const url of [`/api/v1/dailies/${REPORT_KEY}`, `/api/site/reports/daily/${REPORT_KEY}`]) {
+  for (const url of [`/api/v1/dailies/${REPORT_KEY}`, `/api/site/reports/daily/${REPORT_KEY}`, ...(miniprogram ? [miniprogram] : [])]) {
     const res = await get(url);
     assert.equal(res.status, 200, url);
     assert.ok(!res.body.includes(`QUOTED-${T}`) && !res.body.includes(`original-${T}`), `${url} still quotes the withdrawn item`);
+  }
+  if (miniprogram) assert.ok(!(await get(miniprogram)).body.includes(`LEAD-${T}`), "the mini program's daily drops the title too, not only marks it");
+  if (poster) {
+    const after = await get(poster, { "if-none-match": posterBefore!.etag! });
+    assert.equal(after.status, 200, "the share image is drawn again, not answered 304");
+    assert.notEqual(after.etag, posterBefore!.etag, "without the withdrawn title");
   }
   for (const url of ["/api/v1/dailies"]) {
     const res = await get(url);
@@ -152,31 +168,29 @@ test("a withdrawal takes down only the stories citing it, including secondary me
   const other = await article();
   await publishArticle(other, released());
   const unrelated = await storyFor(other);
+  const exits = (story: string) => [`/api/site/stories/${story}`, `/api/v1/stories/${story}`, `/api/mp/v1/stories/${story}`];
   for (const story of stories) {
-    assert.ok((await get(`/api/site/stories/${story}`)).body.includes(id));
-    assert.ok((await get(`/api/v1/stories/${story}`)).body.includes(id));
+    for (const url of exits(story)) assert.ok((await get(url)).body.includes(id), url);
   }
 
   await setVisibility(id, { visibility: "withdrawn", reason: "test", version: 0 }, "test");
   for (const story of stories) {
-    assert.equal((await get(`/api/site/stories/${story}`)).status, 404);
-    assert.equal((await get(`/api/v1/stories/${story}`)).status, 404);
+    for (const url of exits(story)) assert.equal((await get(url)).status, 404, url);
   }
-  assert.equal((await get(`/api/site/stories/${unrelated}`)).status, 200);
+  for (const url of exits(unrelated)) assert.equal((await get(url)).status, 200, url);
 });
 
 test("a withdrawn item leaves the hot board and the hot APIs at once, not at the next ranking", async () => {
-  const [story] = await sql<{ id: number }[]>`
-    INSERT INTO stories (public_id, title, first_report_at, latest_at) VALUES (${randomUUID()}, ${`HOT-${T}`}, now() - interval '2 hours', now()) RETURNING id`;
-  const [fact] = await sql<{ id: number }[]>`INSERT INTO facts (public_id, story_id, title) VALUES (${`fact-${T}`}, ${story!.id}, ${`HOT-${T}`}) RETURNING id`;
+  const story = await seed.story({ title: `HOT-${T}`, firstReportAt: new Date(Date.now() - 7_200_000) });
+  const fact = await seed.fact(story.id, { title: `HOT-${T}`, publicId: `fact-${T}` });
   for (const id of [await article(), await article()]) {
-    await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${fact!.id}, ${id}, 'report')`;
+    await seed.link(fact, id);
     await sql`INSERT INTO story_signals (story_id, article_id, participant_key, source_id, kind, observed_at)
-              VALUES (${story!.id}, ${id}, ${`participant-${id}`}, ${SOURCE}, 'editorial', now() - interval '1 hour')`;
+              VALUES (${story.id}, ${id}, ${`participant-${id}`}, ${SOURCE}, 'editorial', now() - interval '1 hour')`;
     await publishArticle(id, released());
   }
   await computeHotRanking();
-  const rep = (await latestHotRanking())!.entries.find((e) => e.storyId === story!.id)?.representativeItemId;
+  const rep = (await latestHotRanking())!.entries.find((e) => e.storyId === story.id)?.representativeItemId;
   assert.ok(rep, "the story is on the board with a representative item");
   const exits = ["/api/v1/hot-topics", "/api/site/hot"];
   for (const url of exits) assert.ok((await get(url)).body.includes(rep!), `${url} shows the item before`);
@@ -185,36 +199,66 @@ test("a withdrawn item leaves the hot board and the hot APIs at once, not at the
   for (const url of exits) assert.ok(!(await get(url)).body.includes(rep!), `${url} still shows the withdrawn item`);
 });
 
-test("item pages follow the live rule: unsummarised editorial items keep one, hot_signal items have none", async () => {
+test("item pages follow the live rule: only pool items have one; unsummarised, blocked and hot_signal material is a 404 everywhere", async () => {
   const SIGNAL = `${SOURCE}-signal`;
-  await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, site_fulltext, syndicate_fulltext, next_fetch_at)
-            VALUES (${SIGNAL}, 'Test signal', 'rss', 'T1', 'hot_signal', true, false, '2100-01-01')`;
-  const material = (sourceId: string, name: string) =>
-    upsertMaterial({ sourceId, url: `https://example.com/${T}-${name}`, title: `${name} ${T}`, bodyText: BODY, bodyHtml: `<p>${BODY}</p>`, bodyStatus: "ok", via: "fetch", publishedAt: new Date() });
-  // An editorial item the model never summarised, and a hot_signal item carrying an imported summary.
-  const { articleId: plain } = await material(SOURCE, "plain");
+  await seed.source(SIGNAL, { name: "Test signal", participationMode: "hot_signal", syndicateFulltext: false });
+  const material = (sourceId: string, name: string) => seed.article({ sourceId, slug: name, bodyText: BODY });
+  // An editorial item the model never summarised, one the prefilter blocked, and a hot_signal item carrying an imported summary.
+  const plain = await material(SOURCE, "plain");
   await publishArticle(plain);
-  const { articleId: signal } = await material(SIGNAL, "signal");
-  await sql`INSERT INTO analyses (article_id, input_revision, origin, relevance, category, title_zh, summary_zh, score, selected)
-            VALUES (${signal}, 1, 'replay', 'pass', 'industry', ${`信号-${T}`}, ${`SIGNAL-SUMMARY-${T}`}, 80, false)`;
+  const blocked = await material(SOURCE, "blocked");
+  await seed.analysis(blocked, { relevance: "block", selected: false });
+  await publishArticle(blocked);
+  const signal = await material(SIGNAL, "signal");
+  await seed.analysis(signal, { origin: "replay", titleZh: `信号-${T}`, summaryZh: `SIGNAL-SUMMARY-${T}`, reasonZh: null, score: 80, selected: false });
   await publishArticle(signal);
+  const unreadable = [plain, blocked, signal];
+  for (const id of unreadable) {
+    for (const url of [`/api/site/items/${id}`, `/items/${id}/markdown`, `/og/items/${id}.png`, `/og/posters/${id}.png`, `/og/mp/items/${id}.png`]) {
+      assert.equal((await get(url)).status, 404, `${url} has a page`);
+    }
+  }
+  const availability = JSON.parse((await get(`/api/site/items/availability?ids=${unreadable.join(",")}`)).body) as Record<string, string>;
+  for (const id of unreadable) assert.equal(availability[id], "unavailable", `${id} is still available to a starred list`);
 
-  const page = await get(`/api/site/items/${plain}`);
-  assert.equal(page.status, 200, "an unsummarised editorial item keeps its page");
-  const detail = JSON.parse(page.body) as { summary: string | null; indexable: boolean; markdownAvailable: boolean };
-  assert.deepEqual([detail.summary, detail.indexable, detail.markdownAvailable], [null, false, true], "noindex, with its body for export");
-  assert.equal((await get(`/items/${plain}/markdown`)).status, 200);
-  assert.equal((await get(`/api/site/items/${signal}`)).status, 404, "hot_signal material has no page");
-  assert.equal((await get(`/items/${signal}/markdown`)).status, 404);
+  // A pool item the lists leave out (unselected) keeps a noindex page, as before.
+  const unselected = await material(SOURCE, "unselected");
+  await seed.analysis(unselected, { selected: false });
+  await publishArticle(unselected);
+  const page = await get(`/api/site/items/${unselected}`);
+  assert.equal(page.status, 200, "an unselected pool item keeps its page");
+  assert.equal((JSON.parse(page.body) as { indexable: boolean }).indexable, false, "noindex");
+  assert.equal((await get(`/items/${unselected}/markdown`)).status, 200);
 
-  const publicId = randomUUID();
-  const [story] = await sql<{ id: number }[]>`INSERT INTO stories (public_id, title, first_report_at, latest_at) VALUES (${publicId}, ${`事件-${T}`}, now(), now()) RETURNING id`;
-  const [fact] = await sql<{ id: number }[]>`INSERT INTO facts (public_id, story_id, title) VALUES (${`f-${T}`}, ${story!.id}, ${`事实-${T}`}) RETURNING id`;
-  await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${fact!.id}, ${plain}, 'report'), (${fact!.id}, ${signal}, 'report')`;
-  const storyPage = await get(`/api/site/stories/${publicId}`);
-  assert.equal(storyPage.status, 200, "a story whose only page is unsummarised still has a page");
-  assert.ok(storyPage.body.includes(plain), "it lists the unsummarised editorial report");
-  assert.ok(!storyPage.body.includes(signal) && !storyPage.body.includes(`SIGNAL-SUMMARY-${T}`), "and not the hot_signal one");
+  const { id: storyId, publicId } = await seed.story({ title: `事件-${T}` });
+  const fact = await seed.fact(storyId, { title: `事实-${T}`, publicId: `f-${T}` });
+  for (const id of unreadable) await seed.link(fact, id);
+  const storyExits = [`/api/site/stories/${publicId}`, `/api/v1/stories/${publicId}`, `/api/mp/v1/stories/${publicId}`];
+  for (const url of storyExits) assert.equal((await get(url)).status, 404, `${url}: a story with nothing readable has no page`);
+  const readable = await article();
+  await publishArticle(readable, released());
+  await seed.link(fact, readable);
+  for (const url of storyExits) {
+    const res = await get(url);
+    assert.equal(res.status, 200, url);
+    assert.ok(res.body.includes(readable), `${url} lists the summarised report`);
+    for (const id of unreadable) assert.ok(!res.body.includes(id), `${url} lists a report without a page`);
+    assert.ok(!res.body.includes(`SIGNAL-SUMMARY-${T}`), `${url} shows hot_signal material`);
+  }
+});
+
+test("items a reader could not read are absent from the lists, the feeds and the sitemap", async () => {
+  // An editorial item the model never summarised, and one the prefilter blocked despite a title and summary.
+  const plain = await seed.article({ slug: "unread-plain" });
+  await publishArticle(plain, released());
+  const blocked = await seed.article({ slug: "unread-blocked" });
+  await seed.analysis(blocked, { relevance: "block", selected: false });
+  await publishArticle(blocked, released());
+  for (const url of ["/api/site/pool", "/feed/all.xml", "/api/v1/items?mode=all&limit=100", "/sitemap.xml"]) {
+    const res = await get(url);
+    assert.equal(res.status, 200, url);
+    for (const id of [plain, blocked]) assert.ok(!res.body.includes(id), `${url} links ${id}`);
+  }
 });
 
 test("an early release keeps the selected ledger in order", async () => {
@@ -271,9 +315,8 @@ test("v1 story retains website content and fallback ordering without the website
   await publishArticle(second, released());
   const publicId = await storyFor(first);
   const [story] = await sql<{ id: number }[]>`SELECT id FROM stories WHERE public_id = ${publicId}`;
-  const [fact] = await sql<{ id: number }[]>`INSERT INTO facts (public_id, story_id, title)
-    VALUES (${`v1-development-${T}`}, ${story!.id}, 'Latest development fallback') RETURNING id`;
-  await sql`INSERT INTO fact_articles (fact_id, article_id, role) VALUES (${fact!.id}, ${second}, 'report')`;
+  const fact = await seed.fact(story!.id, { publicId: `v1-development-${T}`, title: "Latest development fallback" });
+  await seed.link(fact, second);
   await sql`UPDATE publications SET published_at = now() - interval '1 hour' WHERE article_id = ${first}`;
   await sql`UPDATE stories SET first_report_at = NULL, latest_at = NULL WHERE id = ${story!.id}`;
   const site = JSON.parse((await get(`/api/site/stories/${publicId}`)).body);
@@ -385,4 +428,64 @@ test("minimal sync projection preserves snapshot fields, pagination bindings and
   await setVisibility(id, { visibility: 'withdrawn', reason: 'sync test', version: 0 }, 'test');
   const removed = await getChanges(minimalChanges.cursor);
   assert.ok(removed.changes.some((c: any) => c.op === 'remove' && c.id === id));
+});
+
+test("AI marks follow who wrote each field on every site read: a model's draft is marked, an editor's correction included; a rule's is not", async () => {
+  const mark = `aimark${T}`;
+  const item = (origin: "model" | "replay" | "rule", name: string) =>
+    seed.selected({ bodyText: BODY, analysis: { origin, titleZh: `${mark} ${name}`, summaryZh: `${mark} ${name} summary` } });
+  const model = await item("model", "model");
+  const replay = await item("replay", "replay");
+  const rule = await item("rule", "rule");
+  const edited = await item("model", "edited");
+  // Foreign originals: a model's translation marks the body, the source's own translation does not.
+  for (const [id, origin] of [[model, "model"], [replay, "source"]] as const) {
+    await sql`UPDATE articles SET language = 'en', body_html = '<p>Original full body</p>' WHERE id = ${id}`;
+    await seed.translation(id, { origin, bodyHtml: "<p>中文完整正文</p>", bodyText: "中文完整正文" });
+  }
+  for (const id of [model, replay, rule, edited]) await publishArticle(id, released());
+  await overrideFields(edited, { fields: { title: `${mark} EDITED` }, reason: "test", version: 0 }, "test");
+
+  const all = { title: true, summary: true, reason: true };
+  const none = { title: false, summary: false, reason: false };
+  const detail = async (id: string) => JSON.parse((await get(`/api/site/items/${id}`)).body);
+  assert.deepEqual((await detail(model)).ai, { ...all, body: true }, "model, with a model's translation");
+  assert.deepEqual((await detail(replay)).ai, { ...all, body: false }, "replay, with the source's own translation");
+  assert.deepEqual((await detail(rule)).ai, { ...none, body: false }, "rule");
+  const corrected = await detail(edited);
+  assert.equal(corrected.title, `${mark} EDITED`, "the correction is shown");
+  assert.deepEqual(corrected.ai, { ...all, body: false }, "a corrected model draft stays marked");
+
+  const expected = new Map([[model, all], [replay, all], [rule, none], [edited, all]]);
+  const pool = JSON.parse((await get(`/api/site/pool?q=${mark}`)).body) as { items: Array<{ id: string; ai: unknown }> };
+  for (const [id, ai] of expected) assert.deepEqual(pool.items.find((i) => i.id === id)?.ai, ai, `the pool card of ${id}`);
+
+  // Reports under a story and a fact carry their item's own title mark.
+  const { id: storyId, publicId } = await seed.story({ origin: "manual", title: `${mark} story`, digest: null });
+  const factId = `f-${mark}`;
+  const fact = await seed.fact(storyId, { publicId: factId });
+  for (const id of [model, rule, edited]) await seed.link(fact, id);
+  const story = JSON.parse((await get(`/api/site/stories/${publicId}`)).body);
+  assert.deepEqual(story.ai, { title: true, digest: false }, "an editor's story title stays marked; without a digest there is nothing to mark");
+  const listed = new Map((story.timeline as Array<{ id: string; ai: { title: boolean } }>).map((r) => [r.id, r.ai.title]));
+  assert.deepEqual(listed, new Map([[model, true], [rule, false], [edited, true]]), "story reports");
+  for (const [id, title] of listed) assert.equal(title, (await detail(id)).ai.title, `the story's report ${id} is marked as its item`);
+  assert.equal(story.excerpt.ai.summary, story.excerpt.text !== `${mark} rule summary`, "the excerpt is marked as the report it is taken from");
+  await sql`UPDATE stories SET digest = ${`${mark} digest`} WHERE id = ${storyId}`;
+  assert.deepEqual(JSON.parse((await get(`/api/site/stories/${publicId}`)).body).ai, { title: true, digest: true }, "a digest is a model's");
+  const group = JSON.parse((await get(`/api/site/groups/${factId}/reports`)).body) as { reports: Array<{ id: string; ai: { title: boolean } }> };
+  assert.deepEqual(new Map(group.reports.map((r) => [r.id, r.ai.title])), listed, "a fact's reports");
+
+  // A daily's lead is marked whoever saved it; its items as the items themselves.
+  const cite = (id: string) => ({ itemId: id, title: `${mark} cited`, summary: "s", sourceUrl: "https://example.com/cited", sourceName: "Test" });
+  const daily = await seed.report({ lead: { title: `${mark} lead`, leadParagraph: "" }, sections: [{ label: "模型", items: [cite(model), cite(rule)] }], flashes: [cite(edited)] },
+    { key: `2099-11-${String(10 + Math.floor(Math.random() * 19))}` });
+  try {
+    const issue = JSON.parse((await get(`/api/site/reports/daily/${daily.key}`)).body);
+    assert.deepEqual(issue.ai, { leadTitle: true, leadParagraph: false });
+    assert.deepEqual(issue.sections[0].items.map((c: { ai: { title: boolean } }) => c.ai.title), [true, false]);
+    assert.equal(issue.flashes[0].ai.title, true);
+  } finally {
+    await daily.remove();
+  }
 });

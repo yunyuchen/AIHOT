@@ -4,7 +4,7 @@ import type { CategoryKey, ChannelKey } from "@aihot/contracts/taxonomy";
 import type { FeedItemSummary, ItemSummary, MediaView, SourceKind, XPostView } from "@aihot/contracts/site";
 import { sql, type Db } from "../db.ts";
 import { proxiedImage, proxiedImageSet } from "../media/imgproxy.ts";
-import { displayTags } from "./rules.ts";
+import { displayTags, itemAiMarks } from "./rules.ts";
 
 export interface ItemRow {
   id: string;
@@ -48,6 +48,9 @@ export interface ItemRow {
   zh_text: string | null;
   /** Chinese translation of the post an X post quotes. */
   quoted_zh: string | null;
+  /** Who wrote the current analysis (`publications.analysis_id`) and the current translation: the AI marks. */
+  analysis_origin: string | null;
+  translation_origin: string | null;
 }
 
 /** Columns every item listing selects. Internal judgement details never leave this layer. */
@@ -58,7 +61,8 @@ export const ITEM_COLUMNS = sql`
   s.id AS source_id, s.name AS source_name, s.kind AS source_kind, s.participation_mode AS source_mode, s.icon_url AS source_icon,
   a.x_post, a.author, a.language,
   st.public_id::text AS story_public_id, st.title AS story_title,
-  CASE WHEN p.channel = 'x' THEN tr.body_text END AS zh_text, qt.text_zh AS quoted_zh`;
+  CASE WHEN p.channel = 'x' THEN tr.body_text END AS zh_text, qt.text_zh AS quoted_zh,
+  an.origin AS analysis_origin, tr.origin AS translation_origin`;
 
 /** Public API listings never render article bodies, X media or story metadata. */
 export type ApiItemRow = Pick<ItemRow, "id" | "title" | "original_title" | "summary" | "source_name" | "url" | "published_at" | "discovered_at" | "category" | "score" | "selected" | "reason">;
@@ -74,6 +78,7 @@ export const ITEM_FROM = sql`
   JOIN articles a ON a.id = p.article_id
   LEFT JOIN stories st ON st.id = p.story_id AND st.merged_into IS NULL
   LEFT JOIN translations tr ON tr.article_id = p.article_id AND tr.lang = 'zh' AND tr.revision >= a.revision
+  LEFT JOIN analyses an ON an.id = p.analysis_id
   LEFT JOIN quote_translations qt ON p.channel = 'x' AND qt.tweet_id = substring(a.x_post->'quoted'->>'url' from '/status/([0-9]+)')`;
 
 /** Listed items: public, and a selected item only after its release gate. */
@@ -150,13 +155,14 @@ export function xView(row: Pick<ItemRow, "x_post" | "zh_text"> & Partial<Pick<It
 
 export function toItemSummary(row: ItemRow): ItemSummary {
   const x = row.channel === "x" ? xView(row, true) : null;
+  const reason = row.selected ? row.reason : null;
   return {
     id: row.id,
     revision: row.revision,
     title: row.title,
     originalTitle: row.original_title,
     summary: row.summary,
-    reason: row.selected ? row.reason : null,
+    reason,
     source: {
       id: row.source_id,
       name: row.source_name,
@@ -176,6 +182,7 @@ export function toItemSummary(row: ItemRow): ItemSummary {
     channel: row.channel,
     story: row.story_public_id ? { publicId: row.story_public_id, title: row.story_title ?? "" } : null,
     x,
+    ai: itemAiMarks(row.analysis_origin, reason),
   };
 }
 
@@ -185,7 +192,7 @@ export function toFeedItemSummary(row: ItemRow): FeedItemSummary {
   return {
     id: item.id, title: item.title, summary: item.summary, reason: item.reason,
     source: { name: item.source.name }, publishedAt: item.publishedAt, timelineAt: item.timelineAt,
-    category: item.category, tags: item.tags, score: item.score, selected: item.selected, channel: item.channel,
+    category: item.category, tags: item.tags, score: item.score, selected: item.selected, channel: item.channel, ai: item.ai,
     x: item.x ? {
       authorName: item.x.authorName, handle: item.x.handle, avatarUrl: item.x.avatarUrl,
       ...(item.x.avatarSrcSet ? { avatarSrcSet: item.x.avatarSrcSet } : {}), media: item.x.media,

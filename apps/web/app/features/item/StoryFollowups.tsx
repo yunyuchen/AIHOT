@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import type { StoryFollowup, StoryFollowupsResponse, StoryRef } from "@aihot/contracts/site";
+import { AiBadge } from "../../components/ui/Badge";
 import { MoreLink } from "../../components/ui/Page";
 import { relativeTime, shortSourceName } from "../../lib/format";
 
@@ -44,8 +45,11 @@ function Followups({items, more, story}: {items: StoryFollowup[]; more: boolean;
   return (
     <section className="mt-10 border-t border-line pt-5">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-[14px] font-semibold text-ink">
-          事件后续 <span className="num font-normal text-ink-4">· {items.length}{more ? "+" : ""}</span>
+        <h2 className="flex items-center gap-2 text-[14px] font-semibold text-ink">
+          <span>
+            事件后续 <span className="num font-normal text-ink-4">· {items.length}{more ? "+" : ""}</span>
+          </span>
+          {items.some((d) => d.representative.ai?.title) && <AiBadge />}
         </h2>
         <MoreLink to={`/story/${story.publicId}`}>查看事件全部</MoreLink>
       </div>

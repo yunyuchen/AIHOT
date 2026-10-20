@@ -29,3 +29,15 @@ export function SelectedBadge() {
     </Badge>
   );
 }
+
+/**
+ * The "AI 摘要" mark beside a field a model wrote. Whether it shows is the read layer's `ai.*` mark
+ * for that field (an editor's correction stays marked); pages never infer it themselves.
+ */
+export function AiBadge({ className = "" }: { className?: string }) {
+  return (
+    <Badge tone="accent" title="由 AI 根据原文生成，以原文为准" className={className}>
+      AI 摘要
+    </Badge>
+  );
+}

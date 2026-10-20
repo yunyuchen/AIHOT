@@ -26,6 +26,11 @@ before(async () => {
 });
 after(async () => {
   await sql`DELETE FROM reports WHERE kind = 'daily' AND key IN ('2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05')`;
+  // Each saved daily queues its reminders' send; nothing works that queue here.
+  await sql`DELETE FROM pgboss.job WHERE name = 'notify.reminders' AND data->>'date' IN ('2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05')`;
+  // The next run composes the same days: this run's items must not fill their sections.
+  await sql`DELETE FROM articles WHERE source_id = ${SOURCE}`;
+  await sql`DELETE FROM sources WHERE id = ${SOURCE}`;
   await provider.close();
   await stopBoss();
   await closeDb();

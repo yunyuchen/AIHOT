@@ -8,11 +8,10 @@ export async function itemAvailability(ids: string[]): Promise<Record<string, "p
   const out: Record<string, "public" | "summary-only" | "unavailable"> = {};
   for (const id of clean) out[id] = "unavailable";
   if (clean.length === 0) return out;
-  const rows = await sql<{ id: string; visibility: string; source_mode: string }[]>`
-    SELECT p.article_id AS id, p.visibility, s.participation_mode AS source_mode
-    FROM publications p JOIN sources s ON s.id = p.source_id WHERE p.article_id IN ${sql(clean)}`;
+  const rows = await sql<{ id: string; visibility: string; eligible: boolean }[]>`
+    SELECT article_id AS id, visibility, eligible FROM publications WHERE article_id IN ${sql(clean)}`;
   for (const r of rows) {
-    if (!hasItemPage({ visibility: r.visibility, sourceMode: r.source_mode })) continue;
+    if (!hasItemPage(r)) continue;
     out[r.id] = r.visibility === "summary-only" ? "summary-only" : "public";
   }
   return out;

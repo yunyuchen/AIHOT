@@ -41,6 +41,32 @@ export const SITE = {
   crawlerName: "ReechiHotBot",
 } as const;
 
+/**
+ * 小程序里的板块：一个行业实例供一个板块，经小程序出口的元信息（/api/mp/v1/meta）交给小程序。
+ * key 和 name 也写在小程序的构建配置里，两边要一致；key 上线后不要改。
+ */
+export const BOARD = {
+  /** 板块 key（小写字母），小程序按它对上构建配置里的板块。 */
+  key: "manufacturing",
+  /** 板块名：小程序的 tab 和页面上用，不从站名推。 */
+  name: "制造",
+  /** 小程序名：给小程序的 5:4 分享图左上角的品牌字样。所有板块写同一个名字。 */
+  appName: "锐奇热点",
+  /** 板块的一句话说明。 */
+  description: "锂电、储能、半导体、薄膜等制造行业的每日精选、事件和日报。",
+  /** 整改开关切到占位时显示的文案（选填），null 时小程序用内置文案。 */
+  placeholder: null as null | { title: string; body: string },
+  notice: {
+    /** 板块页脚的一行声明（选填），用“本板块”的说法。 */
+    footer: null as string | null,
+    /**
+     * 心理援助热线（选填）：label 是文案，number 是号码（由人核对官方公布的号码后写入，不由模型写），
+     * categories 是在哪些分类的卡片和条目页上显示它（分类 key 见 taxonomy.ts）。
+     */
+    hotline: null as null | { label: string; number: string; categories: string[] },
+  },
+} as const;
+
 /** 关于页的文案。数字（信源数、收录数、精选数、日报期数）来自站内实时统计，不用写在这里。 */
 export const ABOUT = {
   kicker: `关于 ${SITE.name}`,

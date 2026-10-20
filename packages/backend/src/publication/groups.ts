@@ -8,6 +8,7 @@ import { shortHash } from "../lib/ids.ts";
 import { proxiedImage } from "../media/imgproxy.ts";
 import { ITEM_COLUMNS, ITEM_FROM, categoryCondition, channelCondition, selectedCondition, tagCondition, toItemSummary, topicCondition, type ItemRow } from "./items.ts";
 import { pickRepresentative } from "./timeline.ts";
+import { writtenByModel } from "./rules.ts";
 
 export interface GroupReportsQuery {
   factPublicId: string;
@@ -31,11 +32,11 @@ export async function loadGroupReports(q: GroupReportsQuery, now = new Date()): 
   const filters = sql`${channelCondition(q.channel)} ${categoryCondition(q.category)} ${tagCondition(q.tag)} ${topicCondition(q.topicTags)}`;
   const members = await sql<{
     id: string; title: string; summary: string | null; timeline_at: Date; url: string; selected: boolean;
-    source_id: string; source_name: string; source_kind: string; first_party: boolean; icon_url: string | null;
+    source_id: string; source_name: string; source_kind: string; first_party: boolean; icon_url: string | null; analysis_origin: string | null;
   }[]>`
     SELECT p.article_id AS id, p.title, p.summary, p.timeline_at, p.url, p.selected,
-           s.id AS source_id, s.name AS source_name, s.kind AS source_kind, p.first_party, s.icon_url
-    FROM publications p JOIN sources s ON s.id = p.source_id
+           s.id AS source_id, s.name AS source_name, s.kind AS source_kind, p.first_party, s.icon_url, an.origin AS analysis_origin
+    FROM publications p JOIN sources s ON s.id = p.source_id LEFT JOIN analyses an ON an.id = p.analysis_id
     WHERE p.article_id IN (SELECT article_id FROM fact_articles WHERE fact_id = ${fact.id}) AND p.visibility = 'public' AND p.eligible
       AND (NOT p.selected OR p.visible_after <= ${now}) ${filters}
     ORDER BY p.timeline_at DESC, p.article_id ASC`;
@@ -68,6 +69,7 @@ export async function loadGroupReports(q: GroupReportsQuery, now = new Date()): 
         timelineAt: m.timeline_at.toISOString(),
         originalUrl: m.url,
         selected: m.selected,
+        ai: { title: writtenByModel(m.analysis_origin), summary: writtenByModel(m.analysis_origin) },
       })),
       nextCursor: next,
     },

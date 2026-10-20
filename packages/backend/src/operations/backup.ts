@@ -1,17 +1,25 @@
-// Database and file backups: a verified custom-format dump plus the uploaded files, sent
-// to the existing object store (Tencent COS through its S3-compatible API, AWS Signature V4) under
-// daily/ (Sundays also weekly/, the 1st also monthly/). A few local copies are kept.
+// Database and file backups: a verified custom-format dump (without the daily reminders' rows) plus the
+// uploaded files, sent to the existing object store (Tencent COS through its S3-compatible API, AWS
+// Signature V4) under daily/ (Sundays also weekly/, the 1st also monthly/). A few local copies are kept.
+// Names start with the industry pack's board key, so instances of different packs sharing one bucket do not
+// overwrite each other (two deployments of the same pack in one bucket still would).
 import { execFile } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { BOARD } from "@aihot/industry/site";
 import { config, credential } from "../config.ts";
 import { sql } from "../db.ts";
 
 const run = promisify(execFile);
 const KEEP_LOCAL = 3;
+/**
+ * The two kinds of local copy, capturing the UTC stamp. Copies named before the board key was in them
+ * (aihot-…) count with this pack's own, so they age out like any other.
+ */
+const LOCAL_KINDS = [new RegExp(`^(?:aihot|${BOARD.key})-(\\d{12})\\.dump$`), new RegExp(`^(?:aihot|${BOARD.key})-files-(\\d{12})\\.tar\\.gz$`)];
 
 interface Store {
   secretId: string;
@@ -74,16 +82,24 @@ async function upload(s: Store, key: string, file: string, sha: string, size: nu
   if (!res.ok) throw new Error(`backup upload ${key}: HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
 }
 
+/**
+ * pg_dump's arguments. The daily reminders' rows (openids waiting for one message) never reach a backup,
+ * their table does: the privacy notice promises they live 48 hours at most.
+ */
+export function dumpArgs(file: string): string[] {
+  return ["--format=custom", "--compress=6", "--no-owner", "--exclude-table-data=miniprogram_reminders", "--file", file, config.databaseUrl];
+}
+
 export async function runBackup(now = new Date()) {
   const s = store();
   const dir = path.join(config.dataDir, "backups");
   await mkdir(dir, { recursive: true });
   const stamp = now.toISOString().slice(0, 16).replace(/[-:T]/g, "");
-  const dump = path.join(dir, `aihot-${stamp}.dump`);
-  await run("pg_dump", ["--format=custom", "--compress=6", "--no-owner", "--file", dump, config.databaseUrl], { maxBuffer: 16 * 1024 * 1024 });
+  const dump = path.join(dir, `${BOARD.key}-${stamp}.dump`);
+  await run("pg_dump", dumpArgs(dump), { maxBuffer: 16 * 1024 * 1024 });
   // Verify before shipping: the archive must list cleanly.
   await run("pg_restore", ["--list", dump], { maxBuffer: 64 * 1024 * 1024 });
-  const files = path.join(dir, `aihot-files-${stamp}.tar.gz`);
+  const files = path.join(dir, `${BOARD.key}-files-${stamp}.tar.gz`);
   // An empty archive only when there is nothing to keep. A failure to read or pack existing files is
   // tried once more and otherwise reported: the database dump still ships, but the run fails.
   const kept: string[] = [];
@@ -113,10 +129,12 @@ export async function runBackup(now = new Date()) {
       out.push({ key: s ? key : `local-only:${path.basename(file)}`, bytes: size, sha256: sha });
     }
   }
-  // Local copies: keep the newest few of each kind.
-  for (const kind of ["aihot-2", "aihot-files-"]) {
-    const list = (await readdir(dir)).filter((f) => f.startsWith(kind)).sort().reverse();
-    for (const f of list.slice(KEEP_LOCAL)) await rm(path.join(dir, f), { force: true });
+  // Local copies: keep the newest few of each kind, by stamp. Another pack's copies (a development data
+  // directory shared between packs) are left to that pack.
+  for (const kind of LOCAL_KINDS) {
+    const list = (await readdir(dir)).map((f) => ({ f, stamp: kind.exec(f)?.[1] ?? "" })).filter((c) => c.stamp);
+    list.sort((a, b) => b.stamp.localeCompare(a.stamp));
+    for (const { f } of list.slice(KEEP_LOCAL)) await rm(path.join(dir, f), { force: true });
   }
   const summary = { at: now.toISOString(), uploaded: !!s && !filesError, objects: out, ...(filesError ? { filesError } : {}) };
   await sql`INSERT INTO settings (key, value, updated_by) VALUES ('backup.last', ${sql.json(summary as never)}, 'backup')

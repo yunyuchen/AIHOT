@@ -42,6 +42,17 @@ export interface StoryRef {
   title: string;
 }
 
+/**
+ * Per-field "AI 摘要" marks, decided once in the read layer (publication/rules.ts): true when a model
+ * wrote the field's draft, an editor's later correction included.
+ */
+export interface ItemAiMarks {
+  title: boolean;
+  summary: boolean;
+  /** False when no reason is shown. */
+  reason: boolean;
+}
+
 export interface ItemSummary {
   id: string;
   revision: number;
@@ -61,10 +72,11 @@ export interface ItemSummary {
   channel: "news" | "x";
   story: StoryRef | null;
   x: XPostView | null;
+  ai: ItemAiMarks;
 }
 
 /** The fields rendered by a site feed card; full original text lives in the item detail. */
-export interface FeedItemSummary extends Pick<ItemSummary, "id" | "title" | "summary" | "reason" | "publishedAt" | "timelineAt" | "category" | "tags" | "score" | "selected" | "channel"> {
+export interface FeedItemSummary extends Pick<ItemSummary, "id" | "title" | "summary" | "reason" | "publishedAt" | "timelineAt" | "category" | "tags" | "score" | "selected" | "channel" | "ai"> {
   source: Pick<SourceRef, "name">;
   x: (Pick<XPostView, "authorName" | "handle" | "avatarUrl" | "avatarSrcSet" | "media"> & {
     quoted: Omit<NonNullable<XPostView["quoted"]>, "url"> | null;
@@ -148,6 +160,14 @@ export interface ItemDetail extends ItemSummary {
   indexable: boolean;
   markdownAvailable: boolean;
   group: GroupInfo | null;
+  /** body: the Chinese body is a model's translation. */
+  ai: ItemAiMarks & { body: boolean };
+}
+
+/** The marks of a report listed under a fact, a story or a report issue: its item's own (ItemAiMarks). */
+export interface ReportAiMarks {
+  title: boolean;
+  summary: boolean;
 }
 
 export interface GroupReport {
@@ -158,6 +178,7 @@ export interface GroupReport {
   timelineAt: string;
   originalUrl: string;
   selected: boolean;
+  ai: ReportAiMarks;
 }
 
 export interface GroupReportsResponse {
@@ -253,6 +274,7 @@ export interface StoryReportView {
   originalUrl: string;
   selected: boolean;
   factId: string;
+  ai: ReportAiMarks;
 }
 
 export interface StoryFactView {
@@ -276,8 +298,8 @@ export interface StoryDetail {
   digestUpdatedAt: string | null;
   /** The story's own factual summary, when it has one. */
   summary: string | null;
-  /** Without a digest or summary: the summary of the report the story started from. */
-  excerpt: { text: string; sourceName: string } | null;
+  /** Without a digest or summary: the summary of the report the story started from, with that report's mark. */
+  excerpt: { text: string; sourceName: string; ai: { summary: boolean } } | null;
   latest: string | null;
   whyHot: {
     participants48h: number;
@@ -292,6 +314,8 @@ export interface StoryDetail {
   timeline: StoryReportView[];
   heat: HeatPoint[];
   related: Array<StoryRef & { relation: "storyline" | "related"; latestAt: string | null }>;
+  /** title: the story title (an editor's correction included); digest: the digest, else the story's own summary. */
+  ai: { title: boolean; digest: boolean };
 }
 
 // ---------------------------------------------------------------------------
@@ -316,6 +340,8 @@ export interface ReportCitation {
   publishedAt: string | null;
   /** False once the item was withdrawn; the citation then shows as removed. */
   available: boolean;
+  /** The cited item's own marks; an item older than this database is taken as a model's. */
+  ai: ReportAiMarks;
 }
 
 export interface ReportDetail {
@@ -343,6 +369,8 @@ export interface ReportDetail {
   readingMinutes: number;
   prev: string | null;
   next: string | null;
+  /** The lead's title and paragraph, whenever there is one (section names are not marked). */
+  ai: { leadTitle: boolean; leadParagraph: boolean };
 }
 
 export interface ReportIndexEntry {
@@ -381,7 +409,7 @@ export interface SiteItemDetail extends Omit<ItemDetail, "x"> {
 
 export interface StoryFollowup {
   factId: string;
-  representative: { id: string; title: string; source: { name: string }; timelineAt: string };
+  representative: { id: string; title: string; source: { name: string }; timelineAt: string; ai: { title: boolean } };
 }
 export interface StoryFollowupsResponse { items: StoryFollowup[]; more: boolean }
 

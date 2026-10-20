@@ -11,6 +11,7 @@ import { sql } from "../db.ts";
 import { chatJson } from "../providers/llm.ts";
 import { completeReceipt } from "../providers/receipts.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
+import { enqueueReminderSend } from "../notify/reminders.ts";
 
 export const REPORT_VERSION = promptVersion("report-daily-lead", "report-period");
 
@@ -173,6 +174,9 @@ export async function composeDaily(date: string, reason = "scheduled"): Promise<
   };
   await saveReport("daily", date, start, end, content, reason, model);
   if (lead) await completeReceipt(sql, lead.receiptId);
+  // The 08:00 run and the hourly catch-up both save here: the issue's reminders go out now. A process that
+  // stops before this line leaves them to the 10-minute schedule (reminders.send).
+  await enqueueReminderSend(date).catch((error: unknown) => console.error(JSON.stringify({ level: "warn", msg: "reminder send not queued", date, error: String(error) })));
   return { key: date, entries: ordered.length };
 }
 

@@ -5,6 +5,7 @@ import { sql } from "../db.ts";
 import { cached, type Cached } from "../lib/cache.ts";
 import { proxiedImage, proxiedImageSet } from "../media/imgproxy.ts";
 import { dailyUrl, itemUrl, siteUrl } from "./links.ts";
+import { writtenByModel } from "./rules.ts";
 import { SITE, withSubject } from "@aihot/industry/site";
 
 export type { ReportKind };
@@ -26,15 +27,18 @@ interface Availability {
   sourceIcon: string | null;
   storyPublicId: string | null;
   publishedAt: Date | null;
+  /** The item's own title and summary mark (its current analysis is a model's). */
+  ai: boolean;
 }
 
 async function availability(ids: string[]): Promise<Map<string, Availability>> {
   const out = new Map<string, Availability>();
   if (ids.length === 0) return out;
-  const rows = await sql<{ id: string; visibility: string; eligible: boolean; first_party: boolean; source_id: string; icon_url: string | null; story_public_id: string | null; at: Date | null }[]>`
+  const rows = await sql<{ id: string; visibility: string; eligible: boolean; first_party: boolean; source_id: string; icon_url: string | null; story_public_id: string | null; at: Date | null; analysis_origin: string | null }[]>`
     SELECT p.article_id AS id, p.visibility, p.eligible, p.first_party, p.source_id, s.icon_url, st.public_id::text AS story_public_id,
-      coalesce(p.published_at, p.discovered_at) AS at
+      coalesce(p.published_at, p.discovered_at) AS at, an.origin AS analysis_origin
     FROM publications p LEFT JOIN sources s ON s.id = p.source_id LEFT JOIN stories st ON st.id = p.story_id
+    LEFT JOIN analyses an ON an.id = p.analysis_id
     WHERE p.article_id IN ${sql(ids)}`;
   for (const r of rows) {
     out.set(r.id, {
@@ -44,6 +48,7 @@ async function availability(ids: string[]): Promise<Map<string, Availability>> {
       sourceIcon: r.icon_url,
       storyPublicId: r.story_public_id,
       publishedAt: r.at,
+      ai: writtenByModel(r.analysis_origin),
     });
   }
   return out;
@@ -114,11 +119,13 @@ function citationFrom(raw: Record<string, any>, avail: Map<string, Availability>
   const a = id ? avail.get(id) : undefined;
   // Items absent from this database (older than the imported window) stay cited as they were published.
   const available = id ? (a ? a.available : true) : true;
+  // Such an item's title came with the imported issue, a model's work: marked, as is a citation without an item.
+  const ai = a ? a.ai : true;
   if (!available) {
     // Withdrawn since: the reader sees a marked title; the summary and links are not sent at all.
     return {
       itemId: id, title: String(raw.title ?? ""), summary: null, sourceName: "", sourceUrl: "", sourceId: null, sourceIconUrl: null,
-      firstParty: false, role: raw.role ?? null, storyPublicId: null, publishedAt: null, available: false,
+      firstParty: false, role: raw.role ?? null, storyPublicId: null, publishedAt: null, available: false, ai: { title: ai, summary: false },
     };
   }
   return {
@@ -135,6 +142,7 @@ function citationFrom(raw: Record<string, any>, avail: Map<string, Availability>
     storyPublicId: raw.storyPublicId ?? a?.storyPublicId ?? null,
     publishedAt: a?.publishedAt?.toISOString() ?? null,
     available,
+    ai: { title: ai, summary: ai },
   };
 }
 
@@ -188,7 +196,8 @@ function readingMinutes(text: string): number {
   return Math.max(1, Math.round([...text].length / 450));
 }
 
-async function neighbors(kind: ReportKind, key: string): Promise<{ prev: string | null; next: string | null }> {
+/** The issues of a kind just before and after `key`. */
+export async function neighbors(kind: ReportKind, key: string): Promise<{ prev: string | null; next: string | null }> {
   const [row] = await sql<{ prev: string | null; next: string | null }[]>`
     SELECT (SELECT key FROM reports WHERE kind = ${kind} AND key < ${key} ORDER BY key DESC LIMIT 1) AS prev,
       (SELECT key FROM reports WHERE kind = ${kind} AND key > ${key} ORDER BY key ASC LIMIT 1) AS next`;
@@ -229,6 +238,7 @@ export async function loadReport(kind: ReportKind, key: string): Promise<ReportD
   const cover = picture && leadItem ? { ...picture, caption: kind === "daily" ? null : leadItem.title } : null;
   const headline = kind === "daily" ? null : periodicHeadline(c);
   const title = kind === "daily" ? `${withSubject("日报")} · ${key}` : String(c.title ?? (kind === "weekly" ? `${SITE.name} 周报 · ${key}` : `${SITE.name} 月报 · ${key}`));
+  const lead: ReportDetail["lead"] = c.lead ?? (headline ? { title: headline, leadParagraph: String(c.overview ?? "") } : null);
   return {
     kind,
     key,
@@ -237,7 +247,7 @@ export async function loadReport(kind: ReportKind, key: string): Promise<ReportD
     windowEnd: r.window_end.toISOString(),
     generatedAt: r.generated_at.toISOString(),
     revision: r.revision,
-    lead: c.lead ?? (headline ? { title: headline, leadParagraph: String(c.overview ?? "") } : null),
+    lead,
     overview: c.overview ?? null,
     highlights,
     sections,
@@ -248,6 +258,8 @@ export async function loadReport(kind: ReportKind, key: string): Promise<ReportD
     readingMinutes: readingMinutes(text),
     prev,
     next,
+    // A lead is a model's draft whoever saved the issue last (imported, manual).
+    ai: { leadTitle: !!lead?.title, leadParagraph: !!lead?.leadParagraph },
   };
 }
 

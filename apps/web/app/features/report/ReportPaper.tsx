@@ -10,7 +10,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { ReportCitation, ReportDetail, ReportNavigationEntry } from "@aihot/contracts/site";
 import { shortSourceName } from "../../lib/format";
-import { Badge } from "../../components/ui/Badge";
+import { AiBadge, Badge } from "../../components/ui/Badge";
 import { IconArrowLeft, IconArrowRight, IconArrowUpRight } from "../../components/icons";
 import { Kicker } from "../../components/ui/Kicker";
 import { SourceAvatar } from "../../components/ui/SourceAvatar";
@@ -23,6 +23,9 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (c: ReportCitation) => c.itemId ?? c.title;
 const anchorOf = (c: ReportCitation) => (c.itemId ? `r-${c.itemId}` : null);
 const LINK = "inline-flex min-h-7 items-center gap-0.5 font-medium transition-colors hover:text-accent";
+// "AI 摘要" goes once beside a block's heading when a model wrote any of its text, as the read layer marks
+// each field (an edge-cached issue from before the marks has none). Section names are not marked.
+const citedByModel = (items: ReportCitation[]) => items.some((c) => c.available && (c.ai?.title || c.ai?.summary));
 
 function Masthead({ report, index }: { report: ReportDetail; index: ReportNavigationEntry[] }) {
   const issue = issueNumber(index, report.key);
@@ -212,6 +215,7 @@ function FrontPage({ report, pages, leadStory, count }: { report: ReportDetail; 
   const wide = !cover?.width || !cover.height || cover.width / cover.height >= 1.25;
   const title = report.lead?.title ?? leadStory?.title ?? headline(report.kind, report.key, count);
   const dek = report.lead?.leadParagraph ?? leadStory?.summary ?? report.overview;
+  const leadMarked = report.lead ? !!(report.ai?.leadTitle || report.ai?.leadParagraph) : leadStory ? citedByModel([leadStory]) : false;
   const highlights = report.highlights.filter((h) => !leadStory || keyOf(h) !== keyOf(leadStory)).slice(0, 3);
   const inPage = new Set(pages.flatMap((p) => p.items.map((c) => c.itemId)).filter(Boolean));
   const period = daily ? "今日" : report.kind === "weekly" ? "本周" : "本月";
@@ -220,7 +224,10 @@ function FrontPage({ report, pages, leadStory, count }: { report: ReportDetail; 
   return (
     <section aria-label="头版" className="grid @[880px]:grid-cols-[minmax(0,1fr)_300px] @[1040px]:grid-cols-[minmax(0,1fr)_340px]">
       <div id={leadStory ? (anchorOf(leadStory) ?? undefined) : undefined} className="min-w-0 scroll-mt-6 py-7 @[880px]:border-r @[880px]:border-line @[880px]:py-10 @[880px]:pr-10">
-        <Kicker>{daily ? "头条" : "本期导读"}</Kicker>
+        <div className="flex items-center gap-2.5">
+          <Kicker>{daily ? "头条" : "本期导读"}</Kicker>
+          {leadMarked && <AiBadge />}
+        </div>
         {cover && wide && <LeadPicture cover={cover} onError={() => setBroken(cover.url)} priority className="mt-5" />}
         <h2 className="mt-4 text-[32px] font-black leading-[1.28] tracking-[-0.03em] text-ink [text-wrap:balance] @[520px]:text-[40px] @[1040px]:text-[48px] @[1040px]:leading-[1.22]">
           {leadStory?.itemId ? (
@@ -248,7 +255,10 @@ function FrontPage({ report, pages, leadStory, count }: { report: ReportDetail; 
       <aside className="min-w-0 border-t border-line py-7 @[880px]:border-t-0 @[880px]:py-10 @[880px]:pl-8">
         {highlights.length > 0 && (
           <>
-            <Kicker>{period}看点</Kicker>
+            <div className="flex items-center gap-2.5">
+              <Kicker>{period}看点</Kicker>
+              {highlights.some((h) => h.available && h.ai?.title) && <AiBadge />}
+            </div>
             <ol className="mt-2">
               {highlights.map((h, i) => {
                 const anchor = anchorOf(h);
@@ -290,7 +300,7 @@ function FrontPage({ report, pages, leadStory, count }: { report: ReportDetail; 
 }
 
 /** A page of the report: its number in the accent beside its name. */
-export function SectionPage({ id, no, label, children }: { id: string; no?: number; label: string; children: ReactNode }) {
+export function SectionPage({ id, no, label, ai = false, children }: { id: string; no?: number; label: string; ai?: boolean; children: ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-t`} className="scroll-mt-6 pt-12 @[880px]:pt-16">
       <header className="flex items-baseline gap-3 border-b border-line-strong pb-3 @[880px]:gap-4">
@@ -298,6 +308,7 @@ export function SectionPage({ id, no, label, children }: { id: string; no?: numb
         <h2 id={`${id}-t`} className="min-w-0 text-[24px] font-black leading-[1.25] tracking-[-0.02em] text-ink @[880px]:text-[28px]">
           {label}
         </h2>
+        {ai && <AiBadge className="self-center" />}
       </header>
       {children}
     </section>
@@ -372,7 +383,7 @@ export function ReportPaper({ report, index }: { report: ReportDetail; index: Re
       )}
 
       {pages.map((p, i) => (
-        <SectionPage key={p.id} id={p.id} no={i + 1} label={p.label}>
+        <SectionPage key={p.id} id={p.id} no={i + 1} label={p.label} ai={citedByModel(p.items)}>
           {p.summary && (
             <p className="border-b border-line py-5 text-[15.5px] leading-[1.9] text-ink-2 @[560px]:text-justify">
               <span className="mr-2 font-semibold text-accent">本版导读</span>
@@ -384,7 +395,7 @@ export function ReportPaper({ report, index }: { report: ReportDetail; index: Re
       ))}
 
       {report.flashes.length > 0 && (
-        <SectionPage id="s-flash" no={pages.length + 1} label="快讯">
+        <SectionPage id="s-flash" no={pages.length + 1} label="快讯" ai={report.flashes.some((f) => f.available && f.ai?.title)}>
           <ul className={`${COLUMNS} @[1040px]:columns-3`}>
             {report.flashes.map((f, i) => (
               <li key={`${keyOf(f)}-${i}`} className="flex break-inside-avoid gap-2.5 border-b border-line py-3 text-[14.5px] leading-[1.65]">

@@ -1,5 +1,6 @@
 // Share images (1200×630 PNG) for pages, items, reports, topics and events. Only public content
-// gets a card; anything else is a real 404.
+// gets a card; anything else is a real 404. The mini program's 5:4 images (/og/mp/) are registered with
+// the mini program exit (routes/miniprogram.ts), whose cache table and placeholder switch they follow.
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { CATEGORY_LABELS } from "@aihot/contracts/taxonomy";
 import { beijingDate } from "@aihot/contracts/time";

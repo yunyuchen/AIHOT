@@ -11,7 +11,7 @@ import { contentChain, detachFromFact, mergeStories, overrideFields, rerun, sear
 import { banSource, eraseFeedback, feedbackScreenshot, listFeedback, unbanSource, updateFeedback } from "@aihot/backend/admin/feedback";
 import { listMonitorEvents, listMonitorPosts, relinkPost, resolveMonitorPost, reviewReceipt, setWithdrawn, updateMonitorEvent } from "@aihot/backend/admin/monitor";
 import { releaseReceipt, requeueFailedArticles, resolveDelivery, runsOverview } from "@aihot/backend/admin/runs";
-import { listBudgets, listTargets, replaceContactQr, setTargetEnabled, updateBudget } from "@aihot/backend/admin/settings";
+import { listBudgets, listTargets, loadRectificationSetting, replaceContactQr, setTargetEnabled, switchRectification, updateBudget } from "@aihot/backend/admin/settings";
 import { createSource, fetchNow, listSources, previewSource, sourceDetail, updateSource } from "@aihot/backend/admin/sources";
 import { sql } from "@aihot/backend/db";
 import { loadContact } from "@aihot/backend/site/contact";
@@ -105,7 +105,13 @@ export function registerAdmin(app: FastifyInstance) {
   app.post("/api/admin/monitor/posts/:id/resolve", adminHandler(async (req, reply, admin) => orNotFound(req, reply, await resolveMonitorPost(param(req, "id"), body(req) as never, actorOf(admin)))));
 
   // Settings
-  app.get("/api/admin/settings", adminHandler(async () => ({ contact: await loadContact(), targets: await listTargets(), budgets: await listBudgets() })));
+  app.get("/api/admin/settings", adminHandler(async () => ({
+    contact: await loadContact(), targets: await listTargets(), budgets: await listBudgets(), rectification: await loadRectificationSetting(),
+  })));
+  app.post("/api/admin/settings/rectification", adminHandler(async (req, _reply, admin) => {
+    const b = body<{ status: string; reason: string }>(req);
+    return switchRectification({ status: String(b.status ?? ""), reason: String(b.reason ?? "") }, actorOf(admin));
+  }));
   app.post("/api/admin/settings/contact-qr", adminHandler(async (req, _reply, admin) => {
     const b = body<{ slot: "wechatQr" | "feishuQr"; image: string }>(req);
     return replaceContactQr({ slot: b.slot, data: decodeImage(b.image) }, actorOf(admin));

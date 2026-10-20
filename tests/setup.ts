@@ -2,7 +2,8 @@
 // unless DATABASE_URL names a throwaway database ending in _test or _ci (CI: a freshly migrated one).
 // Secrets are test values set here, never real credentials; paid providers are pointed at
 // local stubs by the tests that need them, and the push valves stay off. The files share
-// one database and its paid-service budgets, so they run one at a time (package.json).
+// one database and its paid-service budgets, so they run one at a time (package.json). The rows
+// a test plants (sources, materials, analyses, stories, reports) come from the helpers in seed.ts.
 import http from "node:http";
 
 const database = new URL(process.env.DATABASE_URL ?? "postgres://unset/unset").pathname.slice(1);
@@ -14,6 +15,7 @@ process.env.SESSION_SECRET ??= "test-session-secret-0123456789";
 process.env.IMG_PROXY_SIGN_SECRET ??= "test-img-secret-0123456789";
 process.env.FEISHU_CONTENT_PUSH_ENABLED = "false";
 process.env.INDEXNOW_SUBMIT_ENABLED = "false";
+process.env.WECHAT_SUBSCRIBE_PUSH_ENABLED = "false";
 process.env.LOG_LEVEL ??= "error";
 // The tests were written against the named model presets AIHOT assigns to each step (each provider is
 // pointed at a local stub by the test that needs it). The open-source default is one model for every

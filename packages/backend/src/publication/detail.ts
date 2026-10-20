@@ -6,7 +6,7 @@ import { proxyBodyImages } from "../media/imgproxy.ts";
 import { textToHtml } from "../content/sanitize.ts";
 import { ITEM_COLUMNS, ITEM_FROM, selectedCondition, toItemSummary, xView, type ItemRow } from "./items.ts";
 import { itemUrl } from "./links.ts";
-import { hasItemPage } from "./rules.ts";
+import { hasItemPage, writtenByModel } from "./rules.ts";
 import { SITE } from "@aihot/industry/site";
 
 interface DetailRow extends ItemRow {
@@ -44,12 +44,12 @@ async function loadRow(id: string): Promise<DetailRow | null> {
 }
 
 /**
- * Public detail (rules.hasItemPage): items the lists leave out (low relevance, merged duplicates, no
- * Chinese summary yet) keep a noindex page; withdrawn and hot_signal items are a 404.
+ * Public detail (rules.hasItemPage): pool items the lists leave out (unselected, merged duplicates) keep
+ * a noindex page; withdrawn, blocked, unsummarised and hot_signal items are a 404.
  */
 export async function loadItemDetail(id: string, now = new Date()): Promise<DetailResult> {
   const row = await loadRow(id);
-  if (!row || !hasItemPage({ visibility: row.visibility, sourceMode: row.source_mode })) return { kind: "not_found" };
+  if (!row || !hasItemPage(row)) return { kind: "not_found" };
 
   const summary = toItemSummary(row);
   if (row.channel === "x") summary.x = xView(row, false, true);
@@ -68,6 +68,7 @@ export async function loadItemDetail(id: string, now = new Date()): Promise<Deta
       indexable: false,
       markdownAvailable: false,
       group: null,
+      ai: { ...summary.ai, reason: false, body: false },
     };
     return { kind: "found", detail, row };
   }
@@ -136,6 +137,8 @@ export async function loadItemDetail(id: string, now = new Date()): Promise<Deta
     indexable: row.indexable,
     markdownAvailable: markdownAvailable(row),
     group,
+    // A Chinese original is nobody's translation; a translation the source supplied is not a model's.
+    ai: { ...summary.ai, body: body?.zhKind === "translation" && writtenByModel(row.translation_origin) },
   };
   return { kind: "found", detail, row };
 }
@@ -145,9 +148,9 @@ export async function loadItemDetail(id: string, now = new Date()): Promise<Deta
  * (a summary, the post, or a full-text body).
  */
 export function markdownAvailable(row: {
-  visibility: string; source_mode: string; summary: string | null; body_mode: string; body_html?: string | null; channel: string; x_post: Record<string, any> | null;
+  visibility: string; eligible: boolean; summary: string | null; body_mode: string; body_html?: string | null; channel: string; x_post: Record<string, any> | null;
 }): boolean {
-  if (row.visibility !== "public" || !hasItemPage({ visibility: row.visibility, sourceMode: row.source_mode })) return false;
+  if (row.visibility !== "public" || !hasItemPage(row)) return false;
   return !!row.summary || (row.channel === "x" && !!row.x_post?.text) || (row.body_mode === "full" && !!row.body_html);
 }
 

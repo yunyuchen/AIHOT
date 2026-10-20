@@ -1,3 +1,4 @@
+import { FEATURES } from "@aihot/industry/features";
 import { SITE } from "@aihot/industry/site";
 import { useState } from "react";
 import { Link, useFetcher } from "react-router";
@@ -19,6 +20,10 @@ interface Runs {
   lagging: Row[];
   receipts: { counts: Record<string, number>; issues: Row[] };
   deliveries: Row[];
+  reminders: {
+    totals: { sent: number; failed: number; unknown: number; skipped: number; expired: number };
+    runs: Array<{ id: number; job: string; at: string; sent: number; failed: number; unknown: number; skipped: number; expired: number }>;
+  };
   errors: Row[];
   retrying: { count: number; next: string | null };
   ingest: Row[];
@@ -155,6 +160,32 @@ export default function RunsAdmin({ loaderData }: Route.ComponentProps) {
           />
         </Card>
       </div>
+
+      {FEATURES.reports && (
+        <Card
+          className="mt-5"
+          title="日报提醒（24 小时）"
+          right={<span>已发 {num(r.reminders.totals.sent)} · 失败 {num(r.reminders.totals.failed)} · 未知 {num(r.reminders.totals.unknown)} · 跳过 {num(r.reminders.totals.skipped)} · 过期 {num(r.reminders.totals.expired)}</span>}
+          pad={false}
+        >
+          <DataTable
+            dense
+            rows={r.reminders.runs}
+            rowKey={(x) => x.id}
+            empty="过去 24 小时没有发送或删除提醒"
+            columns={[
+              { key: "at", label: "时间", render: (x) => <span className="num whitespace-nowrap">{bj(x.at)}</span> },
+              { key: "j", label: "任务", render: (x) => <span className="font-mono text-[12px]">{x.job}</span> },
+              ...(["sent", "failed", "unknown", "skipped", "expired"] as const).map((k) => ({
+                key: k,
+                label: { sent: "已发", failed: "失败", unknown: "未知", skipped: "跳过", expired: "过期" }[k],
+                align: "right" as const,
+                render: (x: Runs["reminders"]["runs"][number]) => (x[k] ? <span className={k === "failed" || k === "unknown" ? "text-hot" : undefined}>{num(x[k])}</span> : <span className="text-ink-4">0</span>),
+              })),
+            ]}
+          />
+        </Card>
+      )}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <Card title="延迟或失败的信源" right={<Link className="text-accent" to="/admin/sources?health=failing">全部失败信源</Link>} pad={false}>

@@ -70,7 +70,7 @@ export function weakEtag(prefix: string, body: string): string {
   return `W/"${prefix}-${createHash("sha256").update(body).digest("hex").slice(0, 16)}"`;
 }
 
-function etagMatches(header: string | undefined, etag: string): boolean {
+export function etagMatches(header: string | undefined, etag: string): boolean {
   if (!header) return false;
   const strip = (t: string) => t.trim().replace(/^W\//, "");
   return header.split(",").some((t) => t.trim() === "*" || strip(t) === strip(etag));

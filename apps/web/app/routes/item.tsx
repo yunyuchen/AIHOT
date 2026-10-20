@@ -7,7 +7,7 @@ import { loadOr404 } from "../lib/api.server";
 import { breadcrumbLd, pageMeta, siteUrl, titled } from "../lib/seo";
 import { fullDateTime, relativeTime } from "../lib/format";
 import { markRead } from "../lib/local-state";
-import { SelectedBadge } from "../components/ui/Badge";
+import { AiBadge, SelectedBadge } from "../components/ui/Badge";
 import { ScoreLabel } from "../components/ui/Score";
 import { PillTabs } from "../components/ui/Tabs";
 import { ArticleLayout, RailSection } from "../components/ui/Page";
@@ -120,7 +120,10 @@ export default function ItemPage() {
   };
 
   const bodyHtml = lang === "zh" ? (item.body?.zh ?? item.body?.original) : (item.body?.original ?? item.body?.zh);
-  const bodyLabel = !item.body ? null : lang === "zh" && item.body.zhKind === "translation" ? "正文 · AI 翻译" : lang === "original" && hasTranslation ? "正文 · 原文" : "正文";
+  const bodyLabel = !item.body ? null : lang === "zh" && item.body.zhKind === "translation" ? "正文 · 译文" : lang === "original" && hasTranslation ? "正文 · 原文" : "正文";
+  // Each field's "AI 摘要" mark is the read layer's (an edge-cached page from before the marks has none).
+  const ai = { title: !!item.ai?.title, summary: !!item.ai?.summary, reason: !!item.ai?.reason, body: !!item.ai?.body };
+  const translationMarked = ai.body && lang === "zh" && item.body?.zhKind === "translation";
   const isX = item.channel === "x" && !!item.x;
   const publishedIso = item.publishedAt ?? item.discoveredAt;
   const summaryOnly = item.readingMode === "summary-only";
@@ -224,7 +227,7 @@ export default function ItemPage() {
   const notes = (
     <>
       {item.reason && !summaryOnly ? (
-        <RailSection title="推荐理由">
+        <RailSection title={<span className="inline-flex items-center gap-1.5">推荐理由{ai.reason && <AiBadge />}</span>}>
           {verdict && <div className="mb-3">{verdict}</div>}
           <p className="text-[13.5px] leading-[1.8] text-ink-2">{item.reason}</p>
         </RailSection>
@@ -300,19 +303,31 @@ export default function ItemPage() {
               </span>
             )}
           </div>
+          {!isX && (ai.title || ai.summary) && (
+            <div className="mb-2.5 flex">
+              <AiBadge />
+            </div>
+          )}
           {!isX && <h1 className="text-[26px] font-bold leading-[1.38] tracking-[-0.01em] text-ink lg:text-[32px] lg:leading-[1.34] xl:text-[36px] xl:leading-[1.3]">{item.title}</h1>}
           {!isX && item.originalTitle && <p className="mt-2.5 text-[14px] leading-relaxed text-ink-4">{item.originalTitle}</p>}
 
           {item.summary && (
             <section className={isX ? "mt-4" : "mt-7 xl:mt-8"}>
-              <div className="mb-2 text-[12px] font-semibold text-accent">{summaryOnly ? "摘要" : "AI 导读"}</div>
+              <div className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-accent">
+                {summaryOnly ? "摘要" : "导读"}
+                {/* A post has no title line above: its summary carries the mark itself. */}
+                {isX && ai.summary && <AiBadge />}
+              </div>
               <p className="text-[18px] leading-[1.7] text-ink xl:text-[20px] xl:leading-[1.7]">{item.summary}</p>
             </section>
           )}
 
           {item.reason && !summaryOnly && (
             <section className="mt-6 border-t border-line pt-4 lg:hidden">
-              <div className="mb-1 text-[12px] font-semibold text-ink-3">推荐理由</div>
+              <div className="mb-1 flex items-center gap-1.5 text-[12px] font-semibold text-ink-3">
+                推荐理由
+                {ai.reason && <AiBadge />}
+              </div>
               <p className="text-[15px] leading-[1.75] text-ink-2">{item.reason}</p>
             </section>
           )}
@@ -328,7 +343,10 @@ export default function ItemPage() {
           {item.body && bodyHtml && (
             <section className="mt-9 border-t border-line pt-4 xl:mt-10">
               <div className="mb-6 flex items-center justify-between gap-3">
-                <span className="text-[12px] text-ink-4">{bodyLabel}</span>
+                <span className="flex items-center gap-1.5 text-[12px] text-ink-4">
+                  {bodyLabel}
+                  {translationMarked && <AiBadge />}
+                </span>
                 {hasTranslation && (
                   <PillTabs
                     size="xs"
@@ -359,6 +377,14 @@ export default function ItemPage() {
             </a>
             <span> · {hostOf(item.links.original)}</span>
           </p>
+          {(ai.title || ai.summary || ai.reason || ai.body) && (
+            <p className="mt-1.5 text-[12px] leading-relaxed text-ink-4">
+              中文标题、摘要由 AI 生成，以原文为准 ·{" "}
+              <Link to="/terms" className="text-ink-3 hover:text-accent">
+                使用规则
+              </Link>
+            </p>
+          )}
 
           {item.tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1.5 lg:hidden">

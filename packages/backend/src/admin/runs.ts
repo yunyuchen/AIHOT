@@ -1,9 +1,10 @@
 // Runs view: task timeline, queue backlog, source lag, error classes, process
-// heartbeats, and the receipts and deliveries whose outcome needs an operator.
+// heartbeats, the receipts and deliveries whose outcome needs an operator, and the daily reminders' counts.
 import { sql } from "../db.ts";
 import { audit } from "./auth.ts";
 import { Conflict } from "./sources.ts";
 import { failureGroupSql, queueProcessing, requeueFailed } from "../jobs/content.ts";
+import { reminderOutcomes } from "../notify/reminders.ts";
 
 const STALE_HEARTBEAT_MS = 3 * 60_000;
 
@@ -50,6 +51,8 @@ export async function runsOverview() {
     sql<{ value: { at: string; sources: Record<string, { ok: boolean; at: string; lastOkAt: string | null; changed?: boolean; rows?: number; error?: string }> } }[]>`
       SELECT value FROM settings WHERE key = 'leaderboard.fetch'`,
   ]);
+  // The mini program's daily reminders: what the last day's runs did with them (the rows themselves are gone).
+  const reminders = await reminderOutcomes(new Date(Date.now() - 24 * 3600_000));
   // Articles waiting to retry after a passing provider problem (they are not failed).
   const [retrying] = await sql<{ n: number; next: Date | null }[]>`
     SELECT count(*)::int AS n, min(processing_retry_at) AS next FROM articles WHERE processing_state = 'new' AND processing_attempts > 0`;
@@ -69,6 +72,7 @@ export async function runsOverview() {
     lagging,
     receipts: { counts: Object.fromEntries(receipts.map((r) => [r.status, r.n])), issues: receiptIssues },
     deliveries,
+    reminders: { totals: reminders.totals, runs: reminders.runs },
     errors,
     retrying: { count: retrying?.n ?? 0, next: retrying?.next ?? null },
     ingest,

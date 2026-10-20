@@ -5,8 +5,10 @@
 //   digest — follow-ups without reader impact: one 09:00 message a day, meant to be handed to the AI.
 // Delivery goes through sendAlert (ops chat, internal-chat fallback; off unless FEISHU_INTERNAL_ENABLED).
 import { beijingDate, beijingTime } from "@aihot/contracts/time";
+import { FEATURES } from "@aihot/industry/features";
 import { sql } from "../db.ts";
 import { beijingDay, beijingStamp, duration, formatAlert, formatRecovery, sendAlert, type Finding, type Level } from "../notify/feishu.ts";
+import { reminderOutcomes } from "../notify/reminders.ts";
 import { backupConfigured } from "./backup.ts";
 
 const REPEAT_MS: Record<Exclude<Level, "digest">, number> = { now: 3600_000, today: 24 * 3600_000 };
@@ -65,8 +67,9 @@ export async function collectFindings(now = Date.now()): Promise<Finding[]> {
         since: p!.waiting >= 10 && p!.oldest ? p!.oldest : undefined,
       });
     }
-    // The daily report is composed at 08:00 and caught up hourly.
-    if (Number(beijingTime(now).slice(0, 2)) >= 10) {
+    // The daily report is composed at 08:00 and caught up hourly. A pack without a daily column
+    // (FEATURES.reports off, e.g. the sports board) schedules neither, so a missing daily is expected there.
+    if (FEATURES.reports && Number(beijingTime(now).slice(0, 2)) >= 10) {
       const [r] = await sql`SELECT 1 FROM reports WHERE kind = 'daily' AND key = ${beijingDate(now)}`;
       if (!r) {
         out.push({
@@ -98,6 +101,26 @@ export async function collectFindings(now = Date.now()): Promise<Finding[]> {
       heals: "不会自动重发",
       action: "转给 AI 处理；如果推送机器人被移出了群，需要你把它加回去",
       detail: refused!.response ?? "",
+    });
+  }
+
+  // Daily reminders (notify/reminders.ts): none is ever sent twice, so a run that got none out is announced
+  // at once; the day's failed and unknown ones wait for the digest below.
+  const reminders = await reminderOutcomes(new Date(now - 24 * 3600_000));
+  const last = reminders.lastAttempt;
+  if (last && last.sent === 0) {
+    const why = Object.entries(last.reasons ?? {}).map(([reason, n]) => `${reason}（${n}）`).join("；");
+    out.push({
+      key: "reminders.failed",
+      level: "today",
+      title: "日报提醒一条都没发出去",
+      impact: last.stopped
+        ? `${beijingStamp(last.at)} 起拿不到微信的发送凭证，点了“提醒我明天的日报”的读者收不到提醒`
+        : `${beijingStamp(last.at)} 那次发送的 ${last.failed + last.unknown} 条日报提醒都没确认送到读者`,
+      heals: last.stopped ? "凭证恢复后会接着发，48 小时内没发出的会删除" : "不会，提醒不会重发",
+      action: "转给 AI 处理；如果改过小程序的 AppSecret 或换了提醒模板，需要你把新的填进服务器配置",
+      detail: [last.stopped && `停在：${last.stopped}`, why && `原因：${why}`, "微信错误码见订阅消息文档；后台“运行”页有每次的计数"].filter(Boolean).join("；"),
+      since: last.at,
     });
   }
 
@@ -162,6 +185,15 @@ export async function collectFindings(now = Date.now()): Promise<Finding[]> {
     out.push({ key: "receipts.unknown", level: "digest", title: `${r!.receipts} 个付费请求自动重试过一次，结果仍未知`, detail: `${r!.services}；后台“运行”页核对后放行` });
   }
   if (r!.deliveries > 0) out.push({ key: "deliveries.unknown", level: "digest", title: `${r!.deliveries} 条飞书内容群推送不确定是否送达`, detail: "后台“运行”页核对群里有没有，再标记或重发" });
+  const missed = reminders.totals.failed + reminders.totals.unknown;
+  if (missed > 0) {
+    out.push({
+      key: "reminders.missed",
+      level: "digest",
+      title: `过去 24 小时 ${missed} 条日报提醒没确认送达`,
+      detail: `失败 ${reminders.totals.failed}、结果未知 ${reminders.totals.unknown}，已发 ${reminders.totals.sent}；提醒不重发，后台“运行”页有每次的计数和原因`,
+    });
+  }
 
   // Runnable jobs (deferred ones excluded) that have waited more than two hours.
   const queues = await sql<{ name: string; n: number; oldest: Date }[]>`

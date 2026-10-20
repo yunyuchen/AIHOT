@@ -17,6 +17,7 @@ export const QUEUES = {
   mpCheck: "sources.mp",
 
   notifySelected: "notify.selected",
+  reminders: "notify.reminders",
   republishSource: "publication.republish-source",
 
   prepareMedia: "media.prepare",
@@ -35,6 +36,8 @@ export const QUEUE_OPTIONS: Record<string, QueueOptions> = {
   [QUEUES.fetchXShard]: { policy: "short", retryLimit: 0, expireInSeconds: 900 },
   [QUEUES.mpCheck]: { policy: "short", retryLimit: 3, retryDelay: 60, retryBackoff: true, expireInSeconds: 600 },
   [QUEUES.notifySelected]: { policy: "short", retryLimit: 0, expireInSeconds: 300 },
+  // Not retried: a run that stopped leaves its rows for the 10-minute schedule (reminders.send).
+  [QUEUES.reminders]: { policy: "short", retryLimit: 0, expireInSeconds: 900 },
   [QUEUES.republishSource]: { policy: "short", retryLimit: 2, retryDelay: 60, expireInSeconds: 3600 },
 
   [QUEUES.prepareMedia]: { policy: "short", retryLimit: 1, retryDelay: 120, expireInSeconds: 600 },

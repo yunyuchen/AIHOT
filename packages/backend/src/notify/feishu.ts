@@ -5,6 +5,7 @@
 import { readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { beijingDate, beijingTime } from "@aihot/contracts/time";
+import { SITE } from "@aihot/industry/site";
 import { config, credential } from "../config.ts";
 import { sql } from "../db.ts";
 
@@ -106,17 +107,23 @@ export function formatRecovery(title: string, since: Date, now: number): { title
   return { title: `✅ 已恢复：${title}`, lines: [`持续 ${duration(now - since.getTime())}（${beijingStamp(since)} 起）`] };
 }
 
+/**
+ * An alert's text. Every message names the site (two instances may post to one chat); production needs no
+ * environment label, any other environment that has sending on says which one it is.
+ */
+export function alertText(title: string, lines: string[]): string {
+  return `【${SITE.name}】${config.environmentName === "production" ? "" : `【${config.environmentName}】`}${title}\n${lines.join("\n")}`;
+}
+
 /** Operations alert: the alert chat, falling back to the internal feedback chat — never a content group. */
 export async function sendAlert(title: string, lines: string[]): Promise<"sent" | "disabled"> {
-  // Production needs no label; any other environment that has sending on says which one it is.
-  const text = `${config.environmentName === "production" ? "" : `【${config.environmentName}】`}${title}\n${lines.join("\n")}`;
   if (!feishuInternalEnabled()) {
     console.log(JSON.stringify({ level: "warn", msg: "alert (not sent: FEISHU_INTERNAL_ENABLED is off)", title, lines }));
     return "disabled";
   }
   const chat = credential("integrations", "FEISHU_ALERT_CHAT_ID") ?? credential("integrations", "FEISHU_INTERNAL_CHAT_ID");
   if (!chat) return "disabled";
-  await sendToChat(chat, "text", { text });
+  await sendToChat(chat, "text", { text: alertText(title, lines) });
   return "sent";
 }
 

@@ -7,6 +7,7 @@ import { latestHotRanking, rankingExtras } from "../events/hot-read.ts";
 import { behindSources, sourceClocks } from "../events/hot.ts";
 import { storyStatusFor } from "../events/digest.ts";
 import { itemUrl, storyApiUrl, storyUrl } from "./links.ts";
+import { storyTitleByModel, writtenByModel } from "./rules.ts";
 import { SITE } from "@aihot/industry/site";
 
 export type StoryLookup = { kind: "found"; storyId: number; publicId: string } | { kind: "merged"; target: string } | { kind: "not_found" };
@@ -48,22 +49,25 @@ interface ReportRow {
   icon_url: string | null;
   fact_public_id: string;
   fact_id: number;
+  /** Who wrote the report's current analysis: its AI marks are the item's own. */
+  analysis_origin: string | null;
 }
 
 /**
- * Every report linked to the story's facts that has a public page (rules.hasItemPage: editorial source,
- * summarised or not), mentions included (an article's other events). New grouping only links
- * pool-eligible articles; imported hot stories also carry reports the AI pool leaves out, which the live
- * pages showed. hot_signal material only adds heat and is not listed, as on the live pages.
+ * Every report linked to the story's facts that has a page (rules.hasItemPage: public and in the pool,
+ * so with a Chinese title and summary), mentions included (an article's other events). Reports the
+ * model never summarised and hot_signal material add heat but are not listed: there is no page to open.
+ * The pool condition is `p.eligible`, which already implies an editorial source.
  */
 async function storyReports(storyId: number, now: Date): Promise<ReportRow[]> {
   return sql<ReportRow[]>`
     SELECT DISTINCT ON (p.article_id) p.article_id AS id, p.title, p.summary, p.url, p.selected,
       coalesce(p.published_at, p.discovered_at) AS at, s.id AS source_id, s.name AS source_name, s.kind AS source_kind,
-      p.first_party, s.icon_url, f.public_id AS fact_public_id, f.id AS fact_id
+      p.first_party, s.icon_url, f.public_id AS fact_public_id, f.id AS fact_id, an.origin AS analysis_origin
     FROM facts f JOIN fact_articles fa ON fa.fact_id = f.id JOIN publications p ON p.article_id = fa.article_id
     JOIN sources s ON s.id = p.source_id
-    WHERE f.story_id = ${storyId} AND p.visibility = 'public' AND s.participation_mode = 'editorial'
+    LEFT JOIN analyses an ON an.id = p.analysis_id
+    WHERE f.story_id = ${storyId} AND p.visibility = 'public' AND p.eligible
       AND (NOT p.selected OR p.visible_after <= ${now})
     ORDER BY p.article_id, (fa.role = 'primary') DESC`;
 }
@@ -78,12 +82,14 @@ function reportView(r: ReportRow): StoryReportView {
     originalUrl: r.url,
     selected: r.selected,
     factId: r.fact_public_id,
+    ai: { title: writtenByModel(r.analysis_origin), summary: writtenByModel(r.analysis_origin) },
   };
 }
 
-async function storyContent(storyId: number, now: Date) {
-  const [s] = await sql<{ public_id: string; title: string; summary: string | null; first_report_at: Date | null; latest_at: Date | null; digest: string | null; digest_updated_at: Date | null; latest: string | null }[]>`
-    SELECT public_id::text, title, summary, first_report_at, latest_at, digest, digest_updated_at, latest FROM stories WHERE id = ${storyId}`;
+/** A story page's content: the story, its listed reports (newest first) and its developments; null with no report to list. */
+export async function storyContent(storyId: number, now: Date) {
+  const [s] = await sql<{ public_id: string; title: string; summary: string | null; first_report_at: Date | null; latest_at: Date | null; digest: string | null; digest_updated_at: Date | null; latest: string | null; origin: string }[]>`
+    SELECT public_id::text, title, summary, first_report_at, latest_at, digest, digest_updated_at, latest, origin FROM stories WHERE id = ${storyId}`;
   if (!s) return null;
   const reports = await storyReports(storyId, now);
   if (reports.length === 0) return null;
@@ -148,7 +154,7 @@ export async function loadStoryDetail(storyId: number, now = new Date()): Promis
     digest: s.digest,
     digestUpdatedAt: s.digest_updated_at?.toISOString() ?? null,
     summary: s.summary,
-    excerpt: !s.digest && !s.summary && origin?.summary ? { text: origin.summary, sourceName: origin.source_name } : null,
+    excerpt: !s.digest && !s.summary && origin?.summary ? { text: origin.summary, sourceName: origin.source_name, ai: { summary: writtenByModel(origin.analysis_origin) } } : null,
     latest: s.latest,
     whyHot: {
       participants48h: Number(why?.p48 ?? 0),
@@ -163,6 +169,8 @@ export async function loadStoryDetail(storyId: number, now = new Date()): Promis
     timeline: reports.slice(0, 100).map(reportView),
     heat: heat.map((h): HeatPoint => ({ hour: h.hour.toISOString(), heat: Number(h.heat), participants: h.participants })),
     related: related.map((r) => ({ publicId: r.public_id, title: r.title, relation: r.relation, latestAt: r.latest_at?.toISOString() ?? null })),
+    // A digest and a story's own summary are always a model's.
+    ai: { title: storyTitleByModel(s.origin), digest: !!(s.digest || s.summary) },
   };
 }
 

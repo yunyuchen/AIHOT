@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router";
 import { Collapse } from "../../components/ui/Presence";
 import type { Development, GroupInfo, GroupReport, TimelineFilters } from "@aihot/contracts/site";
 import { IconArrowUpRight, IconChevronDown } from "../../components/icons";
+import { AiBadge } from "../../components/ui/Badge";
 import { monthDayTime, shortSourceName } from "../../lib/format";
 import { isReload } from "./restore";
 import { sessionCache } from "./session-cache";
@@ -166,6 +167,12 @@ export function GroupSources({ group, filters, parentId }: { group: GroupInfo; f
         {label}
       </Toggle>
       <Panel open={open}>
+        {/* One mark for the list when a model wrote any of its titles (a page restored from an older session has none). */}
+        {others.some((r) => r.ai?.title) && (
+          <div className="flex justify-end pt-0.5">
+            <AiBadge />
+          </div>
+        )}
         <ul className="divide-y divide-line-soft">
           {others.map((r) => (
             <li key={r.id} className="flex items-baseline gap-2 py-1.5 text-[13px]">

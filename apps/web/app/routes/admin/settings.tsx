@@ -4,14 +4,17 @@ import type { Route } from "./+types/settings";
 import { adminGet } from "../../lib/admin.server";
 import { useAdminAction } from "../../features/admin/action";
 import { bj, num } from "../../features/admin/format";
-import { AdminPage, Badge, Button, Card, DataTable, Input, ReasonDialog } from "../../features/admin/ui";
+import { AdminPage, Badge, Button, Card, DataTable, Input, KV, ReasonDialog } from "../../features/admin/ui";
 import { toast } from "../../features/admin/toast";
 
 interface Settings {
   contact: { wechatQr: string; feishuQr: string };
   targets: Array<{ key: string; purpose: string; kind: string; enabled: boolean; enabled_at: string | null; config_ref: string | null; note: string | null; deliveries_7d: number; last_sent_at: string | null }>;
   budgets: Array<{ service: string; per_minute: number; per_hour: number; per_day: number; note: string | null; updated_at: string; used_day: number; used_hour: number }>;
+  rectification: { status: "normal" | "placeholder"; reason: string | null; changedBy: string | null; changedAt: string | null };
 }
+
+const RECTIFICATION_LABELS = { normal: "正常", placeholder: "占位" } as const;
 
 export async function loader({ request }: Route.LoaderArgs) {
   return adminGet<Settings>(request, "/api/admin/settings");
@@ -103,9 +106,46 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
   );
 }
 
+function RectificationSwitch({ r }: { r: Settings["rectification"] }) {
+  const { run, pending } = useAdminAction();
+  const [open, setOpen] = useState(false);
+  const toPlaceholder = r.status === "normal";
+  const next = toPlaceholder ? "placeholder" : "normal";
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0 max-w-2xl">
+        <KV
+          items={[
+            ["状态", <Badge tone={toPlaceholder ? "ok" : "warn"}>{RECTIFICATION_LABELS[r.status]}</Badge>],
+            ["最近切换", r.changedAt ? `${bj(r.changedAt, true)} · ${r.changedBy ?? "—"}` : "从未切换"],
+            ["原因", r.reason],
+          ]}
+        />
+        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-3">
+          占位时，这个行业实例的小程序出口除元信息外一律停止供稿，小程序只显示占位文案；网页、RSS、公开 API、MCP 和现有分享图照常。约 2 分钟生效，不用重启或发版。只在被要求整改时使用，不用于审核时隐藏内容。
+        </p>
+      </div>
+      <Button size="sm" tone={toPlaceholder ? "danger" : "primary"} onClick={() => setOpen(true)}>{toPlaceholder ? "切到占位" : "切回正常"}</Button>
+      <ReasonDialog
+        open={open}
+        title={toPlaceholder ? "把小程序出口切到占位" : "把小程序出口切回正常"}
+        description={toPlaceholder ? "切换后约 2 分钟内，小程序这个板块只显示占位文案，不再显示内容。" : "切换后约 2 分钟内，小程序这个板块恢复显示内容。"}
+        danger={toPlaceholder}
+        confirmLabel={toPlaceholder ? "切到占位" : "切回正常"}
+        busy={pending === "rectification"}
+        onClose={() => setOpen(false)}
+        onSubmit={async (reason) => (await run("POST", "/api/admin/settings/rectification", { status: next, reason }, { label: "rectification", success: `已切到${RECTIFICATION_LABELS[next]}` })) !== null}
+      />
+    </div>
+  );
+}
+
 export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
   return (
     <AdminPage title="设置" subtitle="不改代码即可替换的运营设置。每次修改都写入审计记录。">
+      <Card className="mb-5" title="整改开关">
+        <RectificationSwitch r={s.rectification} />
+      </Card>
       <div className="grid gap-5 xl:grid-cols-2">
         <Card title="关于页二维码">
           <div className="space-y-5">

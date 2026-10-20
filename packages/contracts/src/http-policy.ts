@@ -23,6 +23,29 @@ export const V1_CACHE_CONTROL = {
   selectedChanges: "public, max-age=60, s-maxage=60, stale-while-revalidate=60",
 } as const;
 
+/**
+ * Cache-Control per mini program operation (/api/mp). No stale-while-revalidate, so the placeholder
+ * switch reaches readers within about two minutes (a proxy's minute plus the mini program's own).
+ */
+export const MINIPROGRAM_CACHE_CONTROL = {
+  meta: "public, max-age=60, s-maxage=60",
+  /** The longest; a pending release in scope cuts it short (as the site timeline does). */
+  feed: "public, max-age=60, s-maxage=60",
+  item: "public, max-age=60, s-maxage=60",
+  story: "public, max-age=60, s-maxage=60",
+  latestDaily: "public, max-age=60, s-maxage=60",
+  /** A past issue changes only when regenerated or when an item it cites is withdrawn. */
+  dailyByDate: "public, max-age=300, s-maxage=300",
+  /**
+   * The 5:4 share images (/og/mp/): shorter than the site's share images' hour, so a withdrawal or the
+   * placeholder switch takes them down within ten minutes.
+   */
+  shareImage: "public, max-age=600, s-maxage=600",
+  notFound: "public, max-age=60, s-maxage=60",
+  /** 403 section_paused: every operation but meta while the placeholder switch is on. */
+  paused: "public, max-age=60, s-maxage=60",
+} as const;
+
 export const RSS_CACHE_CONTROL = "public, max-age=300, s-maxage=300, stale-while-revalidate=900";
 export const NO_STORE = "no-store";
 

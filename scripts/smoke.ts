@@ -1,15 +1,24 @@
 // Opens the site's main pages and machine exits and checks each answers: the whole-site check after a
-// deploy, and CI's check of the built site on an empty database.
-//   node scripts/smoke.ts [--base http://localhost:3000]
+// deploy, and CI's check of the built site on an empty database. --machine-only checks just the health
+// endpoint and the mini program exit, for an industry instance whose pages are not public.
+//   node scripts/smoke.ts [--base http://localhost:3000] [--machine-only]
 import { SITE } from "@aihot/industry/site";
 import { FEATURES } from "@aihot/industry/features";
 
 const at = process.argv.indexOf("--base");
 const base = (at > 0 ? process.argv[at + 1] : process.env.SITE_URL) ?? "http://localhost:3000";
+const machineOnly = process.argv.includes("--machine-only");
 
 const PAGES = ["/", "/all", "/hot", "/daily", "/daily/archive", "/topics", "/starred", "/agent", "/about", "/changelog", "/feedback", "/terms", "/privacy", "/more", "/admin/login"];
+const HEALTH: [path: string, type: RegExp] = ["/api/health", /json/];
+// The mini program exit; each answers 200 on an empty database too.
+const MINIPROGRAM: Array<[path: string, type: RegExp]> = [
+  ["/api/mp/v1/meta", /json/],
+  ["/api/mp/v1/feed", /json/],
+];
 const MACHINE: Array<[path: string, type: RegExp]> = [
-  ["/api/health", /json/],
+  HEALTH,
+  ...MINIPROGRAM,
   ["/api/v1/items", /json/],
   ["/api/v1/hot-topics", /json/],
   ["/api/v1/selected/snapshot", /json/],
@@ -48,17 +57,22 @@ async function check(path: string, expect: (res: Response, body: string) => stri
   }
 }
 
-for (const path of PAGES) await check(path, (_res, body) => (body.includes(SITE.name) ? null : `the page does not name ${SITE.name}`));
-for (const [path, type] of MACHINE) await check(path, (res) => (type.test(res.headers.get("content-type") ?? "") ? null : `content-type ${res.headers.get("content-type")}`));
-// MCP: the handshake answers with the site's server name.
-const mcp = await fetch(`${base}/api/mcp`, {
-  method: "POST",
-  headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
-  body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "smoke", version: "1" } } }),
-}).then((r) => r.text()).catch((e) => String(e));
-const mcpOk = mcp.includes(`"name":"${SITE.mcpPrefix}"`);
-console.log(`${mcpOk ? "✓" : "✗"} /api/mcp initialize${mcpOk ? "" : `  ${mcp.slice(0, 200)}`}`);
-if (!mcpOk) failed += 1;
+const machineType = (type: RegExp) => (res: Response) => (type.test(res.headers.get("content-type") ?? "") ? null : `content-type ${res.headers.get("content-type")}`);
+if (machineOnly) {
+  for (const [path, type] of [HEALTH, ...MINIPROGRAM]) await check(path, machineType(type));
+} else {
+  for (const path of PAGES) await check(path, (_res, body) => (body.includes(SITE.name) ? null : `the page does not name ${SITE.name}`));
+  for (const [path, type] of MACHINE) await check(path, machineType(type));
+  // MCP: the handshake answers with the site's server name.
+  const mcp = await fetch(`${base}/api/mcp`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "smoke", version: "1" } } }),
+  }).then((r) => r.text()).catch((e) => String(e));
+  const mcpOk = mcp.includes(`"name":"${SITE.mcpPrefix}"`);
+  console.log(`${mcpOk ? "✓" : "✗"} /api/mcp initialize${mcpOk ? "" : `  ${mcp.slice(0, 200)}`}`);
+  if (!mcpOk) failed += 1;
+}
 
 console.log(failed ? `\n${failed} check(s) failed` : "\nall checks passed");
 process.exit(failed ? 1 : 0);

@@ -25,6 +25,7 @@ import { backupConfigured, runBackup } from "@aihot/backend/operations/backup";
 import { sourceHealthWeekly } from "@aihot/backend/operations/reports";
 import { markStalePendingReceipts } from "@aihot/backend/providers/receipts";
 import { markStaleDeliveries } from "@aihot/backend/notify/deliver";
+import { recoverStaleReminders, sendReminders } from "@aihot/backend/notify/reminders";
 
 interface Scheduled {
   name: string;
@@ -43,18 +44,28 @@ export const SCHEDULES: Scheduled[] = [
   { name: "hot.snapshot", cron: "2 * * * *", run: () => snapshotHeat() },
   { name: "stories.status", cron: "7 * * * *", run: refreshStoryStatuses },
   { name: "stories.links", cron: "12 * * * *", run: linkRelatedStories },
-  { name: "reports.daily", cron: "0 8 * * *", missed: "once", run: () => composeDaily(beijingDate(Date.now())) },
-  { name: "reports.weekly", cron: "0 10 * * 1", missed: "once", run: () => composeWeekly(isoWeekLabel(addDays(beijingDate(Date.now()), -7))) },
-  {
-    name: "reports.monthly",
-    cron: "30 10 1 * *",
-    missed: "once",
-    run: () => {
-      const [y, m] = beijingDate(Date.now()).split("-").map(Number) as [number, number];
-      return composeMonthly(m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`);
-    },
-  },
-  { name: "reports.catch-up", cron: "15 * * * *", run: () => catchUpReports() },
+  // The daily column (FEATURES.reports): daily, weekly and monthly reports and their catch-up, all model
+  // calls, and the mini program's daily reminders. A board without a daily leaves them out; an instance
+  // switched off unschedules them on its next start (registerSchedules below). The ranking, stories and
+  // source health keep running either way.
+  ...(FEATURES.reports
+    ? [
+        { name: "reports.daily", cron: "0 8 * * *", missed: "once" as const, run: () => composeDaily(beijingDate(Date.now())) },
+        { name: "reports.weekly", cron: "0 10 * * 1", missed: "once" as const, run: () => composeWeekly(isoWeekLabel(addDays(beijingDate(Date.now()), -7))) },
+        {
+          name: "reports.monthly",
+          cron: "30 10 1 * *",
+          missed: "once" as const,
+          run: () => {
+            const [y, m] = beijingDate(Date.now()).split("-").map(Number) as [number, number];
+            return composeMonthly(m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`);
+          },
+        },
+        { name: "reports.catch-up", cron: "15 * * * *", run: () => catchUpReports() },
+        // The daily's reminders are queued when it is saved; this sends any a stopped process left behind.
+        { name: "reminders.send", cron: "*/10 * * * *", run: () => sendReminders() },
+      ]
+    : []),
   { name: "ops.retention", cron: "30 3 * * *", missed: "once", run: () => dailyRetention() },
   { name: "sources.icons", cron: "40 4 * * *", missed: "once", run: () => refreshSourceIcons() },
   // IndexNow for new indexable pages (off unless INDEXNOW_SUBMIT_ENABLED).
@@ -64,7 +75,12 @@ export const SCHEDULES: Scheduled[] = [
   {
     name: "ops.recover",
     cron: "*/10 * * * *",
-    run: async () => ({ receipts: await markStalePendingReceipts(), released: await autoReleaseUnknownReceipts(), deliveries: await markStaleDeliveries() }),
+    run: async () => ({
+      receipts: await markStalePendingReceipts(),
+      released: await autoReleaseUnknownReceipts(),
+      deliveries: await markStaleDeliveries(),
+      reminders: await recoverStaleReminders(),
+    }),
   },
   { name: "ops.alerts", cron: "*/10 * * * *", run: () => checkAlerts() },
   // One message with the follow-ups that do not touch readers (nothing when there are none).
@@ -96,7 +112,7 @@ export const SCHEDULES: Scheduled[] = [
     : []),
 ];
 
-export async function registerSchedules(boss: PgBoss) {
+export async function registerSchedules(boss: Pick<PgBoss, "schedule" | "work" | "getSchedules" | "unschedule">) {
   for (const s of SCHEDULES) {
     const queue = `cron.${s.name}`;
     await ensureQueue(queue, { policy: "singleton", retryLimit: 1, expireInSeconds: 3600 });
@@ -104,7 +120,8 @@ export async function registerSchedules(boss: PgBoss) {
     // Schedules fire at minute boundaries; a 15 s pickup keeps them on time with a third of the polling.
     await boss.work(queue, { pollingIntervalSeconds: 15 }, async () => recordRun(s.name, s.run));
   }
-  // A schedule removed from the table (a module switched off) must not keep firing from an earlier run.
+  // A schedule removed from the table (a module switched off, e.g. the daily column's four reports) must not
+  // keep firing from an earlier run.
   const names = new Set(SCHEDULES.map((s) => `cron.${s.name}`));
   for (const existing of await boss.getSchedules()) {
     if (existing.name.startsWith("cron.") && !names.has(existing.name)) await boss.unschedule(existing.name);

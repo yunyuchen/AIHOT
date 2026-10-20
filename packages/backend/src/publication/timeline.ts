@@ -18,7 +18,11 @@ export interface TimelineQuery extends TimelineFilters {
   now?: Date;
 }
 
-interface GroupRow {
+/** A selected item's reading group: its story, else its fact, else the item itself. */
+export const READING_GROUP_KEY = sql`coalesce('s' || p.story_id::text, 'f' || p.fact_id::text, 'a' || p.article_id)`;
+
+/** A reading group and its anchor (its members' latest sort_at). */
+export interface GroupRow {
   gk: string;
   anchor_at: Date;
 }
@@ -85,7 +89,7 @@ async function queryGroupedAnchors(q: TimelineQuery, now: Date) {
   const rows = (
     await sql<{ gk: string; anchor_at: Date }[]>`
       WITH base AS (
-        SELECT p.sort_at, coalesce('s' || p.story_id::text, 'f' || p.fact_id::text, 'a' || p.article_id) AS gk
+        SELECT p.sort_at, ${READING_GROUP_KEY} AS gk
         FROM publications p
         WHERE ${selectedCondition(now)} ${filterSql(q)}
       )
@@ -115,6 +119,30 @@ export async function loadTimeline(q: TimelineQuery): Promise<Omit<TimelineRespo
   const page = groups.slice(0, limit);
   const hasMore = groups.length > limit;
 
+  const cards = await groupCards(q, now, page);
+
+  // Day header counts for the days on this page, over the full grouped set.
+  const days = new Set(page.map((g) => beijingDate(g.anchor_at)));
+  const dayCounts: Record<string, number> = {};
+  if (days.size) {
+    for (const g of grouped) {
+      const day = beijingDate(g.anchor);
+      if (days.has(day)) dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+    }
+  }
+
+  const refreshAt = await refreshAtRead;
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? encodeCursor("tl1", { a: last.anchor_at.getTime(), g: last.gk, b: bind }) : null;
+  return { filters: { channel: q.channel, category: q.category, tag: q.tag, topic: q.topic ?? null }, cards, nextCursor, refreshAt, dayCounts };
+}
+
+/**
+ * The cards of the given reading groups, in their order, under the query's filters: one page of the
+ * timeline, or a single group's card (the mini program's focus card). A group whose representative
+ * left scope in the meantime has no card.
+ */
+export async function groupCards(q: TimelineQuery, now: Date, page: GroupRow[]): Promise<TimelineCard[]> {
   const storyIds = page.filter((g) => g.gk.startsWith("s")).map((g) => Number(g.gk.slice(1)));
   const factIds = page.filter((g) => g.gk.startsWith("f")).map((g) => Number(g.gk.slice(1)));
 
@@ -177,27 +205,12 @@ export async function loadTimeline(q: TimelineQuery): Promise<Omit<TimelineRespo
   const rows = new Map(planned.length ? (await sql<ItemRow[]>`
     SELECT ${ITEM_COLUMNS} ${ITEM_FROM} WHERE p.article_id IN ${sql(planned.map((p) => p.id))}
       AND ${selectedCondition(now)} ${filterSql(q)}`).map((row) => [row.id, row]) : []);
-  const cards: TimelineCard[] = planned.flatMap(({ id, key, anchorAt, group }) => {
+  return planned.flatMap(({ id, key, anchorAt, group }): TimelineCard[] => {
     const row = rows.get(id);
     if (!row) return [];
     if (group) group.story = row.story_public_id ? { publicId: row.story_public_id, title: row.story_title ?? "" } : null;
     return [{ key, anchorAt, item: toFeedItemSummary(row), group }];
   });
-
-  // Day header counts for the days on this page, over the full grouped set.
-  const days = new Set(page.map((g) => beijingDate(g.anchor_at)));
-  const dayCounts: Record<string, number> = {};
-  if (days.size) {
-    for (const g of grouped) {
-      const day = beijingDate(g.anchor);
-      if (days.has(day)) dayCounts[day] = (dayCounts[day] ?? 0) + 1;
-    }
-  }
-
-  const refreshAt = await refreshAtRead;
-  const last = page[page.length - 1];
-  const nextCursor = hasMore && last ? encodeCursor("tl1", { a: last.anchor_at.getTime(), g: last.gk, b: bind }) : null;
-  return { filters: { channel: q.channel, category: q.category, tag: q.tag, topic: q.topic ?? null }, cards, nextCursor, refreshAt, dayCounts };
 }
 
 /** Earliest pending release in this scope; caches of this scope must expire by then. */

@@ -26,12 +26,15 @@ export function isPoolEligible(input: {
 }
 
 /**
- * Item detail page (and its Markdown export): every unwithdrawn item from an editorial source has one,
- * with or without a Chinese summary (noindex unless indexable). hot_signal material is heat evidence
- * only and has none. A paused source keeps its pages.
+ * Item detail page, its share images, its Markdown export and its place in a reader's starred list:
+ * an item that is not withdrawn and is in the public pool (an editorial source, judged relevant, with a
+ * Chinese title and summary; `publications.eligible`). Material the prefilter blocked or the model never
+ * summarised has no page, so nothing a reader could not read is reachable by id. hot_signal material is
+ * heat evidence only and has none either. A paused source keeps its pages; a summary-only item keeps a
+ * page without its body.
  */
-export function hasItemPage(p: { visibility: string; sourceMode: string }): boolean {
-  return p.visibility !== "withdrawn" && p.sourceMode === "editorial";
+export function hasItemPage(p: { visibility: string; eligible: boolean }): boolean {
+  return p.visibility !== "withdrawn" && p.eligible;
 }
 
 /** Selected: pool eligible, judged selected, and the source tier may enter the selection. */
@@ -58,6 +61,28 @@ export function mayRedistribute(source: SourceFacts, bodyMode: "full" | "summary
  */
 export function isIndexable(p: { visibility: string; hasSummary: boolean; selected: boolean; seoIndexedAt: Date | null; seoExcludedAt: Date | null }): boolean {
   return p.visibility === "public" && p.hasSummary && p.seoExcludedAt === null && (p.selected || p.seoIndexedAt !== null);
+}
+
+/**
+ * The "AI 摘要" mark (《人工智能生成合成内容标识办法》, in force since 2025-09-01): a field is marked when a
+ * model wrote its draft, live (`model`) or played back from a recorded answer (`replay`); a field a rule
+ * filled (`rule`), a translation the source supplied (`source`) or no draft at all is not. The draft
+ * decides, so an editor's later correction of a model's title or summary stays marked and never flips it.
+ * Every exit, the mini program projection included, reads its marks from here.
+ */
+export function writtenByModel(origin: string | null | undefined): boolean {
+  return origin === "model" || origin === "replay";
+}
+
+/** A story title is a model's draft, or an editor's correction of one (`manual`): marked either way. */
+export function storyTitleByModel(origin: string | null | undefined): boolean {
+  return writtenByModel(origin) || origin === "manual";
+}
+
+/** An item's title, summary and reason share its current analysis (`publications.analysis_id`); a reason not shown is not marked. */
+export function itemAiMarks(analysisOrigin: string | null | undefined, reason: string | null): { title: boolean; summary: boolean; reason: boolean } {
+  const ai = writtenByModel(analysisOrigin);
+  return { title: ai, summary: ai, reason: ai && reason !== null };
 }
 
 /** Display tags exclude internal entity markers. */
