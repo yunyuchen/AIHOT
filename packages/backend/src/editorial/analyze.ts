@@ -1,10 +1,13 @@
 // analyzeArticle: the judging and writing steps, each with its own prompt from the industry pack
 // (industry/prompts/):
 //   1. prefilter: does the material belong to this industry at all (wide recall). Only BLOCK stops an
-//      item; UNKNOWN goes on like PASS (a BLOCK given while material is missing counts as UNKNOWN);
+//      item; UNKNOWN goes on like PASS (a BLOCK given while material is missing counts as UNKNOWN), unless
+//      the pack's prefilter is strict (industry/selection.ts): then every BLOCK stands and UNKNOWN is a BLOCK;
 //   2. score: two independent scores against the source tier's threshold (industry/selection.ts) decide 精选;
 //   3. writing: the Chinese title, summary and reason by the content understanding for selected and
-//      near-selected items, by the cheaper title/summary prompts for the rest;
+//      near-selected items, by the cheaper title/summary prompts for the rest; copy using a word the pack
+//      bans is dropped, so the item is not published, and so is a summary written from a bare title that
+//      repeats the context's note on the material (仅标题可用);
 //   4. structure (no reader-facing text): category, tags, subject companies and the fact frame the
 //      topics and the event grouping need; it runs beside the scoring.
 // Material with only a title or a feed summary has its article page fetched before it is judged.
@@ -21,9 +24,9 @@ import { buildMaterial, firstImagePart, loadAnalyzeInput, type AnalyzeInputArtic
 import { pageFetchable } from "../content/extract.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
 import {
-  buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, MAX_BODY_CHARS, missingEvidence,
+  buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, materialNoteIn, MAX_BODY_CHARS, missingEvidence,
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
-  type IdentityGuard,
+  bannedWordsIn, type IdentityGuard,
 } from "./writing.ts";
 import { CATEGORY_BY_ITEM_TYPE, CATEGORY_GUIDE, CATEGORY_TAGS, ENTITIES, ENTITY_TAGS, ITEM_TYPES, normalizeTags, TOPIC_TAGS } from "./vocabulary.ts";
 import { promptText, promptVersion } from "./prompts.ts";
@@ -168,6 +171,10 @@ export interface AnalysisRun {
     itemType?: string;
     authorRole?: string;
     identityGuard?: IdentityGuard;
+    /** The pack's banned words the model wrote; in the title or summary they dropped the copy. */
+    bannedWords?: string[];
+    /** The note on the material (仅标题可用) the copy of a bare title repeated; it dropped the summary, or only the reason. */
+    materialNote?: string;
     receiptIds: number[];
     reused: boolean;
   } | null;
@@ -206,8 +213,11 @@ async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<Ana
     maxTokens: 512,
     attemptTag: opts.attemptTag,
   });
-  // A BLOCK without material to back it counts as UNKNOWN (which goes on).
-  const label = res.data.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : res.data.label;
+  // A BLOCK without material to back it counts as UNKNOWN (which goes on). A strict pack keeps every
+  // BLOCK and blocks UNKNOWN too: what the prefilter cannot clear never reaches a public page.
+  const label = SELECTION.strictPrefilter
+    ? (res.data.label === "UNKNOWN" ? "BLOCK" : res.data.label)
+    : (res.data.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : res.data.label);
   return { label, reason: res.data.reason, model: res.model, receiptId: res.receiptId, reused: res.reused };
 }
 
@@ -289,10 +299,18 @@ async function runUnderstand(a: AnalyzeInputArticle, opts: StepOpts): Promise<An
   }
   const d = res.data;
   const copy = finalizeCopy(translateInputOf(a), { titleZh: d.titleZh, summaryZh: d.summaryZh });
+  // With only a title, the model may write the context's note on the material (原文正文抓取失败，仅标题可用)
+  // as copy. The summary is dropped then, so the item waits instead of being published; in the reason
+  // alone it costs only the reason. Only without material: there no text of the source can be the one saying it.
+  const bare = missingEvidence(a);
+  const note = bare ? materialNoteIn(`${copy.titleZh}\n${copy.summaryZh}`) : null;
+  const reasonZh = d.editorialJudgment.trim() || null;
+  const reasonNote = bare && reasonZh ? materialNoteIn(reasonZh) : null;
+  const materialNote = note ?? reasonNote;
   return {
-    kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: copy.summaryZh, reasonZh: d.editorialJudgment.trim() || null,
+    kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: note ? "" : copy.summaryZh, reasonZh: reasonNote ? null : reasonZh,
     tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[d.itemType] }), itemType: d.itemType, authorRole: d.authorRole,
-    identityGuard: copy.identityGuard, receiptIds: [res.receiptId], reused: res.reused,
+    identityGuard: copy.identityGuard, ...(materialNote ? { materialNote } : {}), receiptIds: [res.receiptId], reused: res.reused,
   };
 }
 
@@ -333,14 +351,30 @@ async function runSummarize(a: AnalyzeInputArticle, opts: StepOpts): Promise<Non
 }
 
 /**
- * Runs the steps on the material as it is (or reuses their receipts) without writing business results.
- * `stages: "selection"` stops after the scores (SelectBench).
+ * Copy that uses a word the pack bans (industry/selection.ts) is dropped, title and summary together and
+ * without falling back to the original title: an item without copy is not published. A reason that uses
+ * one loses only the reason.
  */
-export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { stages?: "selection" | "all" } = {}): Promise<AnalysisRun> {
+function withoutBannedWords(w: NonNullable<AnalysisRun["writing"]>): NonNullable<AnalysisRun["writing"]> {
+  const copy = bannedWordsIn(`${w.titleZh}\n${w.summaryZh}`);
+  const reason = w.reasonZh ? bannedWordsIn(w.reasonZh) : [];
+  if (!copy.length && !reason.length) return w;
+  return {
+    ...w, ...(copy.length ? { titleZh: "", summaryZh: "" } : {}), ...(reason.length ? { reasonZh: null } : {}),
+    bannedWords: [...new Set([...copy, ...reason])],
+  };
+}
+
+/**
+ * Runs the steps on the material as it is (or reuses their receipts) without writing business results.
+ * `stages: "selection"` stops after the scores (SelectBench), `stages: "prefilter"` after the prefilter
+ * (the compliance evaluation).
+ */
+export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { stages?: "prefilter" | "selection" | "all" } = {}): Promise<AnalysisRun> {
   checkAnalysisRunning();
   const prefilter = await runPrefilter(a, opts);
   // UNKNOWN is let through (its material is as complete as it will get); BLOCK stops here.
-  if (prefilter.label === "BLOCK") return { prefilter, scores: null, writing: null, structure: null };
+  if (prefilter.label === "BLOCK" || opts.stages === "prefilter") return { prefilter, scores: null, writing: null, structure: null };
   const threshold = tierThreshold(a.source.tier);
   if (opts.stages === "selection") {
     const scores = threshold === null ? null : await runScores(a, threshold, opts);
@@ -352,7 +386,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
     const scores = threshold === null ? null : await runScores(a, threshold, opts);
     const sum = scores && !scores.refused && scores.values.length === SCORE_CALLS ? scores.values.reduce((total, v) => total + v, 0) : null;
     const near = sum !== null && (sum >= scores!.threshold * SCORE_CALLS || sum > UNDERSTAND_FLOOR * SCORE_CALLS);
-    const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
+    const writing = withoutBannedWords((near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts)));
     const s = await structure;
     if ("error" in s) throw s.error;
     return { prefilter, scores, writing, structure: s.value };
@@ -369,7 +403,7 @@ export function normalizeAnalysis(run: AnalysisRun) {
   const titleZh = collapseWhitespace(run.writing?.titleZh ?? "");
   const summaryZh = (run.writing?.summaryZh ?? "").trim();
   // Past the prefilter (PASS or UNKNOWN) an item is relevant, but without a usable Chinese title and
-  // summary it cannot be published: it waits.
+  // summary (none written, or dropped for a banned word or a note on the material) it cannot be published: it waits.
   const relevance = label === "BLOCK" ? "block" : run.writing && (!titleZh || !summaryZh) ? "unknown" : "pass";
   // Selected when the two scores add up to twice the tier threshold; the mean, floored,
   // is the score shown (it never decides a half point on its own).
@@ -432,6 +466,8 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
     scores: out.scores, scoreModel: out.scoreModel, threshold: out.threshold, ...(out.scoreRefused ? { scoreRefused: true } : {}),
     ...(w ? { writer: w.kind, writerModel: w.model, itemType: w.itemType ?? null, authorRole: w.authorRole ?? null } : {}),
     ...(w?.identityGuard?.outcome === "fallback" ? { identityGuard: w.identityGuard } : {}),
+    ...(w?.bannedWords ? { bannedWords: w.bannedWords } : {}),
+    ...(w?.materialNote ? { materialNote: w.materialNote } : {}),
     fact: out.fact,
   };
   const committed = await sql.begin(async (tx) => {

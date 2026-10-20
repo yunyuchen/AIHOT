@@ -2,6 +2,7 @@
 // title/summary prompts for everything else, the output parsing and the deterministic guards. The
 // wording lives in the industry pack (industry/prompts/); a failed guard falls back without a repair call.
 import { IDENTITY_CONTEXT_ALIASES, IDENTITY_LEXICON, PUBLISHER_DOMAINS } from "@aihot/industry/taxonomy";
+import { SELECTION } from "@aihot/industry/selection";
 import { onlyXArticleLink } from "../sources/x.ts";
 import type { AnalyzeInputArticle } from "./input.ts";
 import { promptText } from "./prompts.ts";
@@ -125,6 +126,30 @@ export function missingEvidence(a: AnalyzeInputArticle): boolean {
   return !a.bodyText?.trim() && !a.excerpt?.trim() && !String(a.xPost?.text ?? "").trim() && !String(a.xPost?.quoted?.text ?? "").trim();
 }
 
+/**
+ * The context's notes on the material (【材料质量】抓取失败，仅标题可用, the "(无正文)" placeholder, the
+ * field names), as a model with only a title writes them into the copy: 原文正文抓取失败，仅标题可用 /
+ * 原文正文未抓取到 / 原文仅提供标题. Phrases about the body or the title only: a fact such as 未披露产能,
+ * or a robot's 抓取精度, never matches. A field name counts only whole (【媒体】): titles of the trade
+ * open with 【媒体聚焦】, and the identity guard can put an original title back.
+ */
+const MATERIAL_NOTE = new RegExp([
+  "(?:仅|只)(?:有|提供了?|给出了?|含)?标题",
+  "(?:仅凭|根据|依据)标题",
+  "除了?标题(?:外|以外|之外)",
+  "(?:正文|原文|全文)(?:内容)?(?:抓取|获取|提取)?(?:失败|缺失)",
+  "(?:正文|原文|全文)[^。！？，；]{0,4}(?:未能?|无法)(?:抓取|获取|提取|抓)到?",
+  "(?:未能?|无法)(?:抓取|获取|提取|抓)到?(?:原文|正文|全文)",
+  "(?:无|没有|缺少|缺乏|未提供|未附|暂无)(?:原文)?正文",
+  "原文并?(?:未|没有)(?:提供|给出|包含)",
+  "【(?:来源|来源标签|作者|发布时间|媒体|原文链接|标题|正文|材料质量)】",
+].join("|"), "u");
+
+/** The note on the material the copy repeats, if any; only meaningful where `missingEvidence` holds. */
+export function materialNoteIn(text: string): string | null {
+  return MATERIAL_NOTE.exec(text)?.[0] ?? null;
+}
+
 export const understandUser = (a: AnalyzeInputArticle) =>
   ["请按系统规则理解以下单篇材料，一次返回全部六个字段。", renderContext(a, { annotateQuoted: true })].join("\n\n");
 
@@ -230,17 +255,29 @@ export function enforceIdentity(input: TranslateInput, copy: { titleZh: string; 
   };
 }
 
+/** The pack's banned words (industry/selection.ts) the text uses. */
+export function bannedWordsIn(text: string): string[] {
+  return SELECTION.bannedWords.filter((word) => text.includes(word));
+}
+
 // ── Answer-first summary length ──────────────────────────────────────────────────────────────
 
+/**
+ * A summary over `maxChars` keeps as many of its leading whole sentences as fit, up to the three the
+ * length rule allows (stopping at a fixed length instead cut drafts of 250 characters to one sentence).
+ */
 export function compactAnswerFirstSummary(summary: string, maxChars = 190): string {
   const text = summary.trim().replace(/\s*\n+\s*/g, " ");
   if (text.length <= maxChars) return text;
   const sentences = text.match(/[^。！？!?]+[。！？!?]?/gu) ?? [text];
   let result = "";
+  let kept = 0;
   for (const sentence of sentences) {
     if ((result + sentence).length > maxChars) break;
     result += sentence;
-    if (result.length >= 80) break;
+    kept += 1;
+    // Three sentences, unless three short ones stay under the floor below.
+    if (kept >= 3 && result.length >= 50) break;
   }
   if (result.length >= 50) return result.trim();
   // The first sentence alone is too long: cut at a clause boundary, never inside a name or number.
@@ -249,7 +286,6 @@ export function compactAnswerFirstSummary(summary: string, maxChars = 190): stri
   for (const clause of clauses) {
     if ((result + clause).length + 1 > maxChars) break;
     result += clause;
-    if (result.length >= 80) break;
   }
   return result.length >= 50 ? `${result.replace(/[，；：、,;:]$/u, "")}。` : text;
 }

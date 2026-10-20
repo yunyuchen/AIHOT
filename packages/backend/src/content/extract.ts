@@ -68,9 +68,9 @@ function markdownToHtml(md: string): string {
     .join("");
 }
 
-export async function extractFromUrl(url: string, opts: { allowJina: boolean; subject: string }): Promise<ExtractedBody | null> {
+export async function extractFromUrl(url: string, opts: { allowJina: boolean; subject: string; headers?: Record<string, string> }): Promise<ExtractedBody | null> {
   try {
-    const res = await guardedFetch(url, { timeoutMs: 20_000, maxBytes: 6 * 1024 * 1024 });
+    const res = await guardedFetch(url, { headers: opts.headers, timeoutMs: 20_000, maxBytes: 6 * 1024 * 1024 });
     const type = res.headers.get("content-type") ?? "";
     if (res.status === 200 && /html/.test(type)) {
       const got = readable(res.text(), res.url);
@@ -103,13 +103,30 @@ export function pageFetchable(url: string, sourceKind: string): boolean {
   }
 }
 
+/**
+ * Where the body is read from. Some sites answer the article link their listing gives with a JS
+ * challenge (北极星: news.bjx.com.cn/html/ is behind Aliyun WAF) and serve the same article on another
+ * host (chuneng.bjx.com.cn/news/). Only this fetch moves: the article's URL, its identity, the URL rules
+ * and the link readers follow stay the listed one, so nothing already stored comes in again.
+ */
+function bodyUrl(url: string, rw: { from?: string; to?: string } | null): string {
+  return rw?.from && rw?.to && url.startsWith(rw.from) ? rw.to + url.slice(rw.from.length) : url;
+}
+
 /** Fetches and stores the body of one article. Unconfirmed bodies are recorded as such. */
 export async function extractArticleBody(articleId: string, allowJina = process.env.JINA_BODY_FALLBACK !== "false"): Promise<"ok" | "unconfirmed" | "skipped"> {
-  const [a] = await sql<{ id: string; url: string; body_status: string; revision: number; x_post: { tweetId?: string } | null }[]>`
-    SELECT id, url, body_status, revision, x_post FROM articles WHERE id = ${articleId}`;
+  // A list's request headers (a site that answers only a browser's User-Agent) go to its article pages too;
+  // a JSON source's are for its API.
+  const [a] = await sql<{
+    id: string; url: string; body_status: string; revision: number; x_post: { tweetId?: string } | null;
+    headers: Record<string, string> | null; body_url_rewrite: { from?: string; to?: string } | null;
+  }[]>`
+    SELECT a.id, a.url, a.body_status, a.revision, a.x_post, CASE WHEN s.kind = 'web_list' THEN s.config->'headers' END AS headers,
+      s.config->'bodyUrlPrefixRewrite' AS body_url_rewrite
+    FROM articles a LEFT JOIN sources s ON s.id = a.source_id WHERE a.id = ${articleId}`;
   if (!a || a.body_status === "ok") return "skipped";
   if (a.x_post?.tweetId) return extractXArticle(a.id, a.x_post.tweetId);
-  const got = await extractFromUrl(a.url, { allowJina, subject: `article:${a.id}` });
+  const got = await extractFromUrl(bodyUrl(a.url, a.body_url_rewrite), { allowJina, subject: `article:${a.id}`, headers: a.headers ?? undefined });
   if (!got) {
     await sql`UPDATE articles SET body_status = 'unconfirmed', updated_at = now() WHERE id = ${articleId} AND body_status <> 'ok'`;
     return "unconfirmed";

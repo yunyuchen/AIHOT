@@ -3,14 +3,19 @@
 // articles, dates never found).
 import type { SourceRow } from "./types.ts";
 
-// Rules applied in collect.ts to every kind read through collectSource.
-const COLLECTED = ["_aihot", "allowUrlPrefixes", "denyUrlPrefixes", "ingestNoiseFilter", "itemUrlPrefixRewrite", "sortByPublishedAt", "detail", "fetchPublicContent"];
+// Rules applied to every kind read through collectSource: in collect.ts, and bodyUrlPrefixRewrite where the
+// article body is fetched (content/extract.ts).
+const COLLECTED = [
+  "_aihot", "allowUrlPrefixes", "denyUrlPrefixes", "ingestNoiseFilter", "itemUrlPrefixRewrite", "bodyUrlPrefixRewrite", "sortByPublishedAt", "detail",
+  "fetchPublicContent",
+];
 
 const KEYS: Record<SourceRow["kind"], string[]> = {
   rss: [...COLLECTED, "feedUrl", "summaryIsBody", "preserveUrlFragment", "allowCategories", "denyCategories"],
   web_list: [
     ...COLLECTED, "url", "baseUrl", "parseMode", "adapter", "cacheToleranceSeconds", "linksStartLine", "preserveUrlFragment",
-    "htmlPath", "itemSelector", "linkSelector", "titleSelector", "publishedAtSelector", "publishedAtRegex", "publishedAtUtcOffset",
+    "htmlPath", "headers", "itemSelector", "linkSelector", "titleSelector", "publishedAtSelector", "publishedAtRegex", "publishedAtUtcOffset",
+    "publishedAtPartial", "publishedAtFromUrl",
   ],
   json_list: [
     ...COLLECTED, "url", "mode", "method", "headers", "bodyJson", "jsonKey", "windowVar", "itemsPath", "itemsObjectValues",
@@ -25,9 +30,10 @@ const KEYS: Record<SourceRow["kind"], string[]> = {
 
 // Objects with fixed keys (headers and bodyJson are request data, free-form).
 const NESTED: Record<string, string[]> = {
-  _aihot: ["initialBackfillLimit", "initialBackfillMonths"],
+  _aihot: ["initialBackfillLimit", "initialBackfillMonths", "minIntervalMinutes", "fetchMinute"],
   ingestNoiseFilter: ["dropMarkers", "dropMarkersTitleOnly", "keepIfMatches"],
   itemUrlPrefixRewrite: ["from", "to"],
+  bodyUrlPrefixRewrite: ["from", "to"],
   requireBoolean: ["path", "equals"],
   minNumeric: ["path", "min"],
   detail: [
@@ -41,6 +47,12 @@ const VALUES: Record<string, string[]> = {
   parseMode: ["html", "markdown", "docusaurus_changelog"],
 };
 
+// Whole numbers the scheduler reads (collect.ts): a value out of range would be no rule at all.
+const RANGES: Record<string, [number, number]> = {
+  "_aihot.minIntervalMinutes": [1, 1440],
+  "_aihot.fetchMinute": [0, 59],
+};
+
 /** The config entries a source of this kind would ignore or cannot run, e.g. ["adapter=site_cards", "detail.titleFoo"]. */
 export function unsupportedConfig(kind: SourceRow["kind"], config: Record<string, unknown>): string[] {
   const allowed = new Set(KEYS[kind] ?? []);
@@ -49,7 +61,11 @@ export function unsupportedConfig(kind: SourceRow["kind"], config: Record<string
     if (!allowed.has(key)) out.push(key);
     else if (VALUES[key] && !VALUES[key]!.includes(String(value))) out.push(`${key}=${String(value)}`);
     else if (NESTED[key] && value && typeof value === "object") {
-      for (const sub of Object.keys(value)) if (!NESTED[key]!.includes(sub)) out.push(`${key}.${sub}`);
+      for (const [sub, v] of Object.entries(value)) {
+        const range = RANGES[`${key}.${sub}`];
+        if (!NESTED[key]!.includes(sub)) out.push(`${key}.${sub}`);
+        else if (range && !(typeof v === "number" && Number.isInteger(v) && v >= range[0] && v <= range[1])) out.push(`${key}.${sub}=${String(v)}`);
+      }
     }
   }
   return out;

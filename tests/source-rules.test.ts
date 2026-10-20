@@ -19,6 +19,9 @@ let jinaListingReads = 0;
 const pageReads = new Map<string, number>();
 const ARTICLE_BODY = "A complete article with enough material to preserve the same extraction result without downloading it twice. ".repeat(6);
 const html = (head: string, body: string) => `<html><head>${head}</head><body>${body}</body></html>`;
+// What 北极星's news.bjx.com.cn/html/ answers: a 200 page that is only Aliyun WAF's JS challenge.
+const CHALLENGE = html("", "<script>var arg1='4F9A0C1B2D3E';document.cookie='acw_sc__v2='+arg1;location.reload();</script>");
+const channelArticle = () => html("", `<article><h1>The article on the channel host ${T}</h1><p>${ARTICLE_BODY}</p></article>`);
 const pages: Record<string, (base: string) => string> = {
   "/feed.xml": () =>
     `<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>` +
@@ -30,6 +33,12 @@ const pages: Record<string, (base: string) => string> = {
   [`/p/b-${T}`]: () => html(`<meta name="description" content="Summary of B"><meta property="article:published_time" content="2026-01-01T00:00:00Z">`, `<article><h1>Detail heading B ${T}</h1><p>${ARTICLE_BODY}</p></article>`),
   [`/j/1-${T}`]: () => html(`<meta property="article:published_time" content="2026-09-27T01:00:00Z">`, "<p>one</p>"),
   [`/j/2-${T}`]: () => html(`<meta property="article:published_time" content="2026-09-27T02:00:00Z">`, "<p>two</p>"),
+  "/challenged-list.html": () => html("", `<ul><li><a href="/html/20261020/1-${T}.shtml">Listed on the challenged host ${T}</a></li></ul>`),
+  "/plain-list.html": () => html("", `<ul><li><a href="/html/20261020/2-${T}.shtml">Listed without a rule ${T}</a></li></ul>`),
+  [`/html/20261020/1-${T}.shtml`]: () => CHALLENGE,
+  [`/html/20261020/2-${T}.shtml`]: () => CHALLENGE,
+  [`/news/20261020/1-${T}.shtml`]: channelArticle,
+  [`/news/20261020/2-${T}.shtml`]: channelArticle,
 };
 // Jina Reader: GET /<target URL> answers the rendering, with its header lines.
 const jina = (base: string, target: string) => {
@@ -64,6 +73,17 @@ const SOURCES = {
     },
   },
   jina: { kind: "web_list", config: { url: `https://r.jina.ai/${base}/jlist-${T}`, parseMode: "markdown", allowUrlPrefixes: [`${base}/j/`], detail: { maxFetches: 5, titleRegex: "^# (.+)$" } } },
+  bodyRewrite: {
+    kind: "web_list",
+    config: {
+      url: `${base}/challenged-list.html`, parseMode: "html", itemSelector: "li", linkSelector: "a", titleSelector: "a",
+      allowUrlPrefixes: [`${base}/html/`], bodyUrlPrefixRewrite: { from: `${base}/html/`, to: `${base}/news/` },
+    },
+  },
+  noBodyRewrite: {
+    kind: "web_list",
+    config: { url: `${base}/plain-list.html`, parseMode: "html", itemSelector: "li", linkSelector: "a", titleSelector: "a", allowUrlPrefixes: [`${base}/html/`] },
+  },
 };
 const id = (name: keyof typeof SOURCES) => `test-rules-${name}-${T}`;
 let savedJina: Array<{ per_minute: number; per_hour: number; per_day: number }> = [];
@@ -136,4 +156,29 @@ test("detail HTML supplies the ordinary extracted body once, while short pages k
   assert.deepEqual([full!.body_html, full!.body_text, full!.body_status], [expected.html, expected.text, "ok"]);
   assert.equal(await extractArticleBody(full!.id, false), "skipped");
   assert.equal(pageReads.get(`/p/b-${T}`), 1, "known listings and extraction never download the same confirmed body again");
+});
+
+test("a body URL rewrite reads the body from the other prefix, while the article keeps the listed URL", async () => {
+  for (const name of ["bodyRewrite", "noBodyRewrite"] as const) {
+    assert.equal((await collectSource(id(name), { force: true })).status, "ok", "the collector accepts the rule");
+  }
+  const stored = async (name: keyof typeof SOURCES) =>
+    (await sql<{ id: string; url: string; identity_key: string; body_text: string | null }[]>`
+      SELECT id, url, identity_key, body_text FROM articles WHERE source_id = ${id(name)}`)[0]!;
+  const listed = `${base}/html/20261020/1-${T}.shtml`;
+  const listedRow = await stored("bodyRewrite");
+  assert.equal(listedRow.url, listed, "the URL rules judge the listed link, and it is the one stored");
+  assert.equal(await extractArticleBody(listedRow.id, false), "ok");
+  const expected = readable(channelArticle(), `${base}/news/20261020/1-${T}.shtml`)!;
+  const extracted = await stored("bodyRewrite");
+  assert.deepEqual([extracted.body_text, extracted.url, extracted.identity_key], [expected.text, listed, listedRow.identity_key],
+    "the body is the other prefix's article; the URL readers follow and the identity stay the listed ones");
+  assert.deepEqual([pageReads.get(`/html/20261020/1-${T}.shtml`), pageReads.get(`/news/20261020/1-${T}.shtml`)], [undefined, 1],
+    "the challenged page is never fetched");
+
+  // Without the rule nothing changes: the listed page is read, and a challenge is no body.
+  const plain = await stored("noBodyRewrite");
+  assert.equal(await extractArticleBody(plain.id, false), "unconfirmed");
+  assert.deepEqual([pageReads.get(`/html/20261020/2-${T}.shtml`), pageReads.get(`/news/20261020/2-${T}.shtml`)], [1, undefined]);
+  assert.equal((await stored("noBodyRewrite")).url, `${base}/html/20261020/2-${T}.shtml`);
 });

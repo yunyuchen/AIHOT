@@ -1,4 +1,4 @@
-// 精选的门槛。评分标准本身写在 prompts/selection-score.md；这里只决定“多少分算入选”。
+// 精选的门槛。评分标准本身写在 prompts/selection-score.md；这里只决定“多少分算入选”，外加预筛从严和写后禁词两项把关。
 // 每篇资料由评分模型独立打两次分（0–100），两次之和 ≥ 2 × 门槛才进精选，卡片上显示两次的平均分。
 // 门槛可以按信源分级区分（官方一手低一些、媒体和个人高一些）；本站校准后三级用同一个数。改了门槛或评分提示词，
 // 用 scripts/eval-selection.ts 在你自己标注的样本上重跑一遍，再决定上线（见 docs/selection.md）。
@@ -18,4 +18,15 @@ export const SELECTION = {
    * 其余用更便宜的“标题摘要翻译”。
    */
   understandFloor: 50,
+  /**
+   * 预筛从严：true 时预筛判的 BLOCK 一律算数（缺正文也不改成 UNKNOWN），模型答 UNKNOWN 也按 BLOCK 处理，
+   * 拿不准的资料不进任何公开页面。false（本站）时缺正文的 BLOCK 按 UNKNOWN 继续往下走：标题明确属于本行业的
+   * 资料仍能评分、写标题摘要，不因为只抓到标题就丢掉。
+   */
+  strictPrefilter: false as boolean,
+  /**
+   * 写后禁词：模型写出的标题或摘要用了这里的词，这条就不发布（不回退原标题）；推荐理由用了，只去掉推荐理由。
+   * 本站没有禁词。
+   */
+  bannedWords: [] as string[],
 } as const;

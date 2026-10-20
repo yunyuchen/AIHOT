@@ -66,7 +66,7 @@ async function store(sourceId: string, candidates: Candidate[], backfill: string
   let revised = 0;
   const seen = new Set<string>();
   for (const c of candidates) {
-    const material = { ...c, sourceId, via: "fetch" as const, backfill };
+    const material = { ...c, sourceId, via: "fetch" as const, backfill: backfill ?? c.backfill ?? null };
     // A listing that names one article twice (a featured card and its list entry, a feed repeating an
     // item) stores its first entry only; the later ones would otherwise revise it on every fetch.
     const key = identityKeyFor(material);
@@ -131,8 +131,23 @@ export async function collectSource(sourceId: string, opts: { force?: boolean } 
     const backfillMonths = Number(source.config._aihot?.initialBackfillMonths ?? 12);
     if (firstImport) {
       const cutoff = Date.now() - backfillMonths * 30 * 86400000;
-      candidates = candidates.filter((c) => !c.publishedAt || c.publishedAt.getTime() >= cutoff).slice(0, backfillLimit);
+      const kept = new Set(candidates.filter((c) => !c.publishedAt || c.publishedAt.getTime() >= cutoff).slice(0, backfillLimit));
+      // The newest entry the import leaves out bounds the backlog for the runs after it (below).
+      const left = candidates.filter((c) => !kept.has(c) && c.publishedAt).map((c) => c.publishedAt!.getTime());
+      if (left.length) nextCursor.backlogBefore = new Date(Math.max(...left)).toISOString();
+      candidates = [...kept];
     } else if (source.kind !== "x_search") {
+      // The backlog the first import cut stays bounded on the runs after it (a feed of 400 entries must not
+      // add the other 392 on the next run): of what the listing still shows, entries no newer than the
+      // newest one it left out and more than a day older than the import stay out. The last day's are
+      // kept, archived by source time like the import's own, so yesterday's do not enter "today" (a day,
+      // as lists that date entries by the day alone show today's new ones with the import's date).
+      const backlogBefore = Date.parse(String(source.cursor?.backlogBefore ?? ""));
+      const importedAt = Date.parse(String(source.cursor?.initializedAt ?? ""));
+      if (Number.isFinite(backlogBefore) && Number.isFinite(importedAt)) {
+        candidates = candidates.filter((c) => !c.publishedAt || c.publishedAt.getTime() > backlogBefore || c.publishedAt.getTime() >= importedAt - DAY_MS);
+        for (const c of candidates) if (c.publishedAt && c.publishedAt.getTime() < importedAt) c.backfill = "first-import";
+      }
       // X keeps every post it read: its watermark already covers them, so a cut here would lose them.
       candidates = candidates.slice(0, MAX_ITEMS_PER_RUN);
     }
@@ -318,22 +333,49 @@ async function scheduleXShards(): Promise<number> {
   return enqueued;
 }
 
+/** Minutes from a source's fetch minute (config._aihot.fetchMinute) in which it may be fetched. */
+const FETCH_WINDOW_MINUTES = 10;
+
+/**
+ * When the fetch window of a source with a fetch minute next opens, or null when the source may be
+ * fetched now (it has none, or its window is open). Such a source is fetched only in the ten minutes
+ * from that minute of the hour, however its runs, retries and the scheduler drift: sources of one site
+ * that refuses bursts (sport.gov.cn answers 403) take minutes far apart and never meet.
+ */
+export function fetchWindowOpens(config: Record<string, any> | null | undefined, now = new Date()): Date | null {
+  const minute = config?._aihot?.fetchMinute;
+  if (!Number.isInteger(minute)) return null;
+  const into = (((now.getUTCMinutes() - minute) % 60) + 60) % 60;
+  if (into < FETCH_WINDOW_MINUTES) return null;
+  const opens = new Date(now.getTime() + (60 - into) * 60_000);
+  opens.setUTCSeconds(0, 0);
+  return opens;
+}
+
 /** Every minute: enqueue due sources (enabled, not WeChat/external), oldest due first; X accounts by shard. */
 export async function scheduleDueSources(limit = Number(process.env.FETCH_SCHEDULE_BATCH || 40)): Promise<{ enqueued: number; shards: number }> {
   const kinds: string[] = (process.env.COLLECT_KINDS || "rss,web_list,json_list,x_search").split(",");
   // Listings fetched through Jina Reader are paid; development can leave them out.
   const skipJina = process.env.COLLECT_SKIP_JINA === "true";
-  const rows = await sql<{ id: string }[]>`
-    SELECT id FROM sources
+  const rows = await sql<Array<Pick<SourceRow, "id" | "config">>>`
+    SELECT id, config FROM sources
     WHERE enabled AND kind IN ${sql(kinds)} AND (next_fetch_at IS NULL OR next_fetch_at <= now()) AND NOT (${sharded()})
       ${skipJina ? sql`AND config::text NOT LIKE '%r.jina.ai%'` : sql``}
     ORDER BY next_fetch_at NULLS FIRST LIMIT ${limit}`;
+  let enqueued = 0;
   for (const r of rows) {
+    // Due outside its fetch window (a new source, a retry, a run that ended late): it waits for the window.
+    const opens = fetchWindowOpens(r.config);
+    if (opens) {
+      await sql`UPDATE sources SET next_fetch_at = ${opens} WHERE id = ${r.id}`;
+      continue;
+    }
     await enqueue(QUEUES.fetchSource, { sourceId: r.id }, { singletonKey: r.id });
     await sql`UPDATE sources SET next_fetch_at = now() + interval '10 minutes' WHERE id = ${r.id}`;
+    enqueued += 1;
   }
   const shards = kinds.includes("x_search") ? await scheduleXShards() : 0;
-  return { enqueued: rows.length, shards };
+  return { enqueued, shards };
 }
 
 /**
@@ -353,9 +395,11 @@ export async function adaptIntervals(): Promise<{ updated: number }> {
     // hot signals may wait longer.
     const max = r.participation_mode === "hot_signal" ? 180 : r.kind === "x_search" || r.paid_listing ? 120 : 60;
     // Listings read through Jina are not looked at more than hourly: busy ones would outrun its daily budget.
-    const min = r.paid_listing ? 60 : 15;
+    // A site that refuses frequent visits sets its own floor (config._aihot.minIntervalMinutes).
+    const min = Math.max(r.paid_listing ? 60 : 15, Number(r.config?._aihot?.minIntervalMinutes) || 0);
+    const longest = Math.max(max, min);
     // X accounts read by shard follow the shard's pace, whatever their own volume.
-    const target = shardHandle(r) ? shardMinutes(r.participation_mode) : perDay <= 0.15 ? max : Math.round(Math.min(max, Math.max(min, (24 * 60) / (perDay * 3))));
+    const target = shardHandle(r) ? shardMinutes(r.participation_mode) : perDay <= 0.15 ? longest : Math.round(Math.min(longest, Math.max(min, (24 * 60) / (perDay * 3))));
     const res = await sql`UPDATE sources SET interval_minutes = ${target} WHERE id = ${r.id} AND interval_minutes <> ${target}`;
     updated += res.count;
   }

@@ -45,6 +45,63 @@ export function parseLooseDate(value: string | null | undefined, utcOffset = "+0
   return atOffset(local.getFullYear(), local.getMonth() + 1, local.getDate(), local.getHours(), local.getMinutes(), local.getSeconds(), utcOffset);
 }
 
+const DAY_MS = 86_400_000;
+
+/** "+08:00" → 480. */
+function offsetMinutes(utcOffset: string): number {
+  const m = /^([+-])(\d{2}):?(\d{2})$/.exec(utcOffset);
+  return m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) : 0;
+}
+
+/** The day at the offset, or null for one the calendar does not have (Date.parse turns 02-30 into 03-02). */
+function calendarDay(y: number, mo: number, d: number, h: number, mi: number, utcOffset: string): Date | null {
+  const date = atOffset(y, mo, d, h, mi, 0, utcOffset);
+  if (!date) return null;
+  const local = new Date(date.getTime() + offsetMinutes(utcOffset) * 60_000);
+  return local.getUTCMonth() + 1 === mo && local.getUTCDate() === d ? date : null;
+}
+
+/**
+ * A list date that leaves part of itself out (config.publishedAtPartial): a month and day ("10-16",
+ * "10/16 09:30", "10月16日") is the most recent such day, in this year at the source's offset or, when
+ * that is still more than a day ahead (a December date read in January), in the year before; a time
+ * alone ("09:49") is today, or yesterday when that is still ahead. A date with its year is no partial one.
+ */
+export function parsePartialDate(value: string | null | undefined, utcOffset = "+08:00", now = new Date()): Date | null {
+  const v = (value ?? "").trim();
+  if (!v || /\d{4}/.test(v)) return null;
+  const local = new Date(now.getTime() + offsetMinutes(utcOffset) * 60_000);
+  const md = /(?<!\d)(\d{1,2})[-/.月](\d{1,2})日?(?:\s*(\d{1,2}):(\d{2}))?(?!\d)/.exec(v);
+  if (md) {
+    const [mo, d, h, mi] = [Number(md[1]), Number(md[2]), Number(md[3] ?? 0), Number(md[4] ?? 0)];
+    const year = local.getUTCFullYear();
+    const thisYear = calendarDay(year, mo, d, h, mi, utcOffset);
+    if (thisYear && thisYear.getTime() <= now.getTime() + DAY_MS) return thisYear;
+    return calendarDay(year - 1, mo, d, h, mi, utcOffset);
+  }
+  const t = /^\D*(?<!\d)(\d{1,2}):(\d{2})(?!\d)\D*$/.exec(v);
+  if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return null;
+  const today = calendarDay(local.getUTCFullYear(), local.getUTCMonth() + 1, local.getUTCDate(), Number(t[1]), Number(t[2]), utcOffset);
+  if (!today) return null;
+  return today.getTime() <= now.getTime() + 3_600_000 ? today : new Date(today.getTime() - DAY_MS);
+}
+
+/**
+ * The day an article's address names (config.publishedAtFromUrl), at midnight in the source's offset:
+ * /20261010/, t20261009_1842133.html, /2026/1016/, /2026/10/16/, /2026-10/16/. A run of digits that goes
+ * on (an id such as 2026101612345) is no date.
+ */
+export function dateInUrl(url: string, utcOffset = "+08:00"): Date | null {
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return null;
+  }
+  const m = /(?<!\d)(20\d{2})[-/]?(0[1-9]|1[0-2])[-/]?(0[1-9]|[12]\d|3[01])(?!\d)/.exec(path);
+  return m ? calendarDay(Number(m[1]), Number(m[2]), Number(m[3]), 0, 0, utcOffset) : null;
+}
+
 /** The datePublished of the page's structured data (JSON-LD, also inside @graph or embedded app state). */
 export function jsonLdPublished($: cheerio.CheerioAPI, html: string): string | null {
   const find = (v: unknown, depth = 0): string | null => {
@@ -124,7 +181,9 @@ async function fetchListingText(source: SourceRow): Promise<{ text: string; viaJ
     const page = await jinaRead(target, { purpose: "source_listing", subject: `source:${source.id}`, cacheToleranceSeconds: source.config.cacheToleranceSeconds, perRead: true });
     return { text: page.markdown, viaJina: true, base: source.config.baseUrl ?? target };
   }
-  const res = await guardedFetch(url, { headers: { accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8" }, timeoutMs: 25_000 });
+  // config.headers: a site that answers only browsers (kepuchina.cn sends the crawler a 502) gets their User-Agent.
+  const headers = { accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8", ...(source.config.headers ?? {}) };
+  const res = await guardedFetch(url, { headers, timeoutMs: 25_000 });
   if (res.status !== 200) throw new FetchError(`HTTP ${res.status}`, res.status);
   return { text: res.text(), viaJina: false, base: source.config.baseUrl ?? url };
 }
@@ -163,6 +222,10 @@ export function fromHtml(html: string, base: string, source: SourceRow): Candida
   const listing = String(c.url ?? base).replace(JINA_PREFIX, "");
   // Sections of the listing page are posts only for sources that keep fragments as identity.
   const sectionsArePosts = c.preserveUrlFragment === true;
+  // A date without its year is read as one only where the source says its list prints them so (left to
+  // Date.parse, "10-16" is a day in 2001).
+  const readDate = (text: string | null | undefined) =>
+    c.publishedAtPartial === true && text && !/\d{4}/.test(text) ? parsePartialDate(text, c.publishedAtUtcOffset) : parseLooseDate(text, c.publishedAtUtcOffset);
   const itemSel: string | undefined = c.itemSelector;
   const nodes = itemSel ? $(itemSel).toArray() : $("a[href]").toArray();
   for (const node of nodes) {
@@ -181,11 +244,11 @@ export function fromHtml(html: string, base: string, source: SourceRow): Candida
     let publishedAt: Date | null = null;
     if (c.publishedAtSelector) {
       const dateEl = el.find(c.publishedAtSelector).first();
-      publishedAt = parseLooseDate(dateEl.attr("datetime") ?? dateEl.attr("title") ?? dateEl.text(), c.publishedAtUtcOffset);
+      publishedAt = readDate(dateEl.attr("datetime") ?? dateEl.attr("title") ?? dateEl.text());
     }
     if (!publishedAt && c.publishedAtRegex) {
       const m = new RegExp(c.publishedAtRegex).exec($.html(el));
-      publishedAt = parseLooseDate(m?.[1], c.publishedAtUtcOffset);
+      publishedAt = readDate(m?.[1]);
     }
     seen.add(url);
     out.push({ url, title, publishedAt });
@@ -338,6 +401,8 @@ export async function fetchWebList(source: SourceRow): Promise<Candidate[]> {
   else if (mode === "docusaurus_changelog") out = fromDocusaurusChangelog(text, base, source);
   else out = fromHtml(text, base, source);
   if (out.length === 0) throw new FetchError(`no items matched (${mode})`);
+  // A listing without dates whose addresses carry the day (chinacdc.cn t20261009_…, people.com.cn /2026/1017/).
+  if (source.config.publishedAtFromUrl === true) for (const c of out) c.publishedAt ??= dateInUrl(c.url, source.config.publishedAtUtcOffset);
   return out;
 }
 
@@ -364,7 +429,7 @@ export async function fetchDetail(url: string, source: SourceRow, need: DetailNe
   let html: string | null = null;
   let body: ExtractedBody | null = null;
   if ((need.date && !dateInJina) || (need.title && !titleInJina) || need.summary) {
-    const res = await guardedFetch(url, { timeoutMs: 20_000 });
+    const res = await guardedFetch(url, { headers: source.config.headers, timeoutMs: 20_000 });
     if (res.status === 200) {
       html = res.text();
       if (need.body && /html/.test(res.headers.get("content-type") ?? "")) {

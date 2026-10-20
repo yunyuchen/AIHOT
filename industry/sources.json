@@ -14,6 +14,10 @@
         "allowUrlPrefixes": [
           "https://news.bjx.com.cn/html/"
         ],
+        "bodyUrlPrefixRewrite": {
+          "from": "https://news.bjx.com.cn/html/",
+          "to": "https://chuneng.bjx.com.cn/news/"
+        },
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -42,6 +46,10 @@
         "allowUrlPrefixes": [
           "https://news.bjx.com.cn/html/"
         ],
+        "bodyUrlPrefixRewrite": {
+          "from": "https://news.bjx.com.cn/html/",
+          "to": "https://chuneng.bjx.com.cn/news/"
+        },
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -70,6 +78,10 @@
         "allowUrlPrefixes": [
           "https://news.bjx.com.cn/html/"
         ],
+        "bodyUrlPrefixRewrite": {
+          "from": "https://news.bjx.com.cn/html/",
+          "to": "https://www.bjx.com.cn/news/"
+        },
         "_aihot": {
           "initialBackfillLimit": 8
         }
