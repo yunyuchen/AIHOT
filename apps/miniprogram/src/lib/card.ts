@@ -1,4 +1,4 @@
-// 卡片上的显示规则：分类色标、“N 家在报”、“AI 摘要”角标，和焦点卡的底栏。精选流、焦点卡、收藏卡共用。纯函数，tests/ 里直接跑。
+// 卡片上的显示规则：分类色标、来源数量、“AI 摘要”角标，和焦点卡的底栏。精选流、焦点卡、收藏卡共用。纯函数，tests/ 里直接跑。
 import type { MiniprogramFocus } from "@aihot/contracts/miniprogram";
 import { beijingClock } from "./beijing.ts";
 
@@ -11,7 +11,7 @@ export const FALLBACK_CATEGORY_COLOR = "#8a959e";
 /** 色标的浅底：分类色 15% 透明度（原型 A 版 .cat 的底色）。 */
 const TINT_ALPHA = 0.15;
 
-/** “N 家在报”后面的小圆点最多画几个。 */
+/** 来源数量后的圆点最多画几个。 */
 const MAX_ECHO_DOTS = 5;
 
 export interface CategoryChip {
@@ -37,10 +37,10 @@ export function categoryChip(
   return { label, color, tint: tint(color, TINT_ALPHA) };
 }
 
-/** “N 家在报”：同一事实里不重复的来源数，含自己；≥ 2 才显示（回 null 不显示）。dots 是后面小圆点的个数。 */
+/** 同一事实中不同来源的数量，含代表条目来源；≥ 2 才显示（回 null 不显示）。dots 是后面小圆点的个数。 */
 export function sourceCountChip(sourceCount: number): { label: string; dots: number } | null {
   if (!Number.isInteger(sourceCount) || sourceCount < 2) return null;
-  return { label: `${sourceCount} 家在报`, dots: Math.min(sourceCount, MAX_ECHO_DOTS) };
+  return { label: `${sourceCount} 家来源`, dots: Math.min(sourceCount, MAX_ECHO_DOTS) };
 }
 
 /** 卡片右上角的“AI 摘要”角标：标题或摘要任一是模型写的就标，只看接口的 ai 字段。 */
@@ -49,7 +49,7 @@ export function showAiBadge(ai: { title: boolean; summary: boolean }): boolean {
 }
 
 export interface FocusFoot {
-  /** 大号的“N 家在报”：N 是 sourceNames 的个数（这件事的全部来源，事件层级），≥ 2 才显示（为 null 不显示）。 */
+  /** 大号的来源数量：N 是 sourceNames 的个数（事件层级的全部来源），≥ 2 才显示（为 null 不显示）。 */
   echo: { count: number; dots: number } | null;
   /** 来源名，按首报先后用顿号连起来；sourceNames 是空的时候用代表条目自己的来源名。 */
   sources: string;

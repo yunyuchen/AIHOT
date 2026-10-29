@@ -1,17 +1,17 @@
 // 生成 tabBar 图标（10 张 81×81 PNG）、头部的 logo 小标和小星（“AI 摘要”角标、扫描条游标、时间轴当前时段），写进 src/assets/；
-// 另有分享卡片的本地兜底图（5:4，见文件末尾）。
-// 图形照原型 A 版（docs/design/miniprogram-prototype/a/feed.html 的 tabBar 和 logo），路径数据原样抄自原型的 SVG。
+// 另有微信后台头像（brand/app-icon.png）和分享卡片的本地兜底图（5:4，见文件末尾）。
+// 主品牌采用“折页 R”；导航及功能图标沿用原型 A 版，AI 摘要的小星不作为主品牌标识。
 // ImageMagick 自带的 SVG 渲染器画不出 fill="none" 的描边，所以把同样的 SVG 图元交给它的 MVG 绘图指令来画，
 // 8 倍尺寸画好再缩小，边缘抗锯齿更干净。
 // 改了图形再跑一次：npm run icons（本机要有 magick，或用 MAGICK=/path/to/magick 指定）。生成的 PNG 提交进仓库，CI 不跑这个脚本。
 import { execFileSync } from "node:child_process";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const INK = "#13191c";
 const STAR = "#2ce2e8";
-const OFF = "#6b757e"; // tabBar 未选中：墨灰，和 app.config 的 tabBar.color 一致
+const OFF = "#b9c7c4"; // 深色浮动 tabBar 上的未选中图标
 const WHITE = "#ffffff";
 const MAX_BYTES = 40 * 1024; // 微信对 tabBar 图标的上限
 const SUPERSAMPLE = 8;
@@ -26,34 +26,35 @@ interface Part {
 
 /** 原型里 24×24、线宽 1.6 的线框图标；color 是线条色，on 表示选中态。 */
 const TABS: Record<string, (color: string, on: boolean) => Part[]> = {
-  // 精选：时间轴。选中时上面的节点填星青（原型），未选中时整张墨灰、节点留白。
-  feed: (c, on) => [
-    { shape: { d: "M7 3v18" }, stroke: c },
-    { shape: { circle: [7, 7.5, 2.6] }, stroke: c, fill: on ? STAR : WHITE },
-    { shape: { circle: [7, 16.5, 2.6] }, stroke: c, fill: WHITE },
-    { shape: { d: "M13 7.5h8M13 16.5h6" }, stroke: c },
+  // 编辑式报纸图标，深底未选中、青底选中。
+  feed: (c) => [
+    { shape: { rect: [4, 3, 16, 18, 0] }, stroke: c },
+    { shape: { d: "M8 3v18M11 7h6M11 11h6M11 15h4" }, stroke: c },
   ],
   daily: (c) => [
     { shape: { rect: [4.5, 3, 15, 18, 2] }, stroke: c },
     { shape: { d: "M8.5 8h7M8.5 12h7M8.5 16h4" }, stroke: c },
   ],
   sports: (c) => [
-    { shape: { d: "M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" }, stroke: c },
-    { shape: { d: "M7.5 12.5h2.3l1.2-2.2 2 4 1.2-1.8h2.3" }, stroke: c },
+    { shape: { d: "M2 12h5l3-8 4 16 3-8h5" }, stroke: c },
   ],
   saved: (c) => [{ shape: { d: "M6.5 3.5h11v17L12 16.8l-5.5 3.7z" }, stroke: c }],
   reechi: (c) => [
-    { shape: { rect: [3.5, 3.5, 17, 17, 4.5] }, stroke: c },
-    { shape: { d: "M12 7.5c.4 2.9 1.6 4.1 4.5 4.5-2.9.4-4.1 1.6-4.5 4.5-.4-2.9-1.6-4.1-4.5-4.5 2.9-.4 4.1-1.6 4.5-4.5z" }, stroke: c },
+    { shape: { rect: [3.5, 3.5, 17, 17, 0] }, stroke: c },
+    { shape: { d: "M8 18V7h5c5 0 5 6 0 6H8M12 13l5 5" }, stroke: c },
   ],
 };
 
 const STAR_PATH = "M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z";
 
-// logo：墨色圆角方块（512 见方、圆角 116）上一颗星青四角星。
+// 折页 R：青色字干与斜腿、负形阅读窗口、白色折角。512 网格，留白兼容圆形头像裁切。
+const LOGO_MARK: Part[] = [
+  { shape: { d: "M128 400V112H300L384 196V272L300 316L392 400H300L204 312V400Z M204 184V248H276L308 232V208L284 184Z" }, fill: STAR },
+  { shape: { d: "M300 112L384 196H300Z" }, fill: WHITE },
+];
 const LOGO: Part[] = [
   { shape: { rect: [0, 0, 512, 512, 116] }, fill: INK },
-  { shape: { d: STAR_PATH }, fill: STAR },
+  ...LOGO_MARK,
 ];
 
 // “AI 摘要”角标里的星青小星（原型的 #star symbol，viewBox 92 92 328 328）。
@@ -68,6 +69,7 @@ function mvgShape(shape: Shape): string {
     return `circle ${cx},${cy} ${cx + r},${cy}`;
   }
   const [x, y, w, h, rx] = shape.rect;
+  if (rx === 0) return `rectangle ${x},${y} ${x + w},${y + h}`;
   return `roundrectangle ${x},${y} ${x + w},${y + h} ${rx},${rx}`;
 }
 
@@ -109,6 +111,9 @@ for (const [name, draw] of Object.entries(TABS)) {
 }
 // logo 在头部显示成 24px，按 3 倍图出 72px。
 render(mvg(LOGO, 512, 72, 0, 0), join(root, "src/assets/logo.png"), 72);
+// 后台头像使用满底正方形，让微信决定裁切；放在 src 外，不增加小程序代码包体积。
+mkdirSync(join(root, "brand"), { recursive: true });
+render(mvg([{ shape: { rect: [0, 0, 512, 512, 0] }, fill: INK }, ...LOGO_MARK], 512, 512, 0, 0), join(root, "brand/app-icon.png"), 512);
 // 小星在角标里显示 8px、扫描条游标上 9px、时间轴当前时段的节点里 11px，按最大的 11px 的 3 倍图出 33px。
 // 星形只占 512 见方里的 92–420，pad 取负值把四周的空白裁掉（同原型的 viewBox）。
 render(mvg(STAR_MARK, 512, 33, (-92 * 33) / 328, 0), join(root, "src/assets/star.png"), 33);
@@ -233,22 +238,18 @@ for (const [name, { parts, stroke }] of Object.entries(DAILY_ICONS)) {
   render(mvg(parts, 24, 48, 0, stroke), join(root, "src/assets/daily", `${name}.png`), 48);
 }
 
-// 分享卡片的本地兜底图，写进 src/assets/share/fallback.png：5:4（500×400），纯品牌图，墨色底、正中一颗星青四角星、下面白字小程序名，
+// 分享卡片的本地兜底图，写进 src/assets/share/fallback.png：5:4（500×400），纯品牌图，墨色底、正中折页 R、下面白字小程序名，
 // 不带“AI 摘要”字样。分享图拿不到时（share 缺失、接口占位、预检失败）和五个 tab 页的右上角转发（D27）用它。
 // 字用分享图服务同一套字体（仓库里 assets/og-fonts 的 Noto Sans SC 粗体），不依赖本机字体。压成 32 色的调色板 PNG，体积几 KB；
 // 不能小于 2KB，否则 Taro 会把它内联成 base64，分享接口不认（tests/share.test.ts 检查尺寸和体积）。
 const SHARE_W = 500;
 const SHARE_H = 400;
-const SHARE_STAR = 150; // 星形外接正方形的边长，中心在 (250, 150)
-const SHARE_NAME = "锐奇热点"; // 和构建配置的 appName 一致
+const SHARE_NAME = "锐奇微报"; // 和构建配置的 appName 一致
 const shareFont = join(root, "../../assets/og-fonts/noto-sans-sc-700.ttf");
 const shareOut = join(root, "src/assets/share/fallback.png");
-const starScale = (SHARE_STAR * SUPERSAMPLE) / 328;
-const starAt = (SHARE_W / 2 - SHARE_STAR / 2) * SUPERSAMPLE;
-const starTop = (150 - SHARE_STAR / 2) * SUPERSAMPLE;
 execFileSync(magick, [
   "-size", `${SHARE_W * SUPERSAMPLE}x${SHARE_H * SUPERSAMPLE}`, `xc:${INK}`,
-  "-draw", `translate ${starAt},${starTop} scale ${starScale},${starScale} translate -92,-92 fill '${STAR}' path '${STAR_PATH}'`,
+  "-draw", `translate ${122 * SUPERSAMPLE},${22 * SUPERSAMPLE} ${mvg(LOGO_MARK, 512, 256, 0, 0)}`,
   "-resize", `${SHARE_W}x${SHARE_H}`,
   "(", "-size", `${SHARE_W}x${SHARE_H}`, "xc:none", "-font", shareFont, "-fill", WHITE, "-pointsize", "60", "-kerning", "6",
   "-gravity", "center", "-annotate", "+3+100", SHARE_NAME, ")", "-composite",

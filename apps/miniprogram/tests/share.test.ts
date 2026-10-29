@@ -12,8 +12,8 @@ const ITEM_IMAGE = "https://hot.example/og/mp/items/it_1.png";
 const DAILY_IMAGE = "https://hot.example/og/mp/dailies/2026-10-16.png";
 
 /** failed 里的分享图预检时拿不到。 */
-const basis = (...failed: string[]): ShareBasis => ({ appName: "锐奇热点", fallbackImage: FALLBACK, imageFailed: (url) => failed.includes(url) });
-const APP = { title: "锐奇热点", path: "/pages/feed/index", imageUrl: FALLBACK };
+const basis = (...failed: string[]): ShareBasis => ({ appName: "锐奇微报", fallbackImage: FALLBACK, imageFailed: (url) => failed.includes(url) });
+const APP = { title: "锐奇微报", path: "/pages/feed/index", imageUrl: FALLBACK };
 
 function item(overrides: Partial<MiniprogramItem> = {}): MiniprogramItem {
   return {
@@ -61,7 +61,7 @@ const TARGET = { board: "manufacturing" as const, id: "it_1" };
 const itemContent = (i = item()): ItemScreen => ({ kind: "content", item: i });
 const dailyContent = (d = daily()): DailyScreen => ({ kind: "content", daily: d, stale: null, snapshotAt: null });
 
-test("tab 页转发小程序本身（D27）：指向精选页，标题“锐奇热点”，包里的兜底图", () => {
+test("tab 页转发小程序本身（D27）：指向精选页，标题“锐奇微报”，包里的兜底图", () => {
   assert.equal(FEED_PATH, "/pages/feed/index");
   assert.deepEqual(appShare(basis()), APP);
 });
@@ -132,7 +132,7 @@ test("条目页分享图拿不到：share 缺失或形状不对、预检失败�
 test("条目页没有内容时：已下线或参数不对转发小程序本身；占位、加载中、失败仍指向这条，标题用小程序名、图用兜底图", () => {
   assert.deepEqual(itemShare(null, { kind: "missing" }, basis()), APP);
   assert.deepEqual(itemShare(TARGET, { kind: "missing" }, basis()), APP);
-  const holding = { title: "锐奇热点", path: "/pages/item/index?board=manufacturing&id=it_1", imageUrl: FALLBACK };
+  const holding = { title: "锐奇微报", path: "/pages/item/index?board=manufacturing&id=it_1", imageUrl: FALLBACK };
   assert.deepEqual(itemShare(TARGET, { kind: "placeholder" }, basis()), holding);
   assert.deepEqual(itemShare(TARGET, { kind: "loading" }, basis()), holding);
   assert.deepEqual(itemShare(TARGET, { kind: "failed", failure: failure("network") }, basis()), holding);
@@ -170,7 +170,7 @@ test("日报没有内容时：没有这一期、配置有误、没有日报栏�
   assert.deepEqual(issueShare("manufacturing", null, { kind: "missing", latest: true }, basis()), APP);
   assert.deepEqual(issueShare("manufacturing", "2026-10-16", { kind: "mismatch", actual: "sports" }, basis()), APP);
   assert.deepEqual(issueShare("manufacturing", "2026-10-16", { kind: "off" }, basis()), APP);
-  const holding = { title: "锐奇热点", path: "/pages/daily-issue/index?board=manufacturing&date=2026-10-16", imageUrl: FALLBACK };
+  const holding = { title: "锐奇微报", path: "/pages/daily-issue/index?board=manufacturing&date=2026-10-16", imageUrl: FALLBACK };
   assert.deepEqual(issueShare("manufacturing", "2026-10-16", { kind: "placeholder", title: "t", body: "b" }, basis()), holding);
   assert.deepEqual(issueShare("manufacturing", "2026-10-16", { kind: "loading" }, basis()), holding);
   assert.deepEqual(issueShare("manufacturing", "2026-10-16", { kind: "failed", failure: failure("timeout") }, basis()), holding);

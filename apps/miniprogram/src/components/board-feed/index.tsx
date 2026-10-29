@@ -1,11 +1,5 @@
-// 一个板块的精选流整屏，精选 tab（制造）和运动健康 tab 共用，按板块参数化；板块之间不同的地方看构建配置：
-// - 制造：深色头部（日期、读数、扫描条），头部下沿压一张今日焦点卡，今天按时段分段，卡片显示时刻。
-// - 运动健康（focusCard 否、filterBar、byDay）：头部写板块名、三个读数和板块说明（元信息 board.description），下沿钉分类筛选条，
-//   一律按天分段，卡片不显示时刻；筛到没有内容的分类时是“这个分类最近没有内容”加“看全部”。
-// 元信息给了页脚声明（notice.footer）就固定在屏幕底部；notice.hotline 指定的分类，卡片上显示心理援助热线。
-// 触底加载下一页，下拉刷新（页面配置要开 enablePullDownRefresh）。冷启动先显示本机快照再刷新；整屏显示哪种状态（配置有误、占位、
-// 加载失败、加载中、空态、内容）见 lib/feed-screen.ts，焦点卡只跟着“内容”出现。每次显示都按 60 秒规则检查元信息，占位时只留
-// 深色头部的 logo 行和占位文案。点卡片进条目页（带上这个板块）。
+// 两个板块共用真实精选流、分类、分页和快照；制造焦点使用深墨封面，列表与运动健康使用暖纸阅读面。
+// 占位或失败时保留状态与重试；热线仍从板块元信息读取。
 // 只请求这个板块自己的行业实例：状态、请求、快照都按板块分开（lib/meta-store.ts、lib/use-feed.ts），另一个板块挂了不影响这里。
 import { useEffect, useRef, useState } from "react";
 import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom } from "@tarojs/taro";
@@ -16,7 +10,7 @@ import { FeedList } from "../feed-list";
 import { FilterBar } from "../filter-bar";
 import { FocusCard } from "../focus-card";
 import { failureText, PageState, StaleNotice } from "../page-state";
-import { activeCategory, filterChips, footerText, ledeLines } from "../../lib/board-feed";
+import { activeCategory, filterChips } from "../../lib/board-feed";
 import { boardConfig, buildConfig } from "../../lib/build-config";
 import { feedScreen, visibleFocus } from "../../lib/feed-screen";
 import { awayTooLong } from "../../lib/fresh";
@@ -27,7 +21,7 @@ import { snapshotStamp, staleNotice } from "../../lib/screen";
 import { useFeed } from "../../lib/use-feed";
 import "./index.scss";
 
-export function BoardFeed({ board }: { board: BoardKey }) {
+export function BoardFeed({ board, cover }: { board: BoardKey; cover?: string }) {
   const config = boardConfig(board);
   const { state, reload, revalidate } = useBoardMeta(board);
   const meta = state.status === "ready" ? state.meta : null;
@@ -55,7 +49,7 @@ export function BoardFeed({ board }: { board: BoardKey }) {
     if (away) {
       void reload();
       if (!metaPlaceholder) void feed.refresh();
-      // 列表要收回成第一页，回到顶上看新的（失败时“网络不好”的提示也在顶上）。
+      // 列表要收回成第一页，回到顶部查看新内容（更新失败提示也在顶部）。
       void Taro.pageScrollTo({ scrollTop: 0, duration: 0 }).catch(() => {});
       return;
     }
@@ -71,7 +65,7 @@ export function BoardFeed({ board }: { board: BoardKey }) {
     lastMetaStatus.current = metaStatus;
   }, [metaStatus, feed.refresh]);
 
-  // 下拉刷新：强制重拉元信息和第一页，两个都回来再收起。失败时已有的内容不清空，顶部提示“网络不好”。
+  // 下拉刷新：强制重拉元信息和第一页，两个都回来再收起。失败时已有内容不清空，显示更新失败提示。
   usePullDownRefresh(() => {
     void Promise.all([reload(), feed.refresh()]).finally(() => Taro.stopPullDownRefresh());
   });
@@ -83,12 +77,12 @@ export function BoardFeed({ board }: { board: BoardKey }) {
   };
 
   const title = buildConfig.appName;
-  // 按天看的板块：头部写板块名（元信息没到时用构建配置的兜底值）和板块说明。
-  const boardHeader = config.byDay ? { name: meta?.board.name || config.name, lede: ledeLines(meta?.board.description) } : null;
+  // 按天看的板块：头部只写板块名，元信息没到时用构建配置的兜底值。
+  const boardHeader = config.byDay ? { name: meta?.board.name || config.name } : null;
   if (screen.kind === "mismatch") {
     return (
       <View>
-        <Dashboard title={title} date={null} readings={null} board={boardHeader} />
+        <Dashboard title={title} date={null} board={boardHeader} />
         <PageState
           title="配置有误"
           detail={`接口回的板块是 ${screen.actual}，这里要的是 ${board}（${config.name}），请检查构建配置里的 api 地址`}
@@ -99,7 +93,7 @@ export function BoardFeed({ board }: { board: BoardKey }) {
   if (screen.kind === "placeholder") {
     return (
       <View>
-        <Dashboard title={title} date={null} readings={null} brandOnly />
+        <Dashboard title={title} date={null} board={boardHeader} brandOnly />
         <PageState title={screen.title} detail={screen.body} />
       </View>
     );
@@ -112,27 +106,26 @@ export function BoardFeed({ board }: { board: BoardKey }) {
   const stamp = screen.kind === "content" && screen.snapshotAt ? snapshotStamp(screen.snapshotAt, now) : null;
   const focus = visibleFocus(screen, feed.state, config.focusCard);
   const filter = config.filterBar && meta && meta.categories.length > 0 ? filterChips(meta.categories, colors) : null;
-  const footer = footerText(meta);
   const open = (id: string) => openPage(itemPage(board, id));
   return (
-    <View>
+    <View className={focus ? "board-feed board-feed--focus" : "board-feed"}>
       <Dashboard
         title={title}
         date={meta?.readings.date ?? null}
-        readings={meta?.readings ?? null}
         stamp={stamp}
-        focusAt={focus?.anchorAt ?? null}
         board={boardHeader}
-        filterBar={filter !== null}
+        cover={cover}
       />
       {focus && <FocusCard focus={focus} labels={labels} colors={colors} onOpen={open} />}
+      <View className="board-reading">
+      <Text className="board-reading__heading">{config.byDay ? "生活精选" : "行业精选"}</Text>
       {filter && <FilterBar chips={filter} active={category} onPick={setPicked} />}
       {screen.kind === "failed" && <PageState title="加载失败" detail={failureText(screen.failure)} onRetry={retry} />}
       {screen.kind === "empty" &&
         (screen.filtered ? (
-          <PageState title="这个分类最近没有内容" action={{ text: "看全部", onClick: () => setPicked(null) }} />
+          <PageState title="该分类暂无内容" action={{ text: "查看全部", onClick: () => setPicked(null) }} />
         ) : (
-          <PageState title="最近还没有精选" />
+          <PageState title="暂无精选内容" />
         ))}
       {screen.kind === "content" && screen.stale && <StaleNotice text={staleNotice(feed.state.generatedAt, now)} onRetry={retry} />}
       {(screen.kind === "loading" || screen.kind === "content") && (
@@ -147,24 +140,7 @@ export function BoardFeed({ board }: { board: BoardKey }) {
           hotline={meta?.notice.hotline ?? null}
         />
       )}
-      {footer && <BoardFooter text={footer} />}
+      </View>
     </View>
-  );
-}
-
-/**
- * 页脚的板块声明：固定在屏幕底部（tab 页里就是 tabBar 上面），随时看得到。列表最后放一份同样文字的隐形占位，
- * 撑出同样的高度，免得固定的那条盖住最后一张卡和“没有更早的了”。
- */
-function BoardFooter({ text }: { text: string }) {
-  return (
-    <>
-      <View className="board-footer board-footer--spacer">
-        <Text>{text}</Text>
-      </View>
-      <View className="board-footer board-footer--fixed">
-        <Text>{text}</Text>
-      </View>
-    </>
   );
 }

@@ -1,4 +1,4 @@
-// 颜色和 src/styles/tokens.scss 一致：原生导航栏墨色底白字（D33）；不开 darkmode，微信切深色时保持浅色（D29）。
+// 所有页面统一使用深墨底、白字原生导航。不开 darkmode，微信深色模式下仍保持设计配色。
 // 页面和 tabBar 都按构建期配置的板块列表推出来（lib/tabs.ts 的 appPages、appTabs），不在这里手写：
 // 备用构建（--mode prod-no-sports）去掉运动健康板块时，运动健康 tab 和它的页面一起少掉，只剩四个 tab。
 // 这个文件只在构建时求值，BUILD_CONFIG 由 config/index.ts 的 defineConstants 注入。
@@ -7,18 +7,19 @@ import { appPages, appTabs } from "./lib/tabs";
 export default defineAppConfig({
   pages: appPages(BUILD_CONFIG.boards),
   window: {
-    navigationBarBackgroundColor: "#13191c",
+    navigationBarBackgroundColor: "#151f21",
     navigationBarTextStyle: "white",
-    navigationBarTitleText: "锐奇热点",
-    backgroundColor: "#f2f3f5",
-    backgroundColorTop: "#13191c",
-    backgroundColorBottom: "#f2f3f5",
-    backgroundTextStyle: "light",
+    navigationBarTitleText: "锐奇微报",
+    backgroundColor: "#f7f6f2",
+    backgroundColorTop: "#f7f6f2",
+    backgroundColorBottom: "#f7f6f2",
+    backgroundTextStyle: "dark",
   },
   tabBar: {
-    color: "#6b757e",
-    selectedColor: "#13191c",
-    backgroundColor: "#ffffff",
+    custom: true,
+    color: "#b9c7c4",
+    selectedColor: "#151f21",
+    backgroundColor: "#203132",
     borderStyle: "black",
     list: appTabs(BUILD_CONFIG.boards).map((tab) => ({
       pagePath: tab.pagePath,

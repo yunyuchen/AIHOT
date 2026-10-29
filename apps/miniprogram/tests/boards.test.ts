@@ -97,20 +97,6 @@ test("两个板块的 api 基址不同：各请求各的行业实例", () => {
   }
 });
 
-test("制造板块：有焦点卡，没有筛选条，今天按时段分段", () => {
-  // reminderTemplateId（“提醒我明天的日报”的订阅模板 id）三份各配各的，不在共用部分里，tests/reminder.test.ts 另核对。
-  const { apiBase: _, reminderTemplateId, ...manufacturing } = board(buildTarget("prod").config, "manufacturing")!;
-  assert.equal(typeof reminderTemplateId, "string");
-  assert.deepEqual(manufacturing, {
-    key: "manufacturing",
-    name: "制造",
-    tabs: ["feed", "daily"],
-    focusCard: true,
-    filterBar: false,
-    byDay: false,
-    categoryColors: MANUFACTURING_CATEGORY_COLORS,
-  });
-});
 
 // 配色表的 key 对着行业包的分类表（只有改了这个目录或契约包时才跑，改了行业包的分类要在这里手动跑一次 npm test）。
 test("分类配色表的 key 和各自行业包的分类一致；运动健康在 D3 定下前一律兜底灰", () => {

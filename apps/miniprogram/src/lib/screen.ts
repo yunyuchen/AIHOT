@@ -32,7 +32,7 @@ export function boardGate(meta: MetaState, ...failures: Array<Failure | null | u
 /** 有内容时请求失败的顶部提示。generatedAt 按统一的时间显示写（今天 HH:mm，昨天“昨天 HH:mm”）。 */
 export function staleNotice(generatedAt: string | null, now: number): string {
   const at = generatedAt ? displayTime(generatedAt, now) : "";
-  return at ? `网络不好，显示的是 ${at} 的内容` : "网络不好，显示的是之前的内容";
+  return at ? `内容更新失败，当前显示 ${at} 的内容` : "内容更新失败，当前显示此前内容";
 }
 
 /** 头部的快照时间标记。 */

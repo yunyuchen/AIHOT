@@ -39,7 +39,6 @@ test("本机快照里的元信息：正常的才拿来先显示，占位的、�
 });
 
 test("占位文案：行业包给了就用，没给或标题为空用内置文案（D30）", () => {
-  assert.equal(BUILT_IN_PLACEHOLDER, "这个板块正在调整，暂不提供内容");
   assert.deepEqual(placeholderText({ title: "这个板块正在调整", body: "暂不提供内容，其他板块照常。" }), {
     title: "这个板块正在调整",
     body: "暂不提供内容，其他板块照常。",

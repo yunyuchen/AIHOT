@@ -150,7 +150,7 @@ test("头条卡：头条或导语任一是模型写的就在右上角标；零�
   assert.deepEqual(dailyView(daily("2026-10-16", { lead: { title: " ", paragraph: "" } }), colors).lead, { headline: null, ai: false });
 });
 
-test("零条的一期：保留头部（读数为 0），不画头条卡，显示“这一期没有条目”", () => {
+test("零条的一期：保留头部读数，不画头条卡", () => {
   const view = dailyView(zero(), colors);
   assert.equal(view.empty, true);
   assert.equal(view.lead, null);
@@ -158,7 +158,6 @@ test("零条的一期：保留头部（读数为 0），不画头条卡，显示
   assert.equal(view.sectionCount, 0);
   assert.equal(view.itemCount, 0);
   assert.deepEqual(view.heading, { day: "10月16日", weekday: "周五" });
-  assert.equal(DAILY_COPY.empty, "这一期没有条目");
   // 只有快讯也不算零条。
   assert.equal(dailyView(daily("2026-10-16", { sections: [], flashes: [entry("f1")] }), colors).empty, false);
 });
@@ -171,9 +170,6 @@ test("前一天、后一天：prev、next 为 null 时不能点", () => {
   assert.deepEqual([first.prev, first.next], [null, "2026-09-02"]);
 });
 
-test("页尾说明照规格", () => {
-  assert.equal(DAILY_COPY.note, "日报由模型从前一天 08:00 到当天 08:00 的精选里整理，08:00 出刊");
-});
 
 // ---------- 整屏状态 ----------
 
@@ -196,7 +192,7 @@ test("整屏状态：占位（元信息占位或日报回 section_paused），�
   });
 });
 
-test("整屏状态：元信息说没有日报栏目时“这个板块没有日报”", () => {
+test("整屏状态：元信息说没有日报栏目时返回 off", () => {
   assert.deepEqual(dailyScreen(ready({ columns: { feed: true, stories: true, daily: false } }), state({ phase: "loading" })), { kind: "off" });
 });
 

@@ -1,7 +1,5 @@
 // 条目页：下钻页，参数 board（请求哪个行业实例）和 id。两个板块共用；路由和参数名上线后不改（分享出去的卡片一直留在会话里）。
-// 原生导航栏放返回和“条目详情”，下面一条墨色，正文主卡压在它下沿：分类、“AI 摘要”、标题、完整摘要、“为什么值得看”、收藏和分享按钮；
-// 来源允许站内全文并且给了正文时，主卡下面一张正文卡（rich-text，模型译文前再标一次“AI 摘要”）；
-// 来源卡：来源名、“MM-DD 发布”、“复制来源链接”和一句说明；归进事件时再加事件入口卡“同一件事，N 家在报”，点进事件页。
+// 暖纸阅读正文、独立来源区与固定收藏/分享条；只在来源允许时展示站内全文。
 // 这个板块元信息的 notice.hotline 指定的分类（运动健康的睡眠与心理），主卡下面一张心理援助热线卡，点了拨号。
 // 整屏状态（已下线或不存在、占位、加载失败、加载中、内容）见 lib/item.ts。不写本机快照。
 // 从分享卡片直接进来（栈里没有上一页）时，原生导航栏左上角是微信自带的回首页按钮（回到 app.config 的第一个页面，即精选），
@@ -10,7 +8,6 @@ import { useMemo, useState } from "react";
 import Taro, { useRouter } from "@tarojs/taro";
 import { Image, RichText, Text, View } from "@tarojs/components";
 import type { BoardKey } from "../../../config/boards";
-import starMark from "../../assets/star.png";
 import chevronIcon from "../../assets/item/chevron.png";
 import copyIcon from "../../assets/item/copy.png";
 import { AiBadge } from "../../components/ai-badge";
@@ -94,6 +91,7 @@ function ItemContent({ board, item }: { board: BoardKey; item: MiniprogramItem }
         <Text className="item-main__title" userSelect>
           {item.title}
         </Text>
+        <Text className="item-main__byline">{item.source.name} · {view.published}</Text>
         {item.summary && (
           <Text className="item-main__summary" userSelect>
             {item.summary}
@@ -102,9 +100,6 @@ function ItemContent({ board, item }: { board: BoardKey; item: MiniprogramItem }
         {view.reason && (
           <View className="item-why">
             <View className="item-why__head">
-              <View className="item-why__mark">
-                <Image className="item-why__star" src={starMark} />
-              </View>
               <Text className="item-why__title">为什么值得看</Text>
               <View className="item-main__gap" />
               {view.reason.ai && <AiBadge />}
@@ -141,7 +136,7 @@ function ItemContent({ board, item }: { board: BoardKey; item: MiniprogramItem }
             <Text className="item-source__name">{item.source.name}</Text>
             <Text className="item-source__date num">{view.echo ? `${view.published} · ${view.echo}` : view.published}</Text>
           </View>
-          <View className="item-copy" hoverClass="item-copy--down" onClick={copyLink}>
+          <View className="item-copy" ariaRole="button" ariaLabel="复制来源链接" hoverClass="item-copy--down" onClick={copyLink}>
             <Image className="item-copy__icon" src={copyIcon} />
             复制来源链接
           </View>
@@ -150,7 +145,7 @@ function ItemContent({ board, item }: { board: BoardKey; item: MiniprogramItem }
       </View>
 
       {view.story && (
-        <View className="item-panel item-story" hoverClass="item-story--down" onClick={() => openPage(storyPage(board, view.story!.id))}>
+        <View className="item-panel item-story" ariaRole="button" ariaLabel={view.story.title} hoverClass="item-story--down" onClick={() => openPage(storyPage(board, view.story!.id))}>
           <View className="item-story__text">
             <View className="item-story__head">
               <Text className="item-story__title">{view.story.title}</Text>
@@ -176,12 +171,12 @@ function LinkSheet({ url, onClose }: { url: string; onClose: () => void }) {
   return (
     <View className="link-sheet" catchMove>
       <View className="link-sheet__card">
-        <Text className="link-sheet__title">没能复制到剪切板</Text>
-        <Text className="link-sheet__hint">长按下面的链接选择复制，再到浏览器里打开</Text>
+        <Text className="link-sheet__title">无法复制来源链接</Text>
+        <Text className="link-sheet__hint">请长按下方链接并选择复制，再在浏览器中打开</Text>
         <Text className="link-sheet__url" userSelect>
           {url}
         </Text>
-        <View className="link-sheet__close" hoverClass="link-sheet__close--down" onClick={onClose}>
+        <View className="link-sheet__close" ariaRole="button" ariaLabel="关闭" hoverClass="link-sheet__close--down" onClick={onClose}>
           关闭
         </View>
       </View>

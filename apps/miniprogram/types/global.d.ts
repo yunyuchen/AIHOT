@@ -1,6 +1,7 @@
 /// <reference types="@tarojs/taro" />
 
 declare module "*.png";
+declare module "*.jpg";
 declare module "*.scss";
 
 /** 构建期配置，由 config/index.ts 按 --mode 选一份经 defineConstants 注入。 */

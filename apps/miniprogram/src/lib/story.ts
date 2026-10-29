@@ -55,7 +55,7 @@ export type StoryScreen =
   /** 还没有内容时连不上、超时、503、形状不对：加载失败加重试。 */
   | { kind: "failed"; failure: Failure }
   | { kind: "loading" }
-  /** stale：有内容时下拉刷新失败了，顶部提示“网络不好”，点一下重试。 */
+  /** stale：有内容时下拉刷新失败，顶部显示更新失败提示，可点击重试。 */
   | { kind: "content"; story: MiniprogramStory; stale: Failure | null };
 
 /** 事件页整屏显示哪种状态。target 为 null 时不发请求，直接“已下线或不存在”。 */
@@ -68,7 +68,7 @@ export function storyScreen(target: DrillTarget | null, load: StoryLoad): StoryS
   return { kind: "content", story: load.story, stale: failure };
 }
 
-/** “N 家在报”后面的圆点最多几个（同卡片）。 */
+/** 来源数量标记后的小圆点最多几个（同卡片）。 */
 const MAX_DOTS = 5;
 
 export interface ReportView {
@@ -86,7 +86,7 @@ export interface ReportView {
 }
 
 export interface StoryView {
-  /** 事件层级的“N 家在报”和圆点数，至少 1。 */
+  /** 事件层级的来源数量和圆点数，至少 1。 */
   echo: { label: string; dots: number };
   /** 头部“首报 MM-DD HH:mm | 最新 MM-DD HH:mm”；解析不了时为空字符串，不显示那一格。 */
   first: string;
@@ -107,7 +107,7 @@ export function storyView(story: MiniprogramStory, now: number | string | Date):
   const digest = story.digest?.trim() ?? "";
   const reports = timeline(story.reports);
   return {
-    echo: { label: `${count} 家在报`, dots: Math.min(count, MAX_DOTS) },
+    echo: { label: `${count} 家来源`, dots: Math.min(count, MAX_DOTS) },
     first: dayClock(story.firstReportAt, now),
     latest: dayClock(story.latestAt, now),
     titleAi: story.ai.title === true,

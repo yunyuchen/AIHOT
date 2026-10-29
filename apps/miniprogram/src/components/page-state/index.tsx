@@ -48,12 +48,12 @@ export function StaleNotice({ text, onRetry }: { text: string; onRetry: () => vo
 export function failureText(failure: Failure): string {
   switch (failure.kind) {
     case "network":
-      return "网络连不上，检查网络后重试";
+      return "无法连接网络，请检查网络后重试";
     case "timeout":
-      return "等了 10 秒还没有回应，稍后重试";
+      return "请求超时，请稍后重试";
     case "unavailable":
-      return "服务暂时不可用，稍后重试";
+      return "服务暂不可用，请稍后重试";
     default:
-      return "出了点问题，稍后重试";
+      return "请求未能完成，请稍后重试";
   }
 }

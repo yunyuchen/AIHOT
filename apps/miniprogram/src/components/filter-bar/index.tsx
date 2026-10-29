@@ -1,5 +1,5 @@
-// 分类筛选条（运动健康）：钉在深色头部下沿的一条白卡，“全部”固定在最左，分类跟在后面，放不下时横着滑（原型 sports.html 的 .filter，
-// 原型只画了四个分类、等分一行）。分类和顺序来自元信息的 categories，圆点颜色来自构建配置的分类配色（lib/board-feed.ts 的 filterChips）。
+// 两个板块共用的分类筛选：“全部”固定在左侧，其余分类横向滚动。
+// 分类和顺序来自元信息，圆点颜色来自构建配置（lib/board-feed.ts 的 filterChips）。
 import { ScrollView, View } from "@tarojs/components";
 import type { FilterChip } from "../../lib/board-feed";
 import "./index.scss";

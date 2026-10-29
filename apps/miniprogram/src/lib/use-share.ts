@@ -37,7 +37,7 @@ export function usePageShare(build: () => SharePayload): void {
 }
 
 /**
- * 五个 tab 页（精选、日报、运动健康、收藏、锐奇）：右上角菜单转发小程序本身（D27：指向精选，标题“锐奇热点”，包里的兜底图）。
+ * 五个 tab 页（精选、日报、运动健康、收藏、锐奇）：右上角菜单转发小程序本身（D27：指向精选，标题“锐奇微报”，包里的兜底图）。
  * 日报 tab 另传 issue：头条卡的“分享日报”按钮（from 为 button）分享正在看的那一期。
  */
 export function useTabShare(issue?: () => SharePayload): void {

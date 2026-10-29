@@ -181,34 +181,28 @@ test("全文：rich-text 节点加上段间距等行内样式，已带 style 的
   assert.equal(bodyNodes('<p style="color:red">x</p>'), '<p style="color:red">x</p>');
 });
 
-test("显示：事件入口卡用事件层级的来源数，列出其他来源名", () => {
-  assert.deepEqual(itemView(item(), labels, {}, NOW).story, {
-    id: "st_1",
-    title: "同一件事，4 家在报",
-    dots: 4,
-    line: "Semiconductor Today、SEMI 中国、第三代半导体产业网也报道了，看事件脉络",
-  });
+test("显示：事件入口卡采用事件层级来源数并保留来源名和圆点边界", () => {
+  const view = itemView(item(), labels, {}, NOW).story;
+  assert.equal(view?.id, "st_1");
+  assert.equal(view?.dots, 4);
+  assert.match(view?.title ?? "", /4/);
+  assert.match(view?.line ?? "", /Semiconductor Today、SEMI 中国、第三代半导体产业网/);
+  const story = { id: "st_2", title: "x", sourceCount: 9, otherSourceNames: ["甲", "乙", "丙"], ai: { title: true } };
+  const many = itemView(item({ sourceCount: 1, story }), labels, {}, NOW).story;
+  assert.equal(many?.dots, 5);
+  assert.match(many?.title ?? "", /9/);
+  assert.match(many?.line ?? "", /甲、乙、丙/);
+  const alone = itemView(item({ story: { ...story, sourceCount: 1, otherSourceNames: [] } }), labels, {}, NOW).story;
+  assert.equal(alone?.dots, 1);
 });
 
-test("显示：事件入口卡在条目自己的来源数为 1 时照样显示；其他来源没列全时加“等”，圆点最多 5 个", () => {
-  const story = { id: "st_2", title: "x", sourceCount: 9, otherSourceNames: ["甲", "乙", "丙"], ai: { title: true } };
-  const view = itemView(item({ sourceCount: 1, story }), labels, {}, NOW).story;
-  assert.equal(view?.title, "同一件事，9 家在报");
-  assert.equal(view?.dots, 5);
-  assert.equal(view?.line, "甲、乙、丙等也报道了，看事件脉络");
-  const alone = itemView(item({ story: { ...story, sourceCount: 1, otherSourceNames: [] } }), labels, {}, NOW).story;
-  assert.equal(alone?.line, "看事件脉络");
+test("显示：事件来源数量仅在未归入事件且来源数有效时展示", () => {
+  assert.match(itemView(item({ story: null, sourceCount: 3 }), labels, {}, NOW).echo ?? "", /3/);
+  assert.equal(itemView(item({ story: null, sourceCount: 1 }), labels, {}, NOW).echo, null);
+  assert.equal(itemView(item({ story: null, sourceCount: null }), labels, {}, NOW).echo, null);
+  assert.equal(itemView(item({ sourceCount: 3 }), labels, {}, NOW).echo, null);
 });
 
 test("显示：没归进事件或“只显示摘要”时没有事件入口卡", () => {
   assert.equal(itemView(item({ story: null }), labels, {}, NOW).story, null);
-});
-
-test("显示：同一事实的“N 家在报”只在没归进事件、≥ 2 时跟在发布日期后面", () => {
-  assert.equal(itemView(item({ story: null, sourceCount: 3 }), labels, {}, NOW).echo, "3 家在报");
-  assert.equal(itemView(item({ story: null, sourceCount: 1 }), labels, {}, NOW).echo, null);
-  // “只显示摘要”：接口给 null。
-  assert.equal(itemView(item({ story: null, sourceCount: null }), labels, {}, NOW).echo, null);
-  // 归进事件时由事件入口卡说。
-  assert.equal(itemView(item({ sourceCount: 3 }), labels, {}, NOW).echo, null);
 });

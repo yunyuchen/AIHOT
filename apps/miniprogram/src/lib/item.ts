@@ -63,7 +63,7 @@ export const SOURCE_NOTE = {
 /** 正文末尾接口固定加的那一段（后端 rich-text.ts 的 RICH_TEXT_NOTE），画成小字。 */
 export const BODY_NOTE = "完整排版请复制来源链接查看";
 
-/** 事件入口卡“同一件事，N 家在报”后面的圆点最多几个（同卡片上的“N 家在报”）。 */
+/** 事件入口卡来源数量标记后的小圆点最多几个。 */
 const MAX_STORY_DOTS = 5;
 
 export interface ItemView {
@@ -80,8 +80,8 @@ export interface ItemView {
   /** 来源卡的“MM-DD 发布”：只取 publishedAt 的北京日期（跨年带年份），不用 anchorAt。 */
   published: string;
   /**
-   * 同一事实的“N 家在报”（和卡片上同一个数，≥ 2 才有）：只在没归进事件时跟在发布日期后面；归进事件时由事件入口卡说，
-   * 免得同一页上出现两个不同的数。“只显示摘要”时接口给 null，不显示。
+   * 同一事实的不同来源数量（和卡片上同一个数，≥ 2 才有）：只在没归进事件时跟在发布日期后面；归进事件时由事件入口卡显示，
+   * 避免同一页出现重复计数。“只显示摘要”时接口给 null，不显示。
    */
   echo: string | null;
   sourceNote: string;
@@ -157,8 +157,8 @@ function storyEntry(story: NonNullable<MiniprogramItem["story"]>): NonNullable<I
   const more = count - 1 > others.length ? "等" : "";
   return {
     id: story.id,
-    title: `同一件事，${count} 家在报`,
+    title: `同一事件，${count} 家来源`,
     dots: Math.min(count, MAX_STORY_DOTS),
-    line: others.length > 0 ? `${others.join("、")}${more}也报道了，看事件脉络` : "看事件脉络",
+    line: others.length > 0 ? `${others.join("、")}${more}的相关报道，查看事件进展` : "查看事件进展",
   };
 }

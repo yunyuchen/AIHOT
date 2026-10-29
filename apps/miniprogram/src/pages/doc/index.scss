@@ -1,35 +1,33 @@
 @use "../../styles/tokens" as *;
 
-// 长文：一张白卡，正文 15px、行高 26px，标题和段落间距放宽，方便读完。
+// 暖纸长文：保持法规和合规原文，只调整阅读层级。
 .doc {
-  margin: 10px 16px 24px;
-  padding: 20px 16px 24px;
+  margin: 0;
+  padding: 30px 22px;
   background: $card;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba($ink, 0.06);
+  border-radius: 0;
 }
 .doc__title {
   display: block;
-  font-size: 22px;
-  line-height: 30px;
+  font-size: 28px;
+  line-height: 40px;
   font-weight: 700;
   letter-spacing: 0.3px;
 }
 .doc__version {
   display: inline-block;
   margin-top: 8px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: $work;
+  padding: 0;
+  background: transparent;
   font-size: 12px;
   line-height: 18px;
   color: $iron;
 }
 .doc__facts {
-  margin-top: 16px;
-  padding: 4px 12px;
-  border-radius: 10px;
-  background: $work;
+  margin-top: 24px;
+  padding: 14px 0;
+  border-top: 1px solid $rule;
+  border-bottom: 1px solid $rule;
 }
 .doc__fact {
   display: flex;
@@ -54,16 +52,16 @@
 }
 .doc__h {
   display: block;
-  margin-top: 24px;
-  font-size: 17px;
-  line-height: 25px;
+  margin-top: 32px;
+  font-size: 20px;
+  line-height: 29px;
   font-weight: 700;
 }
 .doc__p {
   display: block;
   margin-top: 10px;
-  font-size: 15px;
-  line-height: 26px;
+  font-size: 16px;
+  line-height: 28px;
   color: $body;
   overflow-wrap: break-word;
 }
@@ -71,9 +69,9 @@
 .doc__quote {
   margin-top: 12px;
   padding: 10px 12px;
-  border-left: 3px solid $star;
-  border-radius: 0 8px 8px 0;
-  background: $work;
+  border-left: 2px solid $accent;
+  border-radius: 0;
+  background: #e7ebe4;
   font-size: 15px;
   line-height: 26px;
   color: $ink;

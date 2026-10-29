@@ -1,14 +1,10 @@
-// 一期日报的整屏（日报 tab 和某期日报页共用，原型 A 版 daily.html）：墨色头部（logo 小标、日报名、日期和星期、前一天和后一天、
-// “N 个分节 · N 条 · 08:00 出刊”），头条卡压在头部下沿（“今日头条”、AI 角标、头条和导语、“提醒我明天的日报”“分享日报”），
-// 下面每个分节一张白卡（分类色点、节名、节内 AI 角标、条数，每行标题和来源，点进条目页），快讯是最后一节，页尾“AI 摘要”和说明。
+// 日报 tab 和某期日报共用：日期刊头、深墨头条、暖纸分节。内容和翻期均由真实接口驱动。
 // 整屏状态（配置有误、占位、没有日报、404、加载失败、加载中、内容）由页面按 lib/daily.ts 的 dailyScreen 算好传进来。
 import { Image, Text, View } from "@tarojs/components";
 import type { BoardKey } from "../../../config/boards";
 import nextIcon from "../../assets/daily/next.png";
 import prevIcon from "../../assets/daily/prev.png";
-import logo from "../../assets/logo.png";
-import starInk from "../../assets/star-ink.png";
-import { boardConfig, buildConfig } from "../../lib/build-config";
+import { boardConfig } from "../../lib/build-config";
 import { DAILY_COPY, dailyView, type DailyScreen, type DailySectionView, type DailyView } from "../../lib/daily";
 import { headerDate } from "../../lib/beijing";
 import { openPage } from "../../lib/open-page";
@@ -49,7 +45,6 @@ export function DailyIssue({ screen, board, fallbackTitle, date, remind, onGo, o
   if (screen.kind === "mismatch" || screen.kind === "placeholder" || screen.kind === "off") {
     return (
       <View>
-        <Head brandOnly />
         {screen.kind === "mismatch" && (
           <PageState
             title="配置有误"
@@ -84,7 +79,7 @@ export function DailyIssue({ screen, board, fallbackTitle, date, remind, onGo, o
   const stamp = screen.snapshotAt ? snapshotStamp(screen.snapshotAt, now) : null;
   return (
     <View>
-      <Head title={daily.title} heading={view.heading} pending={daily.date} view={view} stamp={stamp} raised={!!view.lead} onGo={onGo} />
+      <Head title={daily.title} heading={view.heading} pending={daily.date} view={view} stamp={stamp} onGo={onGo} />
       {view.lead && (
         <Lead lead={view.lead} board={board} reminder={reminderTemplate(remind, boardConfig(board))} draft={dailyDraft(board, daily)} />
       )}
@@ -109,8 +104,6 @@ export function DailyIssue({ screen, board, fallbackTitle, date, remind, onGo, o
 }
 
 interface HeadProps {
-  /** 只留 logo 行（占位、配置有误、没有日报）。 */
-  brandOnly?: boolean;
   title?: string;
   heading?: { day: string; weekday: string } | null;
   /** heading 为 null 时写的字（最新一期还没到时“最新一期”，日期不对时原样的日期）。 */
@@ -119,41 +112,25 @@ interface HeadProps {
   view?: DailyView | null;
   /** 快照的时间标记（“08:05 的内容”）。 */
   stamp?: string | null;
-  /** 下面压着头条卡：下沿留 60（原型），否则 20。 */
-  raised?: boolean;
+  /** 日期切换不改变页面栈。 */
   onGo?: (date: string) => void;
 }
 
-function Head({ brandOnly, title, heading, pending, view = null, stamp, raised, onGo }: HeadProps) {
-  const brand = (
-    <View className="daily-head__brand">
-      <Image className="daily-head__logo" src={logo} />
-      <Text className="daily-head__app">{buildConfig.appName}</Text>
-      {stamp && <Text className="daily-head__stamp num">{stamp}</Text>}
-    </View>
-  );
-  if (brandOnly) return <View className="daily-head">{brand}</View>;
+function Head({ title, heading, pending, view = null, stamp, onGo }: HeadProps) {
   return (
-    <View className={raised ? "daily-head daily-head--raised" : "daily-head"}>
-      {brand}
+    <View className="daily-head">
+      <View className="daily-nav">
+        <DayButton icon={prevIcon} label="前一天" target={view?.prev ?? null} onGo={onGo} />
+        <Text className="daily-head__date num">{heading ? `${heading.day} · ${heading.weekday}` : pending}</Text>
+        <DayButton icon={nextIcon} label="后一天" target={view?.next ?? null} onGo={onGo} after />
+      </View>
+      {stamp && <Text className="daily-head__stamp num">{stamp}</Text>}
       <View className="daily-head__reading">
         <View className="daily-head__today">
-          <Text className="daily-head__k">{title}</Text>
-          <View className="daily-head__date num">
-            {heading ? (
-              <>
-                <Text>{heading.day}</Text>
-                <Text className="daily-head__weekday">{heading.weekday}</Text>
-              </>
-            ) : (
-              <Text>{pending}</Text>
-            )}
-          </View>
+          <Text className="daily-head__k">REECHI DAILY</Text>
+          <Text className="daily-head__title">{title}</Text>
         </View>
-        <View className="daily-nav">
-          <DayButton icon={prevIcon} label="前一天" target={view?.prev ?? null} onGo={onGo} />
-          <DayButton icon={nextIcon} label="后一天" target={view?.next ?? null} onGo={onGo} after />
-        </View>
+        {heading && pending && <Text className="daily-head__number num">{pending.slice(-2)}</Text>}
       </View>
       <View className="daily-head__meters num">
         <Meter value={view ? String(view.sectionCount) : "—"} unit="个分节" />
@@ -164,7 +141,7 @@ function Head({ brandOnly, title, heading, pending, view = null, stamp, raised, 
   );
 }
 
-/** 前一天、后一天：44 的触控区里一个 36 的圆环。target 为 null（没有那一期、内容还没到）时调淡、不能点。 */
+/** 44px 日期切换触控区；没有相邻期时禁用。 */
 interface DayButtonProps {
   icon: string;
   label: string;
@@ -219,7 +196,6 @@ function Lead({ lead, board, reminder, draft }: LeadProps) {
         <View className="daily-lead__headline">
           <View className="daily-lead__row">
             <View className="daily-lead__flag">
-              <Image className="daily-lead__flag-star" src={starInk} />
               今日头条
             </View>
             <View className="daily-lead__gap" />
@@ -265,7 +241,7 @@ function Section({ section, onOpen }: { section: DailySectionView; onOpen: (item
         <Text className="daily-sec__count num">{section.count} 条</Text>
       </View>
       {section.lines.map((line) => (
-        <View key={line.key} className="daily-line" hoverClass="daily-line--down" onClick={() => onOpen(line.itemId)}>
+        <View key={line.key} className="daily-line" ariaRole="button" ariaLabel={line.title} hoverClass="daily-line--down" onClick={() => onOpen(line.itemId)}>
           <Text className="daily-line__title">{line.title}</Text>
           <Text className="daily-line__source">{line.source}</Text>
         </View>

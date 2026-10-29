@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "锐奇热点微信小程序（Taro）。独立的 npm 包，不在根 workspaces 里。",
+  "description": "锐奇微报微信小程序（Taro）。独立的 npm 包，不在根 workspaces 里。",
   "engines": {
     "node": ">=24.11"
   },

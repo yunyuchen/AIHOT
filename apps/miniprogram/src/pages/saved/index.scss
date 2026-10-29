@@ -1,255 +1,49 @@
 @use "../../styles/tokens" as *;
 
-// 尺寸照原型 A 版 saved.html；顶部的状态栏和胶囊由原生导航栏承担（D33），头部从 logo 行开始（同精选 tab）。
-// 原型的 flex gap 换成外边距（iOS 14.5 以下的 WebView 不认 flex 的 gap）。底部说明贴在页面最下面（margin-top: auto）。
 .saved {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-}
-
-// ---------- 深色头部（比精选矮） ----------
-.saved-head {
-  background: $ink;
-  color: #fff;
-  padding: 10px 16px 16px;
-}
-.saved-head__brand {
-  display: flex;
-  align-items: center;
-  height: 32px;
-}
-.saved-head__logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
-}
-.saved-head__app {
-  margin-left: 9px;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-.saved-head__reading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-.saved-head__k {
-  display: block;
-  font-size: 12px;
-  line-height: 17px;
-  color: $fog;
-}
-.saved-head__title {
-  display: block;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 30px;
-  letter-spacing: 0.3px;
-}
-// 条数：大号数字，右边“条”和几个星青小圆点（几条就几个，最多 5 个）。
-.saved-head__tally {
-  display: flex;
-  align-items: center;
-}
-.saved-head__count {
-  font-size: 26px;
-  line-height: 28px;
-  font-weight: 700;
-}
-.saved-head__lbl {
-  display: flex;
-  flex-direction: column;
-  margin-left: 7px;
-}
-.saved-head__unit {
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 14px;
-}
-.saved-head__bars {
-  display: flex;
-  min-height: 6px;
-  margin-top: 4px;
-}
-.saved-head__bar {
-  width: 6px;
-  height: 6px;
-  margin-left: 3px;
-  border-radius: 50%;
-  background: $star;
-  &:first-child {
-    margin-left: 0;
-  }
-}
-.saved-head__local {
-  display: flex;
-  align-items: center;
-  margin-top: 12px;
-  padding-top: 11px;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  font-size: 12px;
-  line-height: 17px;
-  color: $fog;
-}
-.saved-head__device {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  margin-right: 6px;
-}
-
-// ---------- 卡片 ----------
-.saved-list {
-  padding: 2px 16px 16px;
-}
-.saved-card {
-  margin-top: 12px;
-  min-height: 44px;
-  padding: 11px 14px 12px;
-  border-radius: 12px;
-  background: $card;
-  box-shadow: 0 1px 2px rgba(19, 25, 28, 0.06);
-}
-.saved-card--down {
-  opacity: 0.85;
-}
-.saved-card__row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 7px;
-}
-.saved-card__gap {
-  flex: 1;
-  min-width: 6px;
-}
-// 日报不是分类，用文档图标区分（原型 .kind）。
-.saved-card__kind {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 20px;
-  padding: 0 7px 0 5px;
-  border-radius: 4px;
-  background: #eef0f2;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.saved-card__kind-icon {
-  width: 13px;
-  height: 13px;
-  margin-right: 4px;
-}
-.saved-card__title {
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 600;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.saved-card__day {
-  margin-left: 6px;
-}
-// 日报的头条，两行截断。
-.saved-card__lead {
-  margin-top: 4px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $body;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.saved-card__foot {
-  display: flex;
-  align-items: center;
-  min-height: 20px;
-  margin-top: 9px;
-}
-.saved-card__src {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.saved-card__echo {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 20px;
-  margin-left: 8px;
-  padding: 0 7px;
-  border-radius: 4px;
-  background: #eef0f2;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.saved-card__bars {
-  display: flex;
-  margin-right: 6px;
-}
-.saved-card__bar {
-  width: 4px;
-  height: 4px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: $ink;
-  &:first-child {
-    margin-left: 0;
-  }
-}
-.saved-card__on {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  margin-left: 8px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-  white-space: nowrap;
-}
-.saved-card__on-icon {
-  width: 12px;
-  height: 12px;
-  margin-right: 4px;
-}
-
-// ---------- 本机说明：虚线框，贴在页面最下面 ----------
-.saved-note {
-  display: flex;
-  margin: auto 16px 20px;
-  padding: 13px 14px 14px;
-  border: 1px dashed $rail;
-  border-radius: 14px;
-}
-.saved-note__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin: 1.5px 9px 0 0;
-}
-.saved-note__text {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 19px;
-  color: $iron;
-}
-.saved-note__em {
-  font-weight: 600;
+  background: $work;
   color: $ink;
 }
+.saved-head {
+  padding: 32px 24px 20px;
+  background: $work;
+}
+.saved-head__k { display: block; color: $iron; font-size: 13px; line-height: 20px; }
+.saved-head__reading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-top: 24px; }
+.saved-head__title { display: block; white-space: pre-line; font-size: 34px; line-height: 47px; font-weight: 750; letter-spacing: -.6px; }
+.saved-head__local { display: flex; align-items: center; margin-top: 18px; color: $iron; font-size: 12px; line-height: 18px; }
+.saved-head__device { width: 14px; height: 14px; margin-right: 6px; }
+.saved-filters {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  margin: 0 24px;
+  border-bottom: 1px solid $rule;
+  white-space: nowrap;
+}
+.saved-filter { flex: none; padding: 12px 0; color: $iron; font-size: 14px; line-height: 22px; min-height: 46px; border-bottom: 2px solid transparent; }
+.saved-filter--selected { color: $ink; font-weight: 700; border-bottom-color: $accent; }
+.saved-list { padding: 0 24px; }
+.saved-card { padding: 26px 0; }
+.saved-card + .saved-card { border-top: 1px solid $rule; }
+.saved-card--down { opacity: .72; }
+.saved-card__row { display: flex; align-items: center; margin-bottom: 8px; }
+.saved-card__gap { flex: 1; }
+.saved-card__kind { display: inline-flex; align-items: center; color: $accent; font-size: 12px; font-weight: 600; }
+.saved-card__kind-icon { width: 14px; height: 14px; margin-right: 5px; }
+.saved-card__title { display: block; font-size: 20px; line-height: 29px; font-weight: 600; overflow-wrap: break-word; }
+.saved-card__day { margin-left: 6px; color: $iron; }
+.saved-card__lead { margin-top: 5px; color: $iron; font-size: 14px; line-height: 23px; }
+.saved-card__foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 0; min-height: 20px; margin-top: 14px; }
+.saved-card__src { flex: 1; min-width: 0; color: $iron; font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.saved-card__echo { display: inline-flex; align-items: center; flex: none; margin-left: 8px; color: $iron; font-size: 11px; }
+.saved-card__bars { display: flex; margin-right: 6px; }
+.saved-card__bar { width: 4px; height: 4px; margin-left: 2px; border-radius: 50%; background: $accent; }
+.saved-card__on { display: inline-flex; align-items: center; flex: none; margin-left: 10px; color: $iron; font-size: 11px; }
+.saved-card__on-icon { width: 12px; height: 12px; margin-right: 4px; }
+.saved-note { display: flex; margin: auto 24px 20px; padding: 18px 0; }
+.saved-note__icon { flex: none; width: 16px; height: 16px; margin: 2px 9px 0 0; }
+.saved-note__text { flex: 1; min-width: 0; color: $iron; font-size: 12px; line-height: 19px; }
+.saved-note__em { color: $ink; font-weight: 600; }

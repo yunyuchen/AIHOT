@@ -1,6 +1,6 @@
 // 日报 tab：制造板块的最新一期，头部的前一天、后一天在页内切换（不开新页），下拉刷新。和某期日报页共用 components/daily-issue。
 // 冷启动先显示本机快照（snap.v1.{board}.daily，只存最新一期）再刷新；整屏状态见 lib/daily.ts 的 dailyScreen，
-// 失败、占位、快照时间、“网络不好”的提示沿用精选 tab 的做法。头条卡的“提醒我明天的日报”只在这里有（模板 id 配了才画）。
+// 失败、占位、快照时间、更新失败提示沿用精选 tab 的做法。头条卡的“提醒我明天的日报”只在这里有（模板 id 配了才画）。
 // 右上角菜单按 D27 转发小程序本身（指向精选）；头条卡的“分享日报”分享正在看的这一期（指向某期日报页，最新一期也用它的日期）。
 import { useEffect, useRef } from "react";
 import Taro, { useDidShow, usePullDownRefresh } from "@tarojs/taro";
@@ -10,10 +10,12 @@ import { useBoardMeta } from "../../lib/meta-context";
 import { issueShare } from "../../lib/share";
 import { useDaily } from "../../lib/use-daily";
 import { SHARE_BASIS, useShareImageProbe, useTabShare } from "../../lib/use-share";
+import { useActiveTab } from "../../lib/use-active-tab";
 
 const BOARD = "manufacturing";
 
 export default function DailyPage() {
+  useActiveTab();
   const { state, reload, revalidate } = useBoardMeta(BOARD);
   const daily = useDaily(BOARD, null, true);
   const screen = dailyScreen(state, daily.state);
@@ -43,7 +45,7 @@ export default function DailyPage() {
     if (paused) void reload();
   }, [paused]);
 
-  // 下拉刷新：强制重拉元信息和正在看的那一期，两个都回来再收起。失败时已有的内容不清空，顶部提示“网络不好”。
+  // 下拉刷新：强制重拉元信息和正在看的那一期，两个都回来再收起。失败时已有内容不清空，显示更新失败提示。
   usePullDownRefresh(() => {
     void Promise.all([reload(), daily.refresh()]).finally(() => Taro.stopPullDownRefresh());
   });

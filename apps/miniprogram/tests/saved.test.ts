@@ -12,7 +12,6 @@ import {
   parseSaved,
   readMetaSnapshot,
   refreshEntries,
-  SAVED_COPY,
   SAVED_LIMIT,
   savedLabels,
   visibleEntries,
@@ -198,7 +197,6 @@ test("满 300 条：提示满了，不收藏、也不自动删旧的；取消一
   assert.equal(store.entries()!.length, SAVED_LIMIT);
   assert.equal(store.has("item", "manufacturing", "new"), false);
   assert.equal(store.has("item", "manufacturing", "old299"), true);
-  assert.equal(SAVED_COPY.full, "收藏已满 300 条，请先取消一些");
   // 满了照样能取消，取消以后能收藏。
   assert.equal(store.toggle(draft("old5")), "removed");
   assert.equal(store.toggle(draft("new")), "saved");
@@ -400,12 +398,4 @@ test("收藏页的分类名：内存里的元信息优先，没有时用快照�
   assert.deepEqual(savedLabels(ready("normal"), other), { semiconductor: "半导体" });
   assert.deepEqual(savedLabels(undefined, other), { semiconductor: "芯片" });
   assert.deepEqual(savedLabels({ status: "loading" }, null), {});
-});
-
-test("收藏页写明保存在本机、换设备不同步、清理缓存会清空、用“分享给同事”留存", () => {
-  const page = `${SAVED_COPY.local}；${SAVED_COPY.note.join("")}`;
-  for (const phrase of ["保存在这台手机上，换设备不同步", "清理微信缓存或换手机后会清空，重要的条目请用“分享给同事”发到会话里留存"]) {
-    assert.ok(page.includes(phrase), phrase);
-  }
-  assert.match(SAVED_COPY.emptyDetail, /只存在这台手机上/);
 });

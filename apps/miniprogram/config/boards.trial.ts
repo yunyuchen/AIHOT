@@ -4,7 +4,7 @@ import { MANUFACTURING_BOARD, SPORTS_BOARD, type BuildConfig } from "./boards.ts
 
 export default {
   env: "trial",
-  appName: "锐奇热点",
+  appName: "锐奇微报",
   boards: [
     // 制造行业实例；从香港搬到大陆机后用这个域名（票 29），搬之前这个地址还没有制造的内容。
     // 客户还没申请到一次性订阅模板（“资讯 > 信息资讯”类目），先留空：留空时不画“提醒我明天的日报”。

@@ -5,8 +5,8 @@
 // 3. 加载失败：没有任何卡片可显示时，元信息或第一页失败了，显示“加载失败”和重试。
 // 4. 加载中：还没有卡片，第一页还没回来。
 // 5. 空态：第一页成功回来、一张卡都没有（今天和往日都没有）。今天没有、往日有不算空态，时间轴从往日开始。
-//    筛了分类时是“这个分类最近没有内容”加“看全部”，和整个板块没有精选分开。
-// 6. 内容：有卡片就显示，哪怕是快照。这时的失败不清空列表，降成顶部一条“网络不好，显示的是 HH:mm 的内容”。
+//    筛了分类时显示分类空态和“查看全部”，和整个板块没有精选分开。
+// 6. 内容：有卡片就显示，哪怕是快照。这时的失败不清空列表，显示顶部更新失败提示。
 // 焦点卡只跟着“内容”出现，占位、加载失败、加载中、空态都不画（visibleFocus）。
 import type { MiniprogramFocus } from "@aihot/contracts/miniprogram";
 import type { Failure } from "./errors";
@@ -18,11 +18,11 @@ export type FeedScreen =
   | GateScreen
   | { kind: "failed"; failure: Failure }
   | { kind: "loading" }
-  /** filtered：筛了分类（“这个分类最近没有内容”加“看全部”），否则是整个板块“最近还没有精选”。 */
+  /** filtered：筛选后为空时显示分类空态，否则显示板块空态。 */
   | { kind: "empty"; filtered: boolean }
   | {
       kind: "content";
-      /** 元信息或第一页刚失败了：顶部提示“网络不好”，点一下重试。 */
+      /** 元信息或第一页刚失败：顶部显示更新失败提示，可点击重试。 */
       stale: Failure | null;
       /** 列表还是冷启动放上来的快照、刷新还没回来：头部标上这份快照的 generatedAt。有 stale 时不标（提示里已经有时间）。 */
       snapshotAt: string | null;

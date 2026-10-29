@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { MiniprogramMeta } from "@aihot/contracts/miniprogram";
 import { FALLBACK_CATEGORY_COLOR, SPORTS_CATEGORY_COLORS } from "../config/boards.ts";
-import { activeCategory, filterChips, footerText, hotlineFor, ledeLines } from "../src/lib/board-feed.ts";
+import { activeCategory, filterChips, hotlineFor } from "../src/lib/board-feed.ts";
 
 // 运动健康行业包（industry-packs/sports/site.ts 的 BOARD）现在给的样子；号码在人工核对前是空的。
 const sportsMeta: MiniprogramMeta = {
@@ -26,14 +26,6 @@ const sportsMeta: MiniprogramMeta = {
 
 const withHotline = (number: string, categories = ["sleep"]) => ({ label: "心理援助热线", number, categories });
 
-test("头部导语：板块说明一句一行（原型 sports.html），边界那句照样显示", () => {
-  assert.deepEqual(ledeLines(sportsMeta.board.description), ["健康生活与大众运动，每天十来条。", "不做诊疗建议，不推荐药品和保健品。"]);
-  // 没有句号的一句、首尾空白、空串、元信息还没到。
-  assert.deepEqual(ledeLines(" 健康生活与大众运动 "), ["健康生活与大众运动"]);
-  assert.deepEqual(ledeLines(""), []);
-  assert.deepEqual(ledeLines(undefined), []);
-});
-
 test("分类筛选条：“全部”打头，后面照元信息的顺序；圆点颜色取构建配置，D3 定下前运动健康一律兜底灰", () => {
   assert.deepEqual(filterChips(sportsMeta.categories, SPORTS_CATEGORY_COLORS), [
     { key: null, label: "全部", color: null },
@@ -55,13 +47,6 @@ test("正在看的分类：还在元信息的分类表里才算，不在了或�
   assert.equal(activeCategory(null, sportsMeta), null);
   assert.equal(activeCategory("fitness", sportsMeta), null);
   assert.equal(activeCategory("sleep", null), null);
-});
-
-test("页脚声明：来自元信息 notice.footer；制造为 null 不画，空白也不画", () => {
-  assert.equal(footerText(sportsMeta), sportsMeta.notice.footer);
-  assert.equal(footerText({ ...sportsMeta, notice: { footer: null, hotline: null } }), null);
-  assert.equal(footerText({ ...sportsMeta, notice: { footer: "  ", hotline: null } }), null);
-  assert.equal(footerText(null), null);
 });
 
 test("心理援助热线：notice.hotline 指定的分类才显示，文案和号码都从元信息取", () => {

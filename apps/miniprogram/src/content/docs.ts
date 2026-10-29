@@ -1,4 +1,4 @@
-// 三篇文档页的内容：关于锐奇热点、用户协议、隐私说明，从 docs/drafts/compliance/ 的同名草稿逐段抄来（v0.1，草稿，待客户确认）。
+// 三篇文档页的内容：关于锐奇微报、用户协议、隐私说明，从 docs/drafts/compliance/ 的同名草稿逐段抄来（v0.1，草稿，待客户确认）。
 // 草稿里给开发看的说明行、【固定文案】标记行和 <!-- --> 注释不抄；方括号占位原样保留，上线前换成定稿。
 // 隐私说明里的固定文案 A、B 引用 fixed-copy.ts 的常量，不另抄一份。怎么替换定稿见同目录 README.md。
 // 纯文本，不引 Taro。
@@ -37,11 +37,11 @@ export function findDoc(name: string | undefined): Doc | null {
 
 export const DOCS: Record<DocName, Doc> = {
   about: {
-    title: "关于锐奇热点",
+    title: "关于锐奇微报",
     version: "v0.1",
     draft: true,
     blocks: [
-      { kind: "p", text: "锐奇热点是[锐奇公司全称，待客户填]给客户和同行做的制造业企业资讯小程序。" },
+      { kind: "p", text: "锐奇微报是[锐奇公司全称，待客户填]给客户和同行做的制造业企业资讯小程序。" },
       { kind: "p", text: "锐奇做锂电、半导体、薄膜产线的测厚、X 射线和视觉检测设备。我们把这些行业每天值得看的消息整理出来，方便你在微信里看，也方便转给同事和群。" },
       { kind: "h", text: "两个板块" },
       { kind: "ul", items: [
@@ -71,7 +71,7 @@ export const DOCS: Record<DocName, Doc> = {
     ],
   },
   agreement: {
-    title: "锐奇热点用户协议",
+    title: "锐奇微报用户协议",
     version: "v0.1",
     draft: true,
     facts: [
@@ -82,9 +82,9 @@ export const DOCS: Record<DocName, Doc> = {
       ["联系方式", "邮箱 [待客户填]；电话 [待客户填]"],
     ],
     blocks: [
-      { kind: "p", text: "本协议里的“你”指读者，也就是打开锐奇热点看内容的人；“我们”指上面写的运营主体。" },
-      { kind: "h", text: "1. 锐奇热点是什么" },
-      { kind: "p", text: "锐奇热点是[锐奇公司全称，待客户填]给客户和同行做的制造业企业资讯小程序，有两个板块：" },
+      { kind: "p", text: "本协议里的“你”指读者，也就是打开锐奇微报看内容的人；“我们”指上面写的运营主体。" },
+      { kind: "h", text: "1. 锐奇微报是什么" },
+      { kind: "p", text: "锐奇微报是[锐奇公司全称，待客户填]给客户和同行做的制造业企业资讯小程序，有两个板块：" },
       { kind: "ul", items: [
         { term: "制造", text: "：从公开信源里挑出锂电、半导体、薄膜等制造业的重要消息，配上中文标题和摘要；多家报道同一件事时归成一个事件；每天 08:00 出一期日报。" },
         { term: "运动健康", text: "：给同一批读者的配套内容，每天十来条健康生活和大众运动的消息。只有精选和事件页，没有日报。" },
@@ -145,7 +145,7 @@ export const DOCS: Record<DocName, Doc> = {
     ],
   },
   privacy: {
-    title: "锐奇热点隐私说明",
+    title: "锐奇微报隐私说明",
     version: "v0.1",
     draft: true,
     facts: [
@@ -155,9 +155,9 @@ export const DOCS: Record<DocName, Doc> = {
       ["隐私事务联系", "邮箱 [待客户填]；电话 [待客户填]"],
     ],
     blocks: [
-      { kind: "p", text: "本说明里的“你”指读者，也就是打开锐奇热点看内容的人；“我们”指上面写的运营主体。" },
+      { kind: "p", text: "本说明里的“你”指读者，也就是打开锐奇微报看内容的人；“我们”指上面写的运营主体。" },
       { kind: "h", text: "一句话说明" },
-      { kind: "p", text: "锐奇热点不用登录，没有账号，不收集个人信息，唯一例外是：" },
+      { kind: "p", text: "锐奇微报不用登录，没有账号，不收集个人信息，唯一例外是：" },
       { kind: "quote", text: FIXED_A_REMINDER },
       { kind: "p", text: FIXED_B_ACCESS_LOG },
       { kind: "h", text: "1. 不登录，没有账号" },
@@ -187,7 +187,7 @@ export const DOCS: Record<DocName, Doc> = {
         "电话：[待客户填]",
       ] },
       { kind: "h", text: "6. 微信和原文网站" },
-      { kind: "p", text: "锐奇热点运行在微信里，微信自己怎么处理信息，适用微信的隐私政策。你把来源链接复制到浏览器打开原文后，访问的是来源的网站，适用对方的隐私政策。" },
+      { kind: "p", text: "锐奇微报运行在微信里，微信自己怎么处理信息，适用微信的隐私政策。你把来源链接复制到浏览器打开原文后，访问的是来源的网站，适用对方的隐私政策。" },
       { kind: "h", text: "7. 这份说明的更新" },
       { kind: "p", text: "说明更新时，我们会在这一页改版本号和生效日期。" },
       { kind: "h", text: "8. 联系我们" },

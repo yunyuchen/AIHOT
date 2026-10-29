@@ -1,4 +1,4 @@
-// 文档页：关于锐奇热点、用户协议、隐私说明。下钻页，参数 name 选哪篇（about、agreement、privacy）。
+// 文档页：关于锐奇微报、用户协议、隐私说明。下钻页，参数 name 选哪篇（about、agreement、privacy）。
 // 规格的页面表和票都定了“一个文档页带 name 参数”，所以三篇共用这一个页面；内容是打包进来的常量（src/content/docs.ts），不请求接口。
 import { Text, View } from "@tarojs/components";
 import Taro, { useRouter } from "@tarojs/taro";

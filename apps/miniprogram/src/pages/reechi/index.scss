@@ -1,213 +1,55 @@
 @use "../../styles/tokens" as *;
 
-// 尺寸照原型 A 版 reechi.html；顶部的状态栏和胶囊由原生导航栏承担（D33），头部不再留。
-.reechi {
-  padding-bottom: 8px;
-}
-
-// ---------- 深色头部（比精选矮） ----------
+.reechi { padding-bottom: 8px; background: $work; color: $ink; }
 .reechi-head {
-  display: flex;
-  align-items: center;
-  background: $ink;
-  color: #fff;
-  padding: 16px 16px 40px;
-}
-.reechi-head__logo {
-  flex: none;
-  width: 56px;
-  height: 56px;
-  border-radius: 13px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
-}
-.reechi-head__text {
-  flex: 1;
-  min-width: 0;
-  margin-left: 14px;
-}
-.reechi-head__name {
-  display: block;
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-.reechi-head__lead {
-  display: block;
-  margin-top: 1px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $fog;
-  overflow-wrap: break-word;
-}
-
-// ---------- 白卡 ----------
-.sheet {
   position: relative;
-  margin: 10px 16px 0;
-  padding: 14px 16px 16px;
-  background: $card;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba($ink, 0.06);
-}
-// 第一张卡压在深色头部下沿，同精选的焦点卡。
-.sheet--lead {
-  margin-top: -24px;
-  border-radius: 14px;
-  box-shadow: 0 14px 28px -10px rgba($ink, 0.32), 0 2px 6px rgba($ink, 0.08);
-}
-.sheet--list {
-  padding: 4px 0;
-}
-.sheet__title {
-  display: block;
-  font-size: 15px;
-  line-height: 22px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-.sheet__head {
-  padding: 10px 16px 2px;
-}
-.sheet__text {
-  display: block;
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 22px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-.sheet__pad {
-  padding: 0 16px;
-}
-.sheet__foot {
-  margin-top: 4px;
-  padding-bottom: 12px;
-}
-
-// ---------- 产品与案例 ----------
-.tiles {
   display: flex;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  min-height: 370px;
+  padding: 28px 24px 62px;
+  overflow: hidden;
+  background: $ink;
+  color: $work;
 }
-// 两列：每张至少 40%，一行放不下第三张，两张平分剩下的宽度（不用 calc，postcss-calc 不认 rpx）。
-.tile {
-  box-sizing: border-box;
-  flex: 1 0 40%;
-  min-height: 76px;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  background: $work;
-  &:nth-child(2n) {
-    margin-left: 10px;
-  }
-}
-.tile__ico {
-  display: block;
-  width: 22px;
-  height: 22px;
-}
-.tile__name {
-  display: block;
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 600;
-  overflow-wrap: break-word;
-}
-.tile__text {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-
-// ---------- 列表行 ----------
-.cell {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 14px 0 16px;
-}
-.cell--down {
-  background: $work;
-}
-.cell__ico {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  margin-right: 12px;
-}
-.cell__body {
-  flex: 1;
-  min-width: 0;
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-}
-.cell--rule .cell__body {
-  box-shadow: inset 0 1px 0 rgba($ink, 0.07);
-}
-.cell__lbl {
-  flex: 1;
-  font-size: 15px;
-  line-height: 21px;
-}
-.cell__chev {
-  flex: none;
-  width: 16px;
-  height: 16px;
-}
-
-// 联系方式：上面一行小字是项名，下面是值；右侧是动作。
-.contact__text {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 0;
-}
-.contact__label {
-  display: block;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-.contact__value {
-  display: block;
-  font-size: 15px;
-  line-height: 21px;
-  overflow-wrap: break-word;
-}
-.contact__verb {
-  flex: none;
-  margin-left: 12px;
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 600;
-}
-.contact--off .contact__value {
-  color: $body;
-}
-.contact--off .contact__verb {
-  color: $rail;
-  font-weight: 400;
-}
-
-// ---------- 底部集中声明 ----------
-.note {
-  padding: 14px 20px 16px;
-}
-.note__line {
-  display: block;
-  font-size: 12px;
-  line-height: 19px;
-  color: $iron;
-  overflow-wrap: break-word;
-}
-// 访问日志那句另起一行，不并进声明。
-.note__log {
-  margin-top: 6px;
-}
+.reechi-head__logo { position: absolute; left: 24px; top: 24px; width: 28px; height: 28px; border-radius: 7px; }
+.reechi-head__text { position: relative; z-index: 1; min-width: 0; padding-top: 46px; }
+.reechi-head__eyebrow { display: block; color: #b7c0bb; font-size: 12px; line-height: 20px; letter-spacing: 2px; }
+.reechi-head__name { display: block; white-space: pre-line; margin-top: 30px; font-size: 35px; line-height: 51px; font-weight: 750; letter-spacing: -.6px; }
+.reechi-head__lead { display: block; max-width: 290px; margin-top: 18px; color: #d5d8d2; font-size: 15px; line-height: 25px; overflow-wrap: break-word; }
+.reechi-head__contact { display: inline-flex; align-items: center; min-height: 42px; margin-top: 20px; padding: 0 17px; border: 1px solid #7c8985; border-radius: 3px; color: $work; font-size: 13px; font-weight: 600; }
+.reechi-head__contact--down { opacity: .7; }
+.reechi-head__mark { position: absolute; right: -58px; top: 60px; width: 240px; height: 240px; opacity: .13; transform: rotate(-12deg); }
+.reechi-content { position: relative; z-index: 1; margin-top: -30px; padding: 28px 0 0; border-radius: 28px 28px 0 0; background: $work; }
+.sheet { position: relative; margin: 0 18px 14px; padding: 22px 18px; background: $card; border-radius: 5px; }
+.sheet--list { padding: 4px 0; }
+.sheet__eyebrow { display: block; margin-bottom: 8px; color: $accent; font-size: 10px; line-height: 15px; letter-spacing: 1.2px; }
+.sheet__title { display: block; font-size: 22px; line-height: 30px; font-weight: 700; letter-spacing: -.2px; }
+.sheet__head { padding: 12px 16px 4px; font-size: 18px; }
+.sheet__text { display: block; margin-top: 12px; color: $body; font-size: 14px; line-height: 25px; overflow-wrap: break-word; }
+.sheet__pad { padding: 0 16px; }
+.sheet__foot { margin-top: 4px; padding-bottom: 12px; }
+.product-visual { position: relative; height: 220px; margin: 18px -4px 6px; overflow: hidden; background: #e6e6e4; border-radius: 6px; }
+.product-visual--line { height: 150px; }
+.product-visual__image { width: 100%; height: 100%; }
+.product-visual__caption { position: absolute; left: 0; bottom: 0; padding: 5px 9px; background: rgba(21,31,33,.82); color: $work; font-size: 11px; }
+.source-note { display: block; margin-top: 10px; color: $iron; font-size: 11px; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.tile { flex: 1 1 130px; padding: 17px 14px; background: #e7ebe4; border-radius: 10px; }
+.tile__name { display: block; font-size: 16px; line-height: 24px; font-weight: 600; overflow-wrap: break-word; }
+.tile__text { display: block; margin-top: 5px; color: $body; font-size: 14px; line-height: 24px; overflow-wrap: break-word; }
+.cell { display: flex; align-items: center; min-height: 48px; padding: 0 14px 0 16px; }
+.cell--down { background: $work; }
+.cell__ico { flex: none; width: 20px; height: 20px; margin-right: 12px; }
+.cell__body { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; min-height: 48px; }
+.cell--rule .cell__body { border-top: 1px solid $rule; }
+.cell__lbl { flex: 1; font-size: 15px; line-height: 21px; }
+.cell__chev { flex: none; width: 16px; height: 16px; }
+.contact__text { flex: 1; min-width: 0; padding: 8px 0; }
+.contact__label { display: block; color: $iron; font-size: 12px; line-height: 17px; }
+.contact__value { display: block; font-size: 14px; line-height: 21px; overflow-wrap: break-word; }
+.contact__verb { flex: none; margin-left: 12px; color: $accent; font-size: 12px; line-height: 18px; font-weight: 600; }
+.contact--off .contact__value { color: $body; }
+.contact--off .contact__verb { color: $rail; font-weight: 400; }
+.note { padding: 14px 20px 16px; }
+.note__line { display: block; color: $iron; font-size: 12px; line-height: 19px; overflow-wrap: break-word; }
+.note__log { margin-top: 6px; }

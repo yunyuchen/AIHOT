@@ -1,8 +1,8 @@
 {
   "miniprogramRoot": "dist/",
   "projectname": "reechi-miniprogram",
-  "description": "锐奇热点",
-  "appid": "wxad9a58004595f9bc",
+  "description": "锐奇微报",
+  "appid": "wx0b2d807e38c5ee0e",
   "setting": {
     "urlCheck": true,
     "es6": false,
@@ -33,5 +33,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "isGameTourist": false
 }

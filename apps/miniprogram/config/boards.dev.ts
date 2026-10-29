@@ -4,7 +4,7 @@ import { MANUFACTURING_BOARD, SPORTS_BOARD, type BuildConfig } from "./boards.ts
 
 export default {
   env: "dev",
-  appName: "锐奇热点",
+  appName: "锐奇微报",
   boards: [
     // 客户还没申请到一次性订阅模板（“资讯 > 信息资讯”类目），先留空：留空时不画“提醒我明天的日报”。
     { ...MANUFACTURING_BOARD, apiBase: "http://127.0.0.1:3001", reminderTemplateId: "" },

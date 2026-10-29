@@ -76,7 +76,7 @@ export interface FeedState {
   /** 上次第一页成功响应的本机时刻，和那次响应的 refreshAt（下一条精选放出的时刻）：判断第一页还新不新鲜。 */
   fetchedAt: number | null;
   refreshAt: string | null;
-  /** 正在显示的第一页的 generatedAt：快照的时间标记和“网络不好，显示的是 HH:mm 的内容”用它。 */
+  /** 正在显示的第一页的 generatedAt：快照时间标记和更新失败提示使用。 */
   generatedAt: string | null;
   /** 第一页是冷启动时从本机快照放上来的，这次会话还没刷新成功。 */
   fromSnapshot: boolean;
@@ -168,7 +168,7 @@ export function createFeedStore(
     if (gen !== generation) return;
     if (!result.ok) {
       if (result.failure.kind === "paused") snapshot?.drop();
-      // 已经显示的卡片（快照、上次的列表）不清空，页面顶部提示“网络不好”。
+      // 已显示的卡片（快照、上次的列表）不清空，页面顶部显示更新失败提示。
       return set({ ...state, phase: "failed", failure: result.failure });
     }
     const cards = dedupe([], result.data.cards);

@@ -61,6 +61,67 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "web-chinacdc-occupational",
+      "name": "中国疾控中心·职业病防治知识",
+      "kind": "web_list",
+      "$comment": "2026-10-29 用户确认接入，部署机实抓列表 12 条，最新 2026-07-29。低频职业防护与职场生活方式科普，不保证日更。列表标题混入日期，详情页 h5 取完整标题。与职业卫生所栏目有同稿，共用热度来源组；首次只收近 12 个月最多 5 篇，旧文按原日期归档。",
+      "config": {
+        "url": "https://www.chinacdc.cn/jkkp/zyjk/zyjk/zybfzzs/",
+        "itemSelector": ".xw_list li",
+        "linkSelector": "a",
+        "publishedAtSelector": "a span",
+        "sortByPublishedAt": true,
+        "detail": {
+          "maxFetches": 5,
+          "titleSelector": ".containerBox h5",
+          "titleAuthoritative": true
+        },
+        "_aihot": {
+          "initialBackfillLimit": 5,
+          "initialBackfillMonths": 12,
+          "minIntervalMinutes": 360
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 360,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "chinacdc-occupational"
+    },
+    {
+      "id": "web-niohp-education",
+      "name": "中国疾控中心职业卫生所·科普教育",
+      "kind": "web_list",
+      "$comment": "2026-10-29 用户确认接入，部署机实抓列表 5 条，最新 2026-08-06，抽查口罩适合性、高温作业文章正文可读。/kpdw/ 是 JS 跳转，直接抓 /kpdw/kpjy2/；标题前有空链接，只取含文章日期的链接。日期从 URL 取，低频更新；混有中毒防护科普，仍走原有分类和安全边界。与中疾控职业病防治知识共用热度来源组。",
+      "config": {
+        "url": "https://niohp.chinacdc.cn/kpdw/kpjy2/",
+        "itemSelector": ".r h4",
+        "linkSelector": "a[href*=\"/t\"]",
+        "publishedAtFromUrl": true,
+        "sortByPublishedAt": true,
+        "_aihot": {
+          "initialBackfillLimit": 5,
+          "initialBackfillMonths": 12,
+          "minIntervalMinutes": 360
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "participation_mode": "editorial",
+      "interval_minutes": 360,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "signal_group_id": "chinacdc-occupational"
+    },
+    {
       "id": "rss-who-zh",
       "name": "世界卫生组织·中文新闻",
       "kind": "rss",

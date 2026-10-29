@@ -1,11 +1,5 @@
-// 精选流的卡片列表：一根竖轴，按时段分段（今天凌晨、上午、下午、晚间，往日按天），最新的在上；按天看的板块（运动健康，byDay）
-// 一律按天分段、卡片不显示时刻。每段一个段头（圆形节点、时段名、范围、条数），段里的卡左侧一个圆形节点挂在轴上；当前时段的节点是
-// logo 星，轴线青色。底部是续页的状态。空态、加载失败和占位由页面按 lib/feed-screen.ts 显示，这里只画卡片。
-// 焦点卡由页面画在头部下沿，时间轴按 id 去掉焦点那张（lib/feed.ts 的 withoutFocus），分段和段头条数都按去掉以后的算。点卡片进条目页。
-// 已读（打开过条目页，use-feed.ts 带上的 state.read）的卡片标题改用正文灰，其余不变（D25）。
-// 元信息 notice.hotline 指定的分类，卡片上多一行心理援助热线（components/hotline）。
-import { Image, Text, View } from "@tarojs/components";
-import star from "../../assets/star.png";
+// 精选按时段或日期分组；同一事件只显示一张卡，来源数保留在卡片底部。
+import { Text, View } from "@tarojs/components";
 import { displayTime } from "../../lib/beijing";
 import { hotlineFor } from "../../lib/board-feed";
 import { categoryChip, showAiBadge, sourceCountChip } from "../../lib/card";
@@ -44,8 +38,8 @@ export function FeedList({ state, labels, colors, focusId, onOpen, onRetry, byDa
   // 已加载的卡只有焦点那一张：不画轴，只留底部状态。
   if (cards.length === 0) return <Footer state={state} onRetry={onRetry} bare />;
   return (
-    <View className="feed-list">
-      <View className="feed-list__axis">
+      <View className="feed-list__surface">
+        <View className="feed-list__axis">
         {timelineSections(cards, now, byDay).map((section, i) => (
           <Period
             key={section.key}
@@ -60,9 +54,9 @@ export function FeedList({ state, labels, colors, focusId, onOpen, onRetry, byDa
             read={state.read}
           />
         ))}
+        </View>
+        <Footer state={state} onRetry={onRetry} />
       </View>
-      <Footer state={state} onRetry={onRetry} />
-    </View>
   );
 }
 
@@ -82,7 +76,6 @@ function Period({ section, first, labels, colors, now, read, onOpen, showTime, h
   return (
     <View className={`feed-period${section.live ? " feed-period--live" : ""}`}>
       <View className={`feed-period__head${first ? "" : " feed-period__head--gap"}`}>
-        <View className="feed-period__node">{section.live && <Image className="feed-period__star" src={star} />}</View>
         <Text className="feed-period__name">{section.title}</Text>
         {section.range && <Text className="feed-period__range num">{section.range}</Text>}
         <Text className="feed-period__count num">{section.count} 条</Text>
@@ -112,7 +105,7 @@ function Footer({ state, onRetry, bare = false }: { state: FeedState; onRetry: (
   if (state.phase === "failed" || state.more === "failed") {
     return (
       <View className={`${className} feed-list__status--retry`} hoverClass="feed-list__status--down" onClick={onRetry}>
-        加载失败，点这里重试
+        加载失败，点击重试
       </View>
     );
   }
@@ -141,8 +134,6 @@ function Card({ card, first, labels, colors, now, read, onOpen, showTime, hotlin
   const help = hotlineFor(card.category, hotline);
   return (
     <View className={`feed-card${first ? " feed-card--first" : ""}`}>
-      <View className="feed-card__node" />
-      <View className="feed-card__hang" />
       <View className="feed-card__body" hoverClass="feed-card__body--down" onClick={() => onOpen(card.id)}>
         <View className="feed-card__row">
           {showTime && <Text className="feed-card__time num">{displayTime(card.anchorAt, now)}</Text>}

@@ -15,16 +15,16 @@ export const DAILY_COPY = {
   /** 出刊时刻，头部读数和页尾说明用。 */
   issueTime: "08:00",
   /** 页尾，前面一个“AI 摘要”。 */
-  note: "日报由模型从前一天 08:00 到当天 08:00 的精选里整理，08:00 出刊",
+  note: "日报由模型根据前一日 08:00 至当日 08:00 的精选内容整理，每日 08:00 出刊",
   /** 最新一期回 404。 */
-  firstPending: "第一期日报还没出刊，每天 08:00 出刊",
+  firstPending: "首期日报尚未发布，每日 08:00 出刊",
   /** 某一期回 404（或某期日报页的日期不对）。 */
-  noIssue: "这一天没有日报",
-  latest: "看最新一期",
+  noIssue: "该日期暂无日报",
+  latest: "查看最新一期",
   /** 零条的一期。 */
-  empty: "这一期没有条目",
+  empty: "本期暂无条目",
   /** 元信息说这个板块没有日报栏目。 */
-  off: "这个板块没有日报",
+  off: "本板块不提供日报",
   /** 快讯节的节名。 */
   flashes: "快讯",
 } as const;
@@ -146,7 +146,7 @@ export function createDailyStore(
     if (gen !== generation) return;
     if (!result.ok) {
       if (result.failure.kind === "paused" || (date === null && result.failure.kind === "not_found")) snapshot?.drop();
-      // 已经显示的这一期（快照、上次的内容）不清空，页面顶部提示“网络不好”。
+      // 已显示的这一期（快照、上次的内容）不清空，页面顶部显示更新失败提示。
       return set({ ...state, phase: "failed", failure: result.failure });
     }
     const daily = result.data;
@@ -168,9 +168,9 @@ export function createDailyStore(
 
 export type DailyScreen =
   | GateScreen
-  /** 元信息说这个板块没有日报栏目（运动健康）：“这个板块没有日报”。 */
+  /** 元信息说这个板块没有日报栏目（运动健康）。 */
   | { kind: "off" }
-  /** 404：最新一期是“第一期日报还没出刊”，某一期是“这一天没有日报”加“看最新一期”。 */
+  /** 404：最新一期暂未发布，某一期暂无日报并可查看最新一期。 */
   | { kind: "missing"; latest: boolean }
   /** 还没有内容时连不上、超时、503、形状不对：加载失败加重试。 */
   | { kind: "failed"; failure: Failure }
@@ -178,7 +178,7 @@ export type DailyScreen =
   | {
       kind: "content";
       daily: MiniprogramDaily;
-      /** 有内容时刷新失败了：顶部提示“网络不好”，点一下重试。 */
+      /** 有内容时刷新失败：顶部显示更新失败提示，可点击重试。 */
       stale: Failure | null;
       /** 还是冷启动放上来的快照、刷新还没回来：头部标上快照的 generatedAt。有 stale 时不标。 */
       snapshotAt: string | null;
@@ -229,7 +229,7 @@ export interface DailyView {
    * ai：头条或导语任一是模型写的，卡片右上角标一次。
    */
   lead: { headline: { title: string; paragraph: string } | null; ai: boolean } | null;
-  /** 零条的一期：保留头部，不显示头条卡，显示“这一期没有条目”。 */
+  /** 零条的一期：保留头部，不显示头条卡，显示空态。 */
   empty: boolean;
   /** 前一天、后一天；null 时按钮不能点。 */
   prev: string | null;

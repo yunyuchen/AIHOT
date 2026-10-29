@@ -1,25 +1,20 @@
 @use "../../styles/tokens" as *;
 
-// 尺寸照原型 A 版 story.html。原型自己画了状态栏和导航（返回、“事件”），这里由原生导航栏承担（D33），
-// 下面只留原型 .dash 下沿那 24 的墨色，事件卡往上压 16。原型的 flex gap 换成外边距。
 .story {
   padding-bottom: 16px;
 }
 .story-top {
-  height: 24px;
-  background: $ink;
+  height: 0;
+  background: $work;
 }
 
 // ---------- 事件卡 ----------
 .story-card {
   position: relative;
-  margin: -16px 16px 0;
-  padding: 13px 16px;
-  border-radius: 14px;
+  margin: 0;
+  padding: 24px 20px;
+  border-radius: 0;
   background: $card;
-  box-shadow:
-    0 14px 28px -10px rgba(19, 25, 28, 0.32),
-    0 2px 6px rgba(19, 25, 28, 0.08);
 }
 .story-card__status {
   display: block;
@@ -29,11 +24,12 @@
   color: $iron;
   text-align: center;
 }
-// “N 家在报”、首报、最新一行，格子之间竖线分隔。
+// 来源数量、首报、最新一行，格子之间竖线分隔。
 .story-card__span {
   display: flex;
   align-items: center;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 8px 0;
 }
 .story-echo {
   display: inline-flex;
@@ -43,7 +39,7 @@
   margin-right: 10px;
   padding: 0 7px;
   border-radius: 4px;
-  background: #eef0f2;
+  background: #e7ebe4;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -64,14 +60,13 @@
 }
 .story-fact {
   padding: 0 10px;
-  border-left: 1px solid #dfe2e5;
+  border-left: 1px solid $rule;
   line-height: 18px;
   white-space: nowrap;
   &:last-child {
     padding-right: 0;
   }
 }
-// 紧跟“N 家在报”的第一格不画竖线（原型 .echo-chip + .fact）。
 .story-fact--lead {
   padding-left: 0;
   border-left: 0;
@@ -87,11 +82,11 @@
 }
 // 标题；“AI 摘要”跟在标题最后一个字后面。
 .story-card__title {
-  margin-top: 9px;
-  font-size: 20px;
-  line-height: 27px;
+  margin-top: 24px;
+  font-size: 29px;
+  line-height: 43px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0;
   overflow-wrap: break-word;
 }
 .story-card__ai {
@@ -118,35 +113,35 @@
 
 // “事件综述”。
 .story-brief {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #eceef0;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 2px solid $accent;
 }
 .story-brief__title {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 19px;
+  line-height: 28px;
   font-weight: 700;
 }
 .story-brief__text {
   display: block;
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 21px;
+  margin-top: 16px;
+  font-size: 17px;
+  line-height: 29px;
   color: $body;
   overflow-wrap: break-word;
 }
 
 // ---------- 谁在报，怎么说：首报在上，后续往下接 ----------
 .story-reports {
-  margin: 8px 16px 0;
-  padding: 12px 16px 4px;
-  border-radius: 14px;
+  margin: 8px 22px 0;
+  padding: 24px 0 0;
+  border-top: 1px solid $rule;
+  border-radius: 0;
   background: $card;
-  box-shadow: 0 1px 2px rgba(19, 25, 28, 0.06);
 }
 .story-reports__title {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 20px;
+  line-height: 29px;
   font-weight: 700;
 }
 .story-reports__order {
@@ -192,7 +187,6 @@
 }
 .story-rp--latest .story-rp__dot {
   background: $star;
-  box-shadow: 0 0 0 2px $ink;
 }
 .story-rp__meta {
   display: flex;
@@ -214,7 +208,7 @@
   margin-left: 6px;
   padding: 0 6px;
   border-radius: 4px;
-  background: #eef0f2;
+  background: #e7ebe4;
   font-size: 11px;
   line-height: 18px;
   font-weight: 600;
@@ -227,9 +221,10 @@
 }
 .story-rp__title {
   display: block;
-  margin-top: 2px;
-  font-size: 14px;
-  line-height: 20px;
+  margin-top: 8px;
+  padding-bottom: 16px;
+  font-size: 17px;
+  line-height: 28px;
   overflow-wrap: break-word;
 }
 // 没有条目页的报道不能点，标题用正文灰，和能点的分开。
@@ -245,6 +240,8 @@
   padding-left: 24px;
 }
 .story-grow__ring {
+  border: 2px solid $rail;
+  box-sizing: border-box;
   position: absolute;
   left: 0;
   top: 17px;
@@ -252,7 +249,6 @@
   height: 10px;
   border-radius: 50%;
   background: $card;
-  box-shadow: inset 0 0 0 2px $rail;
 }
 .story-grow__text {
   font-size: 12px;
@@ -260,9 +256,7 @@
   color: $iron;
 }
 
-// ---------- 整屏状态：白卡同样压在墨色条下沿 ----------
-// page-state 自带 16 的外边距，往上再提 16 + 16。
 .story-state {
   position: relative;
-  margin-top: -32px;
+  margin-top: 0;
 }

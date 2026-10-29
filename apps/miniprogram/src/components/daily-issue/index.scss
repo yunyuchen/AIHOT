@@ -1,336 +1,53 @@
 @use "../../styles/tokens" as *;
 
-// 尺寸照原型 A 版 daily.html。顶部的状态栏和胶囊由原生导航栏承担（D33），头部从 logo 行开始（同精选 tab 的 dashboard）。
-// 原型的 flex gap 换成外边距（iOS 14.5 以下的 WebView 不认 flex 的 gap）。
+.daily-head { padding: 14px 22px 0; background: $work; color: $ink; }
+.daily-head__stamp { display: block; margin-bottom: 8px; text-align: right; font-size: 11px; color: $iron; }
+.daily-nav { display: flex; align-items: center; justify-content: space-between; margin: 0 -4px 18px; }
+.daily-nav__btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; }
+.daily-nav__btn--down { opacity: .6; }
+.daily-nav__ring { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: $ink; border-radius: 50%; }
+.daily-nav__icon { width: 16px; height: 16px; }
+.daily-nav__btn--off { opacity: .3; }
+.daily-head__date { flex: 1; min-width: 0; text-align: center; font-size: 13px; line-height: 20px; }
+.daily-head__reading { display: flex; align-items: center; padding-bottom: 24px; border-bottom: 2px solid $ink; }
+.daily-head__today { flex: 1; min-width: 0; }
+.daily-head__k { display: block; color: $iron; font-size: 10px; letter-spacing: 2px; }
+.daily-head__title { display: block; margin-top: 6px; font-size: 29px; line-height: 38px; font-weight: 800; overflow-wrap: break-word; }
+.daily-head__number { flex: none; margin-left: 14px; font-size: 68px; line-height: 76px; font-weight: 800; letter-spacing: -4px; }
+.daily-head__meters { display: flex; flex-wrap: wrap; padding: 14px 0; }
+.daily-head__meter { margin-right: 18px; font-size: 12px; line-height: 20px; color: $iron; }
+.daily-head__value { margin-right: 4px; color: $ink; font-weight: 600; }
+.daily-head__unit { font-size: 11px; }
 
-// ---------- 墨色头部 ----------
-.daily-head {
-  background: $ink;
-  color: #fff;
-  padding: 10px 16px 20px;
-}
-// 头条卡往上压 48，下沿留 60（原型）。
-.daily-head--raised {
-  padding-bottom: 60px;
-}
-.daily-head__brand {
-  display: flex;
-  align-items: center;
-  height: 32px;
-}
-.daily-head__logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
-}
-.daily-head__app {
-  margin-left: 9px;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-.daily-head__stamp {
-  margin-left: auto;
-  padding-left: 12px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $fog;
-  white-space: nowrap;
-}
-// 读数行和 logo 行的间距 10，同精选 tab（原型 6）。
-.daily-head__reading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-.daily-head__today {
-  min-width: 0;
-}
-.daily-head__k {
-  display: block;
-  font-size: 12px;
-  line-height: 17px;
-  color: $fog;
-}
-.daily-head__date {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 30px;
-  letter-spacing: 0.3px;
-}
-.daily-head__weekday {
-  margin-left: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: $fog;
-  letter-spacing: 0;
-}
-.daily-head__meters {
-  display: flex;
-  margin-top: 14px;
-}
-.daily-head__meter {
-  padding: 0 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  &:first-child {
-    padding-left: 0;
-    border-left: 0;
-  }
-  &:last-child {
-    padding-right: 0;
-  }
-}
-.daily-head__value {
-  display: block;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 28px;
-}
-.daily-head__unit {
-  display: block;
-  font-size: 12px;
-  line-height: 17px;
-  color: $fog;
-}
+.daily-lead { margin: 0 22px; }
+.daily-lead__headline { padding: 26px 20px; border-radius: 6px; background: $ink; color: $work; }
+.daily-lead__row { display: flex; align-items: center; }
+.daily-lead__flag { color: $star; font-size: 12px; }
+.daily-lead__gap { flex: 1; min-width: 6px; }
+.daily-lead__headline .ai-badge { color: $star; }
+.daily-lead__title { display: block; margin-top: 22px; font-size: 27px; line-height: 39px; font-weight: 700; overflow-wrap: break-word; }
+.daily-lead__text { display: block; margin-top: 20px; padding-top: 18px; border-top: 1px solid #4b5b59; font-size: 16px; line-height: 28px; color: #d8e1dc; overflow-wrap: break-word; }
+.daily-lead__acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.daily-btn { display: flex; align-items: center; justify-content: center; flex: 1 1 auto; min-width: 0; height: 46px; margin: 0; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.daily-btn--ghost { background: #e7ebe4; color: $ink; }
+.daily-btn--solid { background: $star; color: $ink; }
+.daily-btn__icon { width: 16px; height: 16px; margin-right: 6px; flex: none; }
+.daily-btn--solid .daily-btn__icon { filter: brightness(0); }
+.daily-lead__hint { display: block; margin-top: 9px; font-size: 12px; line-height: 20px; color: $iron; }
 
-// 前一天、后一天：44 的触控区，里面 36 的圆环。
-.daily-nav {
-  display: flex;
-  flex: none;
-  margin-right: -4px;
-  margin-bottom: -7px;
-}
-.daily-nav__btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-}
-.daily-nav__btn--after {
-  margin-left: 4px;
-}
-.daily-nav__btn--down {
-  opacity: 0.6;
-}
-.daily-nav__ring {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.26);
-}
-.daily-nav__icon {
-  width: 16px;
-  height: 16px;
-}
-.daily-nav__btn--off .daily-nav__ring {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-.daily-nav__btn--off .daily-nav__icon {
-  opacity: 0.3;
-}
-
-// ---------- 头条卡：压在头部下沿 ----------
-.daily-lead {
-  position: relative;
-  z-index: 2;
-  margin: -48px 16px 0;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: $card;
-  box-shadow:
-    0 14px 28px -10px rgba(19, 25, 28, 0.32),
-    0 2px 6px rgba(19, 25, 28, 0.08);
-}
-.daily-lead__headline {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eceef0;
-}
-.daily-lead__row {
-  display: flex;
-  align-items: center;
-}
-.daily-lead__flag {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 22px;
-  padding: 0 8px 0 7px;
-  border-radius: 4px;
-  background: $star;
-  color: $ink;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-.daily-lead__flag-star {
-  width: 10px;
-  height: 10px;
-  margin-right: 5px;
-}
-.daily-lead__gap {
-  flex: 1;
-  min-width: 6px;
-}
-.daily-lead__title {
-  display: block;
-  margin-top: 10px;
-  font-size: 20px;
-  line-height: 27px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  overflow-wrap: break-word;
-}
-// 日报的导语是正文，不截断。
-.daily-lead__text {
-  display: block;
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 21px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-.daily-lead__acts {
-  display: flex;
-}
-// 按字宽分剩下的空间：日报 tab 一行有“收藏”“提醒我明天的日报”“分享日报”三个按钮，平分放不下提醒的字。
-// “分享日报”是原生 button（components/share-button 去掉了它的默认样式），外边距在这里清掉，间隔只由 --next 和收藏按钮自己的右边距给。
-.daily-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 44px;
-  margin: 0;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.daily-btn--ghost {
-  background: #eef0f2;
-  color: $ink;
-}
-.daily-btn--solid {
-  background: $ink;
-  color: #fff;
-}
-.daily-btn--next {
-  margin-left: 8px;
-}
-.daily-btn__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-}
-// 提醒按钮下面一行：点一次只提醒一次。
-.daily-lead__hint {
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-
-// ---------- 分节：每节一张白卡 ----------
-.daily-secs {
-  padding: 2px 16px 0;
-}
-.daily-sec {
-  margin-top: 12px;
-  padding: 0 16px;
-  border-radius: 14px;
-  background: $card;
-  box-shadow: 0 1px 2px rgba(19, 25, 28, 0.06);
-}
-.daily-sec__head {
-  display: flex;
-  align-items: center;
-  height: 46px;
-}
-.daily-sec__dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
-  border-radius: 50%;
-}
-// 快讯没有分类：空心圈。
-.daily-sec__dot--flash {
-  background: $card;
-  box-shadow: inset 0 0 0 2px $rail;
-}
-.daily-sec__label {
-  min-width: 0;
-  overflow: hidden;
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.daily-sec__badge {
-  display: flex;
-  flex: none;
-  margin-left: 6px;
-}
-.daily-sec__count {
-  flex: none;
-  margin-left: auto;
-  padding-left: 8px;
-  font-size: 12px;
-  color: $iron;
-}
-.daily-line {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 44px;
-  padding: 10px 0 11px;
-  border-top: 1px solid #eceef0;
-}
-.daily-line--down {
-  opacity: 0.6;
-}
-.daily-line__title {
-  font-size: 15px;
-  line-height: 21px;
-  font-weight: 600;
-  overflow-wrap: break-word;
-}
-.daily-line__source {
-  margin-top: 3px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-
-// ---------- 页尾 ----------
-.daily-note {
-  display: flex;
-  align-items: center;
-  padding: 14px 16px 24px;
-}
-.daily-note__text {
-  margin-left: 8px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-
-.daily__status {
-  display: block;
-  padding: 24px 16px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $iron;
-  text-align: center;
-}
+.daily-secs { padding: 8px 22px 0; }
+.daily-sec { margin-top: 28px; border-top: 1px solid $rule; }
+.daily-sec__head { display: flex; align-items: center; min-height: 62px; }
+.daily-sec__dot { width: 6px; height: 6px; flex: none; margin-right: 8px; border-radius: 50%; }
+.daily-sec__dot--flash { border: 1px solid $iron; }
+.daily-sec__label { flex: 1; min-width: 0; font-size: 21px; line-height: 28px; font-weight: 700; overflow-wrap: break-word; }
+.daily-sec__badge { display: flex; margin-left: 8px; }
+.daily-sec__count { flex: none; margin-left: 10px; font-size: 11px; color: $iron; }
+.daily-line { display: flex; flex-direction: column; padding: 18px 0; min-height: 44px; }
+.daily-line + .daily-line { border-top: 1px solid $rule; }
+.daily-line--down { opacity: .6; }
+.daily-line__title { font-size: 18px; line-height: 29px; font-weight: 600; overflow-wrap: break-word; }
+.daily-line__source { margin-top: 7px; color: $iron; font-size: 12px; line-height: 20px; }
+.daily-note { display: flex; align-items: flex-start; margin: 24px 22px 0; padding-top: 20px; border-top: 1px solid $rule; }
+.daily-note__text { margin-left: 10px; color: $iron; font-size: 12px; line-height: 20px; }
+.daily__status { display: block; padding: 36px 22px; font-size: 14px; color: $iron; text-align: center; }

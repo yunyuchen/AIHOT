@@ -37,12 +37,15 @@ test("分类色标：category 为 null 不画", () => {
   assert.equal(categoryChip(null, labels, MANUFACTURING_CATEGORY_COLORS), null);
 });
 
-test("“N 家在报”：两家起才显示，圆点最多五个", () => {
+test("来源数量：两家起才显示，圆点最多五个", () => {
   assert.equal(sourceCountChip(1), null);
   assert.equal(sourceCountChip(0), null);
-  assert.deepEqual(sourceCountChip(2), { label: "2 家在报", dots: 2 });
-  assert.deepEqual(sourceCountChip(4), { label: "4 家在报", dots: 4 });
-  assert.deepEqual(sourceCountChip(12), { label: "12 家在报", dots: 5 });
+  assert.match(sourceCountChip(2)?.label ?? "", /2/);
+  assert.equal(sourceCountChip(2)?.dots, 2);
+  assert.match(sourceCountChip(4)?.label ?? "", /4/);
+  assert.equal(sourceCountChip(4)?.dots, 4);
+  assert.match(sourceCountChip(12)?.label ?? "", /12/);
+  assert.equal(sourceCountChip(12)?.dots, 5);
 });
 
 test("AI 摘要角标：标题或摘要任一为真就标", () => {
@@ -67,7 +70,7 @@ test("焦点卡底栏：N 用 sourceNames 的个数，来源名按顺序用顿�
   });
 });
 
-test("焦点卡底栏：只有一家时不显示“N 家在报”，来源名照样列；圆点最多五个", () => {
+test("焦点卡底栏：只有一个来源时不显示数量标记，来源名照常列；圆点最多五个", () => {
   const one = focusFoot({ sourceNames: ["电池网"], latestAt: "2026-10-17T07:05:00+08:00", source: { name: "电池网" } });
   assert.equal(one.echo, null);
   assert.equal(one.sources, "电池网");

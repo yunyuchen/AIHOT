@@ -1,0 +1,30 @@
+@use "../styles/tokens" as *;
+
+.floating-tabs {
+  position: fixed;
+  z-index: 50;
+  bottom: env(safe-area-inset-bottom);
+  left: 14px;
+  right: 14px;
+  display: flex;
+  padding: 6px;
+  border-radius: 20px;
+  background: #203132;
+  box-shadow: 0 10px 28px rgba(21, 31, 33, .18);
+}
+.floating-tabs__item {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: $tab;
+  border-radius: 14px;
+  transition: background-color .16s, opacity .16s;
+}
+.floating-tabs__item--active { background: $star; color: $ink; }
+.floating-tabs__item--down { opacity: .7; }
+.floating-tabs__icon { width: 23px; height: 23px; }
+.floating-tabs__label { margin-top: 3px; font-size: 11px; line-height: 17px; white-space: nowrap; }

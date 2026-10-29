@@ -38,7 +38,7 @@ export function snapshotMeta(data: unknown, board: string): MiniprogramMeta | nu
 }
 
 /** 内置占位文案（D30），不提整改、不提类目。 */
-export const BUILT_IN_PLACEHOLDER = "这个板块正在调整，暂不提供内容";
+export const BUILT_IN_PLACEHOLDER = "本板块调整中，暂不提供内容";
 
 /** 占位时显示的文案：优先行业包给的（元信息 placeholder），没给或标题是空的用内置文案。 */
 export function placeholderText(placeholder: MiniprogramPlaceholder | null | undefined): { title: string; body: string | null } {

@@ -1,139 +1,17 @@
 @use "../../styles/tokens" as *;
 
-// 尺寸照原型 A 版 .focus：往上压进深色头部 48（头部这时下沿留 60）。原型的 flex gap 换成外边距。
-.focus-card {
-  position: relative;
-  z-index: 2;
-  margin: -48px 16px 0;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: $card;
-  box-shadow:
-    0 14px 28px -10px rgba(19, 25, 28, 0.32),
-    0 2px 6px rgba(19, 25, 28, 0.08);
-}
-.focus-card--down {
-  opacity: 0.85;
-}
-.focus-card__row {
-  display: flex;
-  align-items: center;
-}
-.focus-card__flag {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 22px;
-  margin-right: 6px;
-  padding: 0 8px 0 7px;
-  border-radius: 4px;
-  background: $star;
-  color: $ink;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-.focus-card__flag-star {
-  width: 10px;
-  height: 10px;
-  margin-right: 5px;
-}
-.focus-card__gap {
-  flex: 1;
-  min-width: 6px;
-}
-.focus-card__title {
-  margin-top: 10px;
-  font-size: 20px;
-  line-height: 27px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  overflow-wrap: break-word;
-}
-// 摘要两行截断。
-.focus-card__summary {
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 21px;
-  color: $body;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.focus-card__foot {
-  display: flex;
-  align-items: center;
-  margin-top: 12px;
-  padding-top: 11px;
-  border-top: 1px solid #eceef0;
-}
-.focus-card__echo {
-  display: flex;
-  align-items: center;
-  flex: none;
-  margin-right: 12px;
-}
-.focus-card__count {
-  font-size: 26px;
-  line-height: 28px;
-  font-weight: 700;
-}
-.focus-card__label {
-  display: flex;
-  flex-direction: column;
-  margin-left: 6px;
-}
-.focus-card__label-text {
-  font-size: 12px;
-  line-height: 14px;
-  font-weight: 600;
-}
-.focus-card__bars {
-  display: flex;
-  margin-top: 3px;
-}
-.focus-card__bar {
-  width: 6px;
-  height: 6px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: $star;
-  box-shadow: inset 0 0 0 1px rgba(19, 25, 28, 0.55);
-  &:first-child {
-    margin-left: 0;
-  }
-}
-// 来源名两行截断。
-.focus-card__sources {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.focus-card__when {
-  flex: none;
-  margin-left: 12px;
-  text-align: right;
-}
-.focus-card__clock {
-  display: block;
-  font-size: 15px;
-  line-height: 18px;
-  font-weight: 700;
-}
-.focus-card__day {
-  display: block;
-  font-size: 11px;
-  line-height: 14px;
-  color: $iron;
-}
+.focus-card { position: relative; z-index: 1; margin: 0; padding: 20px 24px 44px; color: $work; text-align: center; background: $ink; }
+.focus-card__row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.focus-card__flag { display: inline-flex; align-items: center; color: $star; font-size: 13px; font-weight: 600; letter-spacing: .5px; }
+.focus-card__gap { flex: 0; }
+.focus-card__title { margin-top: 22px; font-size: 29px; line-height: 1.38; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
+.focus-card__summary { margin-top: 18px; font-size: 15px; line-height: 26px; color: $fog; overflow-wrap: anywhere; }
+.focus-card__actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.focus-card__read { display: inline-flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 6px; background: $star; color: $ink; font-size: 16px; font-weight: 700; }
+.focus-card__read--down { opacity: .8; }
+.focus-card__arrow { font-size: 20px; }
+.focus-card__echo { display: inline-flex; align-items: baseline; gap: 5px; padding: 11px 14px; border: 1px solid $iron; border-radius: 6px; color: $work; }
+.focus-card__count { font-size: 18px; font-weight: 700; }
+.focus-card__label-text { font-size: 13px; }
+.focus-card__sources { margin-top: 18px; color: $fog; font-size: 12px; line-height: 19px; overflow-wrap: anywhere; }
+.focus-card .ai-badge, .focus-card .category-tag { color: $star; }

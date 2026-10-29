@@ -74,6 +74,10 @@ docker compose --profile https up -d --build
 - 数据库备份的 `DB_BACKUP_STORE_*` 每套用各自的 bucket，密钥只给到自己的 bucket，一套出了事删不到另一套的备份。备份文件名以板块 key（`site.ts` 里的 `BOARD.key`）开头，比如 `daily/manufacturing-<时间>.dump` 和 `daily/sports-<时间>.dump`，万一配进同一个 bucket 也不会互相覆盖（同一个行业包的两份部署共用一个 bucket 仍会覆盖）。
 - `API_BASE_URL`、`DATABASE_URL` 不用设也不用改：compose 把它们指向本项目里的 `api` 和 `db`，每套在自己的网络里，连不到另一套。`SITE_DOMAIN` 只给自带的 Caddy 用，这里也不用设。
 
+**线上模型切换记录（2026-10-29）**：制造和运动健康实例经使用者指定，默认文本模型从 DeepSeek 官方 `deepseek-flash` 切为网关 `https://rq.yunyc.work/v1` 的 `gemini-4-argon`。各自服务器 `.env` 的 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL` 已更新，`LLM_EXTRA_JSON={}`，不再携带 DeepSeek 专用的 `thinking` 参数；密钥仅保存在服务器受保护配置中，文件权限为 `600`，不入库。两套 `api`、`worker`、`web` 已通过 Compose 重建（未重建镜像、未重跑迁移），11 个模型能力均解析到新配置；重启后各完成一次真实 JSON 输出校验，制造回执 `26347`、运动健康回执 `6921` 均为 `completed`，公开小程序元信息正常。预算、采集和推送开关保持不变；切换只影响后续生成，不自动重写历史文章或日报。这里记录的是网关提供的模型标识，不代表对其底层模型身份的独立认证。
+
+**同日再次切换至 Astra（当前配置）**：按使用者要求，沿用上述网关，模型改为其 `/v1/models` 列出的 `gpt-6-astra`，并更换两套服务器上的模型密钥；`LLM_EXTRA_JSON={}`、预算、提示词、评分门槛和安全阀保持不变。两套服务重建后，11 个模型能力均指向 Astra；真实 JSON 调用回执为制造 `26354`、运动健康 `6966`，均为 `completed`，两套公开小程序精选接口正常。服务器 `.env` 权限仍为 `600`，密钥不入库，历史内容未重写。
+
 宿主机的反向代理用 Caddy 的话（会自动申请和续期证书）：
 
 ```

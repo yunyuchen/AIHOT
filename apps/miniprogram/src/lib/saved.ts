@@ -14,14 +14,14 @@ export const SAVED_LIMIT = 300;
 /** 收藏页和收藏按钮上的固定文案。 */
 export const SAVED_COPY = {
   /** 头部那一行。 */
-  local: "保存在这台手机上，换设备不同步",
+  local: "仅保存在本机，设备间不同步",
   /** 页面底部的说明；“分享给同事”加粗。 */
-  note: ["收藏只存在本机，不上传、不登录。清理微信缓存或换手机后会清空，重要的条目请用", "“分享给同事”", "发到会话里留存。"],
-  emptyTitle: "还没有收藏",
-  emptyDetail: "在条目页或日报的头条卡上点“收藏”，就会出现在这里。收藏只存在这台手机上，不上传、不登录。",
-  unreadable: "收藏读不出来",
-  unreadableDetail: "这台手机的本机存储暂时不可用，稍后重试。看内容不受影响。",
-  full: `收藏已满 ${SAVED_LIMIT} 条，请先取消一些`,
+  note: ["收藏仅保存在本机，不上传、不登录。清理微信缓存后将被清除，且无法同步至新设备。重要内容可通过", "“分享给同事”", "发送至会话留存。"],
+  emptyTitle: "暂无收藏",
+  emptyDetail: "在条目页或日报头条卡片上选择“收藏”，即可在此查看。收藏仅保存在本机，不上传、不登录。",
+  unreadable: "无法读取收藏",
+  unreadableDetail: "本机存储暂不可用，请稍后重试。查看内容不受影响。",
+  full: `收藏已达 ${SAVED_LIMIT} 条，请先取消部分收藏`,
   saved: "已收藏",
   removed: "已取消收藏",
   saveFailed: "收藏失败，请稍后再试",
@@ -35,7 +35,7 @@ export type SavedKind = "item" | "daily";
 /**
  * 一条收藏（规格“本机存储”表的 saved.v1）。条目的 id 是条目 id，日报的 id 是日报日期 YYYY-MM-DD。
  * 日报没有分类、来源名和来源数（都是 null），只有日报才有 siteName（日报名）；日报的 title 是那一期的头条，没有头条时是空字符串。
- * sourceCount 是同一事实的来源数（和卡片上的“N 家在报”同一个数），“只显示摘要”时接口给 null，收藏页不显示。
+ * sourceCount 是同一事实的来源数，“仅显示摘要”时接口给 null，收藏页不显示。
  * ai：标题或摘要任一是模型写的（日报看头条和导语），收藏卡右上角标“AI 摘要”。savedAt 是收藏时的本机时刻（毫秒）。
  */
 export interface SavedEntry {

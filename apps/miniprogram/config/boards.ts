@@ -18,11 +18,11 @@ export interface BoardConfig {
   tabs: BoardTab[];
   /** 精选流是否渲染焦点卡：制造是，运动健康否。 */
   focusCard: boolean;
-  /** 精选流有没有分类筛选条（元信息的 categories 加“全部”）：运动健康有，制造 V1 按原型不做。 */
+  /** 精选流的分类筛选条：读取元信息 categories，加“全部”。 */
   filterBar: boolean;
   /**
-   * 按天看的精选流（运动健康，原型 sports.html）：时间轴一律按天分段（今天、昨天、日期），卡片不显示时刻；深色头部不画 24 小时
-   * 扫描条，左边写板块名，读数下面写元信息的板块说明。为 false 时（制造）今天按凌晨、上午、下午、晚间分段，卡片显示时刻，头部有扫描条。
+   * 按天看的精选流（运动健康）：一律按天分段，卡片不显示时刻。
+   * 为 false 时（制造）今天按凌晨、上午、下午、晚间分段，卡片显示时刻。
    */
   byDay: boolean;
   /** 分类 key → 色标颜色。分类名从元信息读；不在表里的 key 用 FALLBACK_CATEGORY_COLOR。 */
@@ -75,7 +75,7 @@ export const MANUFACTURING_BOARD = {
   name: "制造",
   tabs: ["feed", "daily"],
   focusCard: true,
-  filterBar: false,
+  filterBar: true,
   byDay: false,
   categoryColors: MANUFACTURING_CATEGORY_COLORS,
 } satisfies Omit<BoardConfig, "apiBase">;

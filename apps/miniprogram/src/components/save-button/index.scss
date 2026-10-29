@@ -1,12 +1,12 @@
 @use "../../styles/tokens" as *;
 
-// 两种样子照原型 item.html、daily.html 的 .btn.ghost：条目页白底描边，日报头条卡浅灰底（和“提醒我明天的日报”的 .daily-btn--ghost 一样）。
+// 收藏状态和点击行为独立于页面布局；item 位于底部操作条，daily 在头条下方。
 .save-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 6px;
   color: $ink;
   font-size: 14px;
   font-weight: 600;
@@ -16,24 +16,25 @@
   opacity: 0.75;
 }
 
-// 条目页：白底描边，和右边的“分享给同事”平分一行（分享按钮自带左边距 10）。
+// 条目页操作条内保留足够触控宽度。
 .save-btn--item {
-  flex: 1;
-  background: $card;
-  box-shadow: inset 0 0 0 1px #d6dbdf;
+  flex: 0 0 98px;
+  background: transparent;
+  color: $work;
 }
 .save-btn--item .save-btn__icon {
   width: 18px;
   height: 18px;
   margin-right: 6px;
 }
+.save-btn--item .save-btn__icon { filter: brightness(0) invert(1); }
 
-// 日报头条卡：浅灰底，按字宽收窄，排在最前面、和后面的按钮隔 8；日报 tab 一行三个按钮，“提醒我明天的日报”要放得下。
+// 日报按钮行可换行，提醒文案不挤占收藏/分享。
 .save-btn--daily {
   flex: none;
-  margin-right: 8px;
+  height: 46px;
   padding: 0 12px;
-  background: #eef0f2;
+  background: #e7ebe4;
 }
 .save-btn--daily .save-btn__icon {
   flex: none;
