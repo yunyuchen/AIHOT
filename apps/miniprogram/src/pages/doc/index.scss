@@ -1,105 +1,18 @@
 @use "../../styles/tokens" as *;
 
-// 暖纸长文：保持法规和合规原文，只调整阅读层级。
-.doc {
-  margin: 0;
-  padding: 30px 22px;
-  background: $card;
-  border-radius: 0;
-}
-.doc__title {
-  display: block;
-  font-size: 28px;
-  line-height: 40px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-.doc__version {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 0;
-  background: transparent;
-  font-size: 12px;
-  line-height: 18px;
-  color: $iron;
-}
-.doc__facts {
-  margin-top: 24px;
-  padding: 14px 0;
-  border-top: 1px solid $rule;
-  border-bottom: 1px solid $rule;
-}
-.doc__fact {
-  display: flex;
-  padding: 6px 0;
-}
-.doc__fact-key {
-  flex: none;
-  width: 92px;
-  padding-right: 8px;
-  box-sizing: border-box;
-  font-size: 13px;
-  line-height: 20px;
-  color: $iron;
-}
-.doc__fact-value {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 20px;
-  color: $ink;
-  overflow-wrap: break-word;
-}
-.doc__h {
-  display: block;
-  margin-top: 32px;
-  font-size: 20px;
-  line-height: 29px;
-  font-weight: 700;
-}
-.doc__p {
-  display: block;
-  margin-top: 10px;
-  font-size: 16px;
-  line-height: 28px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-// 固定文案 A 这类要突出的整段：浅底，左侧一道星青竖线（星青只做线条）。
-.doc__quote {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-left: 2px solid $accent;
-  border-radius: 0;
-  background: #e7ebe4;
-  font-size: 15px;
-  line-height: 26px;
-  color: $ink;
-  overflow-wrap: break-word;
-}
-.doc__list {
-  margin-top: 8px;
-}
-.doc__item {
-  display: flex;
-  margin-top: 4px;
-}
-.doc__marker {
-  flex: none;
-  width: 20px;
-  font-size: 15px;
-  line-height: 26px;
-  color: $iron;
-}
-.doc__item-text {
-  flex: 1;
-  min-width: 0;
-  font-size: 15px;
-  line-height: 26px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-.doc__term {
-  font-weight: 600;
-  color: $ink;
-}
+// 长文：法规和合规原文一字不改，只调阅读层级。新闻纸底，不画线；事实表和要突出的整段（固定文案 A）用通栏的下沉纸块。
+.doc { padding: 22px $page 8px; }
+.doc__title { display: block; @include type-article; }
+.doc__version { display: block; margin-top: 8px; @include type-meta; }
+.doc__facts { margin: 20px (-$page) 0; padding: 12px $page; background-color: $press; }
+.doc__fact { display: flex; padding: 4PX 0; }
+.doc__fact-key { flex: none; width: 92px; padding-right: 8px; @include type-meta; }
+.doc__fact-value { flex: 1; min-width: 0; @include type(13px, 20px, 400); overflow-wrap: break-word; }
+.doc__h { display: block; margin-top: 30px; @include type(17px, 26px, 600); }
+.doc__p { display: block; margin-top: 10px; @include type-body; }
+.doc__quote { margin: 12px (-$page) 0; padding: 12px $page; background-color: $press; @include type(15px, 26px, 400); overflow-wrap: break-word; }
+.doc__list { margin-top: 8px; }
+.doc__item { display: flex; margin-top: 4PX; }
+.doc__marker { flex: none; width: 20px; @include type(15px, 26px, 400, $mute); }
+.doc__item-text { flex: 1; min-width: 0; @include type(15px, 26px, 400, $body); overflow-wrap: break-word; }
+.doc__term { font-weight: 600; color: $ink; }

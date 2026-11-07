@@ -1,0 +1,224 @@
+/* 栏目色标：行业月刊。纸白铜版纸 + 墨色刊头，分类色升级成栏目色；唯一的记忆点是屏幕右缘的书口色标。
+   只用类选择器（含 ::before/::after），不用 :first-child、:last-child、相邻兄弟选择器，第一个/最后一个由 app.js 给修饰类。
+   用到 h1/h2/h3/p 的类都写全 margin 简写，不靠浏览器默认边距：截图里的间距就是这里写的数，搬到 Taro 的 View/Text 上不变。
+   不用 gap，间距一律用 margin。栏目色由数据内联给 --c（落到 Taro 时由 tsx 内联 style 给 background-color）。 */
+.phone {
+  --paper: #ffffff;
+  --ink: #15191d;
+  --body: #3d454b;
+  --mute: #646d73;
+  --rule: #e2e5e7;
+  --dim: #a7afb4;      /* 墨底上的未选中字 7.94:1 */
+  --off: #9aa3a9;      /* 禁用字（豁免对比度） */
+  --off-line: #cfd4d7; /* 禁用描边 */
+  --tab: 7px;          /* 书口色标宽 */
+  --f-cn: -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --f-num: "DIN Alternate", "Helvetica Neue", Roboto, sans-serif;
+  --f-big: "DIN Condensed", "Helvetica Neue", "sans-serif-condensed", Roboto, sans-serif;
+}
+.phone__body { font-family: var(--f-cn); color: var(--body); -webkit-font-smoothing: antialiased; }
+/* 小程序里 app.scss 已经给 view/text/image 设了 border-box，这一行只是让原型一致。 */
+.phone__body *, .phone__fixed * { box-sizing: border-box; }
+
+/* ---------- 数字 ---------- */
+.n { font-family: var(--f-num); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.nb { font-family: var(--f-big); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+/* ---------- AI 摘要标记：两格铭牌，墨格反白“AI”+“摘要” ---------- */
+.ai { display: inline-flex; flex: none; height: 20px; border: 1px solid var(--ink); vertical-align: middle; }
+.ai__a { display: flex; align-items: center; padding: 0 4px; background: var(--ink); color: #fff;
+  font: 700 11px/1 "Helvetica Neue", Roboto, sans-serif; letter-spacing: .3px; }
+.ai__b { display: flex; align-items: center; padding: 0 5px; color: var(--ink); font: 500 11px/1 var(--f-cn); }
+
+/* ---------- 小标：今日焦点、今日头条、本期栏目（15px 600 墨字，后面可跟 AI 标记） ---------- */
+.flagrow { display: flex; align-items: center; }
+.flag { margin-right: 10px; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--ink); }
+
+/* ---------- 按钮：44 高、直角，实心墨底 / 墨描边 ---------- */
+.btn { display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px;
+  border: 1px solid var(--ink); font: 600 15px/1 var(--f-cn); white-space: nowrap; color: var(--ink); background: var(--paper); }
+.btn--solid { background: var(--ink); color: #fff; }
+.btn--off { border-color: var(--off-line); color: var(--off); background: var(--paper); }
+.btn--push { margin-left: auto; }
+.btn--block { width: 100%; margin-top: 14px; }
+.btn--inline { display: inline-flex; margin-top: 20px; padding: 0 28px; }
+.btn--row { flex: none; width: 72px; padding: 0; }
+.btn__ico { width: 18px; height: 18px; flex: none; margin-right: 6px; }
+
+/* ---------- 栏目色带（整宽）和书口色标（右缘竖条） ---------- */
+.band { display: flex; align-items: center; height: 44px; padding: 0 calc(20px + var(--tab)) 0 20px; background: var(--c); color: var(--ink); }
+.band--dark { color: #fff; }
+.band__name { font-size: 17px; line-height: 24px; font-weight: 600; }
+.band__aside { margin-left: auto; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+.band__n { font-size: 17px; margin-right: 2px; }
+.edge { position: relative; padding-right: calc(20px + var(--tab)); }
+.edge--flush { padding-right: 0; }
+.edge::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: var(--tab); background: var(--c); }
+/* 政策与标准的近黑色标往里收 3px，外侧留纸白，读作一条墨色标签，不像机身黑边。其他栏目色照样出血。 */
+.edge--dark::after { right: 3px; }
+
+/* ---------- 刊头（精选）：刊名的排法 ---------- */
+.mast { padding: 4px 20px 16px; background: var(--ink); color: #fff; }
+.mast__row { display: flex; align-items: center; }
+.mast__logo { width: 40px; height: 40px; flex: none; display: block; }
+.mast__name { margin: 0 0 0 12px; font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: 2px; color: #fff; }
+.mast__line { margin-top: 8px; font-size: 13px; line-height: 18px; color: var(--dim); }
+.mast__wk { margin: 0 3px; font-size: 14px; color: #fff; }
+
+/* ---------- 今日焦点 ---------- */
+.focus { padding-top: 18px; padding-bottom: 24px; padding-left: 20px; }
+.focus__title { margin: 12px 0 0; font-size: 30px; line-height: 40px; font-weight: 600; color: var(--ink); }
+.focus__sum { margin: 12px 0 0; font-size: 16px; line-height: 28px; color: var(--body);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.focus__src { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.focus__foot { display: flex; align-items: flex-end; margin-top: 16px; }
+.stat { margin-right: 24px; }
+.stat__k { display: block; font-size: 12px; line-height: 16px; color: var(--mute); }
+.stat__v { display: block; margin-top: 4px; font-size: 14px; line-height: 24px; color: var(--ink); font-weight: 500; }
+.stat__n { font-size: 22px; line-height: 24px; margin-right: 2px; }
+
+/* ---------- 分类筛选 ---------- */
+.filter { display: flex; overflow-x: auto; overflow-y: hidden; padding: 0 20px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); scrollbar-width: none; }
+.filter::-webkit-scrollbar { display: none; }
+.chip { flex: none; display: flex; align-items: center; height: 48px; padding: 0 12px; font-size: 15px; line-height: 20px; font-weight: 500; color: var(--body); white-space: nowrap; }
+.chip--on { background: var(--ink); color: #fff; font-weight: 600; padding: 0 16px; }
+.chip__sw { width: 6px; height: 22px; margin-right: 8px; background: var(--c); flex: none; }
+
+/* ---------- 时段 ---------- */
+.period { display: flex; align-items: baseline; padding: 28px 20px 10px; }
+.period__name { font-size: 20px; line-height: 28px; font-weight: 600; color: var(--ink); }
+.period__count { margin-left: 10px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.period__n { font-size: 14px; margin-right: 2px; }
+
+/* ---------- 精选卡：右缘一条栏目色标，栏目名在第一行最右、紧挨色标 ---------- */
+.card { position: relative; padding: 18px calc(20px + var(--tab)) 20px 20px; }
+.card::before { content: ""; position: absolute; left: 20px; right: 10px; top: 0; height: 1px; background: var(--rule); }
+.card::after { content: ""; position: absolute; right: 0; top: 1px; bottom: 1px; width: var(--tab); background: var(--c); }
+.card--dark::after { right: 3px; }
+.card__meta { display: flex; align-items: center; height: 20px; }
+.card__time { margin-right: 12px; font-size: 15px; line-height: 20px; color: var(--ink); }
+.card__cat { margin-left: auto; margin-right: -10px; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--ink); white-space: nowrap; }
+.card__title { margin: 10px 0 0; font-size: 18px; line-height: 27px; font-weight: 600; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card__sum { margin: 6px 0 0; font-size: 15px; line-height: 24px; color: var(--body);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card__foot { display: flex; align-items: center; margin-top: 10px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.card__echo { margin-left: 14px; color: var(--ink); font-weight: 600; }
+.card__echo-n { font-size: 14px; margin-right: 2px; }
+
+/* ---------- tabBar：墨底白字，选中项只靠白色和 600 字重区分 ---------- */
+.tabs { display: flex; height: 86px; padding-bottom: 34px; background: var(--ink); }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--dim); font: 500 11px/14px var(--f-cn); }
+.tab__ico { width: 24px; height: 24px; margin-bottom: 3px; }
+.tab--on { color: #fff; font-weight: 600; }
+
+/* ---------- 日报 ---------- */
+.pager { display: flex; align-items: center; height: 52px; padding: 0 8px; background: var(--paper); border-bottom: 1px solid var(--rule); color: var(--ink); }
+.pager__btn { display: flex; align-items: center; height: 44px; padding: 0 12px; font-size: 15px; line-height: 20px; font-weight: 500; color: var(--ink); }
+.pager__btn--off { color: var(--off); }
+.pager__ico { width: 16px; height: 16px; flex: none; }
+.pager__ico--l { margin-right: 4px; }
+.pager__ico--r { margin-left: 4px; }
+.pager__date { flex: 1; text-align: center; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--ink); }
+.cover { padding: 22px 20px 0; }
+.cover__top { display: flex; align-items: flex-end; }
+.cover__day { font-size: 92px; line-height: 74px; color: var(--ink); margin-right: 16px; padding-top: 6px; }
+.cover__name { margin: 0 0 2px; font-size: 26px; line-height: 34px; font-weight: 600; color: var(--ink); letter-spacing: 1px; }
+.readings { display: flex; margin-top: 20px; border-top: 2px solid var(--ink); }
+.reading { flex: 1; padding: 10px 0 0 12px; border-left: 1px solid var(--rule); }
+.reading--first { border-left: 0; padding-left: 0; }
+.reading__v { display: block; font-size: 34px; line-height: 34px; color: var(--ink); }
+.reading__k { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.cover__window { margin: 14px 0 0; font-size: 13px; line-height: 20px; color: var(--mute); }
+.actions { display: flex; margin-top: 16px; }
+.actions__btn { flex: 1; }
+.actions__btn--first { margin-right: 12px; }
+/* 本期栏目：封面目录，每行右缘一条栏目色标 */
+.toc { margin-top: 28px; }
+.toc__head { padding: 0 20px 10px; }
+.toc__row { position: relative; display: flex; align-items: center; height: 44px; padding: 0 calc(20px + var(--tab)) 0 20px; cursor: pointer; }
+.toc__row::before { content: ""; position: absolute; left: 20px; right: 10px; top: 0; height: 1px; background: var(--rule); }
+.toc__row::after { content: ""; position: absolute; right: 0; top: 1px; bottom: 1px; width: var(--tab); background: var(--c); }
+.toc__row--dark::after { right: 3px; }
+.toc__name { font-size: 16px; line-height: 22px; font-weight: 500; color: var(--ink); }
+.toc__count { margin-left: auto; font-size: 13px; line-height: 20px; color: var(--mute); white-space: nowrap; }
+.toc__n { font-size: 17px; margin-right: 2px; color: var(--ink); }
+.lead { margin: 28px 20px 0; padding-top: 16px; border-top: 1px solid var(--rule); }
+.lead__title { margin: 12px 0 0; font-size: 26px; line-height: 36px; font-weight: 600; color: var(--ink); }
+.lead__text { margin: 12px 0 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.sec { margin-top: 8px; }
+.sec--first { margin-top: 32px; }
+.ditem { position: relative; padding: 14px calc(20px + var(--tab)) 15px 20px; }
+.ditem::before { content: ""; position: absolute; left: 20px; right: 10px; top: 0; height: 1px; background: var(--rule); }
+.ditem--first::before { display: none; }
+.ditem__title { font-size: 16px; line-height: 26px; font-weight: 500; color: var(--ink); }
+.ditem__src { margin-top: 4px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.note { display: flex; align-items: flex-start; margin: 28px 20px 0; padding-top: 16px; border-top: 1px solid var(--rule); }
+.note__ai { margin: 1px 10px 0 0; }
+.note__text { margin: 0; font-size: 13px; line-height: 22px; color: var(--mute); }
+
+/* ---------- 条目详情 ---------- */
+.art { padding-top: 18px; padding-bottom: 24px; padding-left: 20px; margin-bottom: 4px; }
+.art__title { margin: 12px 0 0; font-size: 26px; line-height: 36px; font-weight: 600; color: var(--ink); }
+.art__meta { display: flex; align-items: center; margin-top: 12px; font-size: 14px; line-height: 20px; color: var(--body); font-weight: 500; }
+.art__date { margin-left: 14px; color: var(--mute); font-weight: 400; }
+.art__sum { margin: 18px 0 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.art__why { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.blk { margin: 0 20px; padding: 18px 0 20px; border-top: 1px solid var(--rule); }
+.blk__head { display: flex; align-items: center; margin-bottom: 10px; }
+.blk__name { font-size: 17px; line-height: 24px; font-weight: 600; color: var(--ink); margin-right: 10px; }
+.blk__text { margin: 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.srcrow { display: flex; align-items: baseline; }
+.srcrow__name { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ink); }
+.srcrow__date { margin-left: 12px; font-size: 14px; color: var(--mute); }
+.fine { margin: 12px 0 0; font-size: 13px; line-height: 21px; color: var(--mute); }
+.story { display: flex; align-items: center; margin-top: 2px; padding: 16px 12px 16px 16px; border: 1px solid var(--ink); }
+.story__main { flex: 1; min-width: 0; }
+.story__title { font-size: 17px; line-height: 26px; font-weight: 600; color: var(--ink); }
+.story__count { margin-top: 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--ink); }
+.story__n { font-size: 16px; margin-right: 2px; }
+.story__others { margin-top: 4px; font-size: 13px; line-height: 20px; color: var(--mute); }
+.story__go { flex: none; width: 24px; height: 24px; margin-left: 10px; color: var(--ink); }
+.bar { display: flex; padding: 10px 20px 44px; background: var(--paper); border-top: 1px solid var(--rule); }
+.bar__save { flex: 1; margin-right: 12px; }
+.bar__share { flex: 1.4; }
+
+/* ---------- 锐奇 ---------- */
+.intro { padding: 26px 20px 4px; }
+.intro__logo { width: 64px; height: 64px; display: block; }
+.intro__name { margin: 16px 0 0; font-size: 30px; line-height: 40px; font-weight: 600; color: var(--ink); letter-spacing: 2px; }
+.intro__lead { margin: 8px 0 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.h2 { margin: 40px 20px 0; padding-top: 12px; border-top: 3px solid var(--ink); font-size: 22px; line-height: 30px; font-weight: 600; color: var(--ink); }
+.fig { margin: 18px 0 0; }
+.fig--hero { margin-top: 28px; }
+.fig__img { display: block; width: 100%; height: auto; background: #eceeef; }
+.fig__cap { display: block; padding: 8px 20px 0; font-size: 13px; line-height: 20px; }
+.fig__name { font-weight: 500; color: var(--body); }
+.fig__src { font-size: 12px; color: var(--mute); }
+/* 产品：纸白底、墨字产品名，产品名和说明整段右缘贴“检测与设备”的青色色标（同精选卡的做法） */
+.prods { margin-top: 6px; }
+.prod { position: relative; padding: 16px calc(20px + var(--tab)) 18px 20px; }
+.prod::before { content: ""; position: absolute; left: 20px; right: 10px; top: 0; height: 1px; background: var(--rule); }
+.prod--first::before { display: none; }
+.prod::after { content: ""; position: absolute; right: 0; top: 1px; bottom: 1px; width: var(--tab); background: var(--c); }
+.prod__name { margin: 0; font-size: 18px; line-height: 26px; font-weight: 600; color: var(--ink); }
+.prod__text { margin: 6px 0 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.para { margin: 14px 20px 0; font-size: 16px; line-height: 28px; color: var(--body); }
+.para--first { margin-top: 16px; }
+.para--after-fig { margin-top: 18px; }
+.rows { margin: 8px 20px 0; }
+.row { display: flex; align-items: center; min-height: 68px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.row--last { border-bottom: 0; }
+.row__main { flex: 1; min-width: 0; padding-right: 12px; }
+.row__k { font-size: 13px; line-height: 18px; color: var(--mute); }
+.row__v { margin-top: 2px; font-size: 16px; line-height: 24px; color: var(--ink); font-weight: 500; word-break: break-all; }
+.row__v--num { font-size: 19px; line-height: 24px; font-weight: 700; letter-spacing: .2px; }
+.row__v--off { color: var(--mute); font-weight: 400; font-size: 15px; }
+.row__sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--mute); }
+.doc { display: flex; align-items: center; min-height: 52px; font-size: 16px; line-height: 24px; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.doc--last { border-bottom: 0; }
+.doc__ico { margin-left: auto; width: 18px; height: 18px; flex: none; color: var(--mute); }
+.small { margin: 12px 20px 0; font-size: 13px; line-height: 22px; color: var(--mute); }
+.small--first { margin-top: 16px; }
+.tail { height: 28px; }

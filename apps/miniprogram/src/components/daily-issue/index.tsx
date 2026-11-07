@@ -1,4 +1,4 @@
-// 日报 tab 和某期日报共用：日期刊头、深墨头条、暖纸分节。内容和翻期均由真实接口驱动。
+// 日报 tab 和某期日报共用：翻页条、钴蓝日数和刊名、时间窗、读数行、“今日头条”栏头、分节栏头和条目、页尾说明。内容和翻期均由真实接口驱动。
 // 整屏状态（配置有误、占位、没有日报、404、加载失败、加载中、内容）由页面按 lib/daily.ts 的 dailyScreen 算好传进来。
 import { Image, Text, View } from "@tarojs/components";
 import type { BoardKey } from "../../../config/boards";
@@ -12,6 +12,9 @@ import { itemPage } from "../../lib/page-stack";
 import { REMINDER_COPY, reminderTemplate } from "../../lib/reminder";
 import { dailyDraft, type SavedDraft } from "../../lib/saved";
 import { snapshotStamp, staleNotice } from "../../lib/screen";
+import { HeadTab } from "../head-tab";
+import { Reading } from "../reading";
+import { windowText } from "../reading/derive";
 import { AiBadge } from "../ai-badge";
 import { failureText, PageState, StaleNotice } from "../page-state";
 import { RemindButton } from "../remind-button";
@@ -30,7 +33,7 @@ interface Props {
    */
   date: string | null;
   /**
-   * 头条卡里画不画“提醒我明天的日报”：只有日报 tab 有，某期日报页没有（规格）。日报 tab 传了也要构建配置里这个板块配了
+   * 按钮行下面画不画“提醒我明天的日报”：只有日报 tab 有，某期日报页没有（规格）。日报 tab 传了也要构建配置里这个板块配了
    * 订阅模板 id 才画（lib/reminder.ts 的 reminderTemplate）。
    */
   remind: boolean;
@@ -79,7 +82,15 @@ export function DailyIssue({ screen, board, fallbackTitle, date, remind, onGo, o
   const stamp = screen.snapshotAt ? snapshotStamp(screen.snapshotAt, now) : null;
   return (
     <View>
-      <Head title={daily.title} heading={view.heading} pending={daily.date} view={view} stamp={stamp} onGo={onGo} />
+      <Head
+        title={daily.title}
+        heading={view.heading}
+        pending={daily.date}
+        view={view}
+        stamp={stamp}
+        span={windowText(daily.window)}
+        onGo={onGo}
+      />
       {view.lead && (
         <Lead lead={view.lead} board={board} reminder={reminderTemplate(remind, boardConfig(board))} draft={dailyDraft(board, daily)} />
       )}
@@ -88,11 +99,9 @@ export function DailyIssue({ screen, board, fallbackTitle, date, remind, onGo, o
         <PageState title={DAILY_COPY.empty} />
       ) : (
         <View>
-          <View className="daily-secs">
-            {view.sections.map((section) => (
-              <Section key={section.key} section={section} onOpen={(id) => openPage(itemPage(board, id))} />
-            ))}
-          </View>
+          {view.sections.map((section) => (
+            <Section key={section.key} section={section} onOpen={(id) => openPage(itemPage(board, id))} />
+          ))}
           <View className="daily-note">
             <AiBadge />
             <Text className="daily-note__text">{DAILY_COPY.note}</Text>
@@ -112,42 +121,52 @@ interface HeadProps {
   view?: DailyView | null;
   /** 快照的时间标记（“08:05 的内容”）。 */
   stamp?: string | null;
+  /** 时间窗“11月5日 08:00 至 11月6日 08:00”（components/reading/derive.ts 的 windowText）；没有时不画。 */
+  span?: string | null;
   /** 日期切换不改变页面栈。 */
   onGo?: (date: string) => void;
 }
 
-function Head({ title, heading, pending, view = null, stamp, onGo }: HeadProps) {
+function Head({ title, heading, pending, view = null, stamp, span = null, onGo }: HeadProps) {
+  // 日数（“06”）只在日期合法时画；没有日数时刊名和读数都从页边起，有日数时读数对齐内容栏（x=88）。
+  const day = heading && pending ? pending.slice(-2) : null;
   return (
     <View className="daily-head">
       <View className="daily-nav">
         <DayButton icon={prevIcon} label="前一天" target={view?.prev ?? null} onGo={onGo} />
-        <Text className="daily-head__date num">{heading ? `${heading.day} · ${heading.weekday}` : pending}</Text>
+        <Text className="daily-nav__date">{heading ? `${heading.day} ${heading.weekday}` : pending}</Text>
         <DayButton icon={nextIcon} label="后一天" target={view?.next ?? null} onGo={onGo} after />
       </View>
-      {stamp && <Text className="daily-head__stamp num">{stamp}</Text>}
-      <View className="daily-head__reading">
-        <View className="daily-head__today">
-          <Text className="daily-head__k">REECHI DAILY</Text>
+      {stamp && <Text className="daily-head__stamp">{stamp}</Text>}
+      <View className="daily-head__issue">
+        {day && <Text className="daily-head__day num">{day}</Text>}
+        <View className="daily-head__id">
           <Text className="daily-head__title">{title}</Text>
+          {span && <Text className="daily-head__span">{span}</Text>}
         </View>
-        {heading && pending && <Text className="daily-head__number num">{pending.slice(-2)}</Text>}
       </View>
-      <View className="daily-head__meters num">
-        <Meter value={view ? String(view.sectionCount) : "—"} unit="个分节" />
-        <Meter value={view ? String(view.itemCount) : "—"} unit="条" />
-        <Meter value={DAILY_COPY.issueTime} unit="出刊" />
+      <View className={day ? "daily-head__readings daily-head__readings--indent" : "daily-head__readings"}>
+        <View className="daily-head__reading">
+          <Reading value={view ? view.sectionCount : "—"} after="个分节" size="l" />
+        </View>
+        <View className="daily-head__reading">
+          <Reading value={view ? view.itemCount : "—"} after="条" size="l" />
+        </View>
+        <View className="daily-head__reading">
+          <Reading value={DAILY_COPY.issueTime} after="出刊" size="l" />
+        </View>
       </View>
     </View>
   );
 }
 
-/** 44px 日期切换触控区；没有相邻期时禁用。 */
+/** 翻页按钮：44 高，文字加箭头；没有相邻期（或内容还没到）时禁用。 */
 interface DayButtonProps {
   icon: string;
   label: string;
   target: string | null;
   onGo?: (date: string) => void;
-  /** 第二个按钮，和第一个隔 4。 */
+  /** “后一天”：箭头在字后面。 */
   after?: boolean;
 }
 
@@ -155,32 +174,23 @@ function DayButton({ icon, label, target, onGo, after }: DayButtonProps) {
   const on = target !== null && !!onGo;
   return (
     <View
-      className={`daily-nav__btn${after ? " daily-nav__btn--after" : ""}${on ? "" : " daily-nav__btn--off"}`}
+      className={on ? "daily-nav__btn" : "daily-nav__btn daily-nav__btn--off"}
       hoverClass={on ? "daily-nav__btn--down" : "none"}
       ariaRole="button"
       ariaLabel={label}
       onClick={on ? () => onGo!(target!) : undefined}
     >
-      <View className="daily-nav__ring">
-        <Image className="daily-nav__icon" src={icon} />
-      </View>
-    </View>
-  );
-}
-
-function Meter({ value, unit }: { value: string; unit: string }) {
-  return (
-    <View className="daily-head__meter">
-      <Text className="daily-head__value">{value}</Text>
-      <Text className="daily-head__unit">{unit}</Text>
+      {!after && <Image className="daily-nav__icon daily-nav__icon--prev" src={icon} />}
+      <Text>{label}</Text>
+      {after && <Image className="daily-nav__icon daily-nav__icon--next" src={icon} />}
     </View>
   );
 }
 
 /**
- * 头条卡。按钮行：“收藏”（components/save-button，日报 tab 和某期日报页都有，D28）；“提醒我明天的日报”（reminder 是订阅模板 id，
- * 为 null 时不画）下面一行写“点一次只提醒一次……”；“分享日报”是 open-type 为 share 的按钮，走页面的分享回调（lib/use-share.ts），
- * 分享的是正在看的这一期。
+ * 头条：“今日头条”栏头（头条或导语是模型写的就标“AI 摘要”）、头条和导语。按钮行：“收藏”（描边，日报 tab 和某期日报页都有，D28）和
+ * “分享日报”（墨底、只写字，open-type 为 share，分享正在看的这一期）；“提醒我明天的日报”只在日报 tab 且配了模板 id，单独一行通栏描边，
+ * 下面一句提示。
  */
 interface LeadProps {
   lead: NonNullable<DailyView["lead"]>;
@@ -193,31 +203,27 @@ function Lead({ lead, board, reminder, draft }: LeadProps) {
   return (
     <View className="daily-lead">
       {lead.headline && (
-        <View className="daily-lead__headline">
-          <View className="daily-lead__row">
-            <View className="daily-lead__flag">
-              今日头条
-            </View>
-            <View className="daily-lead__gap" />
-            {lead.ai && <AiBadge />}
+        <View>
+          <HeadTab label="今日头条" aside={lead.ai ? <AiBadge /> : null} />
+          <View className="daily-lead__body">
+            {lead.headline.title && (
+              <Text className="daily-lead__title" userSelect>
+                {lead.headline.title}
+              </Text>
+            )}
+            {lead.headline.paragraph && (
+              <Text className="daily-lead__text" userSelect>
+                {lead.headline.paragraph}
+              </Text>
+            )}
           </View>
-          {lead.headline.title && (
-            <Text className="daily-lead__title" userSelect>
-              {lead.headline.title}
-            </Text>
-          )}
-          {lead.headline.paragraph && (
-            <Text className="daily-lead__text" userSelect>
-              {lead.headline.paragraph}
-            </Text>
-          )}
         </View>
       )}
       <View className="daily-lead__acts">
         <SaveButton draft={draft} variant="daily" />
-        {reminder && <RemindButton board={board} templateId={reminder} className="daily-btn daily-btn--ghost" iconClassName="daily-btn__icon" />}
-        <ShareButton label="分享日报" className={reminder ? "daily-btn daily-btn--solid daily-btn--next" : "daily-btn daily-btn--solid"} iconClassName="daily-btn__icon" />
+        <ShareButton label="分享日报" className="daily-btn daily-btn--ink" />
       </View>
+      {reminder && <RemindButton board={board} templateId={reminder} className="daily-btn--line" iconClassName="daily-btn__icon" />}
       {reminder && <Text className="daily-lead__hint">{REMINDER_COPY.hint}</Text>}
     </View>
   );
@@ -226,26 +232,16 @@ function Lead({ lead, board, reminder, draft }: LeadProps) {
 function Section({ section, onOpen }: { section: DailySectionView; onOpen: (itemId: string) => void }) {
   return (
     <View className="daily-sec">
-      <View className="daily-sec__head">
-        {section.color ? (
-          <View className="daily-sec__dot" style={{ background: section.color }} />
-        ) : (
-          <View className="daily-sec__dot daily-sec__dot--flash" />
-        )}
-        <Text className="daily-sec__label">{section.label}</Text>
-        {section.ai && (
-          <View className="daily-sec__badge">
-            <AiBadge />
+      {/* 节名不是模型写的；节里任一条目的标题是模型写的就在栏头旁标一次（用户协议：日报在每个分节标题旁标）。分节不画分类色。 */}
+      <HeadTab label={section.label} aside={[section.ai && <AiBadge />, <Reading value={section.count} after="条" size="s" />]} />
+      <View className="daily-sec__items">
+        {section.lines.map((line) => (
+          <View key={line.key} className="daily-line" ariaRole="button" ariaLabel={line.title} hoverClass="daily-line--down" onClick={() => onOpen(line.itemId)}>
+            <Text className="daily-line__title">{line.title}</Text>
+            <Text className="daily-line__source">{line.source}</Text>
           </View>
-        )}
-        <Text className="daily-sec__count num">{section.count} 条</Text>
+        ))}
       </View>
-      {section.lines.map((line) => (
-        <View key={line.key} className="daily-line" ariaRole="button" ariaLabel={line.title} hoverClass="daily-line--down" onClick={() => onOpen(line.itemId)}>
-          <Text className="daily-line__title">{line.title}</Text>
-          <Text className="daily-line__source">{line.source}</Text>
-        </View>
-      ))}
     </View>
   );
 }

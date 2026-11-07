@@ -1,55 +1,42 @@
 @use "../../styles/tokens" as *;
 
-.reechi { padding-bottom: 8px; background: $work; color: $ink; }
-.reechi-head {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  min-height: 370px;
-  padding: 28px 24px 62px;
-  overflow: hidden;
-  background: $ink;
-  color: $work;
-}
-.reechi-head__logo { position: absolute; left: 24px; top: 24px; width: 28px; height: 28px; border-radius: 7px; }
-.reechi-head__text { position: relative; z-index: 1; min-width: 0; padding-top: 46px; }
-.reechi-head__eyebrow { display: block; color: #b7c0bb; font-size: 12px; line-height: 20px; letter-spacing: 2px; }
-.reechi-head__name { display: block; white-space: pre-line; margin-top: 30px; font-size: 35px; line-height: 51px; font-weight: 750; letter-spacing: -.6px; }
-.reechi-head__lead { display: block; max-width: 290px; margin-top: 18px; color: #d5d8d2; font-size: 15px; line-height: 25px; overflow-wrap: break-word; }
-.reechi-head__contact { display: inline-flex; align-items: center; min-height: 42px; margin-top: 20px; padding: 0 17px; border: 1px solid #7c8985; border-radius: 3px; color: $work; font-size: 13px; font-weight: 600; }
-.reechi-head__contact--down { opacity: .7; }
-.reechi-head__mark { position: absolute; right: -58px; top: 60px; width: 240px; height: 240px; opacity: .13; transform: rotate(-12deg); }
-.reechi-content { position: relative; z-index: 1; margin-top: -30px; padding: 28px 0 0; border-radius: 28px 28px 0 0; background: $work; }
-.sheet { position: relative; margin: 0 18px 14px; padding: 22px 18px; background: $card; border-radius: 5px; }
-.sheet--list { padding: 4px 0; }
-.sheet__eyebrow { display: block; margin-bottom: 8px; color: $accent; font-size: 10px; line-height: 15px; letter-spacing: 1.2px; }
-.sheet__title { display: block; font-size: 22px; line-height: 30px; font-weight: 700; letter-spacing: -.2px; }
-.sheet__head { padding: 12px 16px 4px; font-size: 18px; }
-.sheet__text { display: block; margin-top: 12px; color: $body; font-size: 14px; line-height: 25px; overflow-wrap: break-word; }
-.sheet__pad { padding: 0 16px; }
-.sheet__foot { margin-top: 4px; padding-bottom: 12px; }
-.product-visual { position: relative; height: 220px; margin: 18px -4px 6px; overflow: hidden; background: #e6e6e4; border-radius: 6px; }
-.product-visual--line { height: 150px; }
-.product-visual__image { width: 100%; height: 100%; }
-.product-visual__caption { position: absolute; left: 0; bottom: 0; padding: 5px 9px; background: rgba(21,31,33,.82); color: $work; font-size: 11px; }
-.source-note { display: block; margin-top: 10px; color: $iron; font-size: 11px; }
-.tiles { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.tile { flex: 1 1 130px; padding: 17px 14px; background: #e7ebe4; border-radius: 10px; }
-.tile__name { display: block; font-size: 16px; line-height: 24px; font-weight: 600; overflow-wrap: break-word; }
-.tile__text { display: block; margin-top: 5px; color: $body; font-size: 14px; line-height: 24px; overflow-wrap: break-word; }
-.cell { display: flex; align-items: center; min-height: 48px; padding: 0 14px 0 16px; }
-.cell--down { background: $work; }
-.cell__ico { flex: none; width: 20px; height: 20px; margin-right: 12px; }
-.cell__body { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; min-height: 48px; }
-.cell--rule .cell__body { border-top: 1px solid $rule; }
-.cell__lbl { flex: 1; font-size: 15px; line-height: 21px; }
-.cell__chev { flex: none; width: 16px; height: 16px; }
-.contact__text { flex: 1; min-width: 0; padding: 8px 0; }
-.contact__label { display: block; color: $iron; font-size: 12px; line-height: 17px; }
-.contact__value { display: block; font-size: 14px; line-height: 21px; overflow-wrap: break-word; }
-.contact__verb { flex: none; margin-left: 12px; color: $accent; font-size: 12px; line-height: 18px; font-weight: 600; }
-.contact--off .contact__value { color: $body; }
-.contact--off .contact__verb { color: $rail; font-weight: 400; }
-.note { padding: 14px 20px 16px; }
-.note__line { display: block; color: $iron; font-size: 12px; line-height: 19px; overflow-wrap: break-word; }
-.note__log { margin-top: 6px; }
+.reechi { padding-bottom: 8px; }
+// 页首版图下面：logo 和“锐奇”一行，介绍，墨底“联系我们”。
+.org { padding: 22px $page 0; }
+.org__top { display: flex; align-items: center; }
+.org__logo { flex: none; display: block; width: 48px; height: 48px; margin-right: 12px; }
+.org__name { @include type(28px, 36px, 600); }
+.org__lead { display: block; margin-top: 16px; @include type-body; }
+.org__contact { @include btn-ink; display: inline-flex; margin-top: 18px; }
+.org__contact--down { background-color: $ink-press; }
+
+// 栏目：钴蓝栏头或纸底功能栏头，正文在页边内，可点的行通栏。
+.reechi-block { margin-top: $section; }
+.reechi-block__body { padding: 14px $page 0; }
+.reechi-rows { padding-top: 6px; }
+.product { padding: 12px 0 14px; }
+.product__name { display: block; @include type-card; }
+.product__use { display: block; margin-top: 2PX; @include type-meta; }
+.product__text { display: block; margin-top: 4PX; @include type-summary; }
+.reechi-figure { margin-top: 10px; }
+.reechi-para { display: block; @include type-body; }
+.reechi-para + .reechi-para { margin-top: 14px; }
+.reechi-legal { display: block; @include type-legal; }
+.reechi-legal + .reechi-legal { margin-top: 12px; }
+
+// 联系方式：整行可点，按下通栏变 $press；右边是描边小按钮的样子（点哪儿都一样）。值是占位时禁用。
+.contact { display: flex; align-items: center; min-height: 64px; padding: 10px $page; }
+.contact--down { background-color: $press; }
+.contact__main { flex: 1; min-width: 0; margin-right: 16px; }
+.contact__label { display: block; @include type-meta; }
+.contact__value { display: block; margin-top: 2PX; @include type(16px, 24px, 400); overflow-wrap: break-word; }
+.contact__note { display: block; margin-top: 2PX; @include type-meta; }
+.contact__verb { @include btn-line; @include btn-sm; flex: none; }
+.contact--off .contact__value { color: $mute; }
+.contact--off .contact__verb { @include btn-off; }
+
+// 文档入口：52 高，整行可点。
+.reechi-doc { display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 $page; }
+.reechi-doc--down { background-color: $press; }
+.reechi-doc__label { @include type(16px, 22px, 400); }
+.reechi-doc__chev { flex: none; display: block; width: 18px; height: 18px; }

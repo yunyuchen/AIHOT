@@ -1,15 +1,4 @@
 @use "../../styles/tokens" as *;
 
-.ai-badge {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  min-height: 18px;
-  padding-left: 9px;
-  border-left: 1px solid currentColor;
-  color: $accent;
-  font-size: 11px;
-  line-height: 18px;
-  font-weight: 500;
-  white-space: nowrap;
-}
+// “AI 摘要”：1PX 次要色细框，12/500 正文色字，20 高。文字不能改（用户协议第 3 节）。
+.ai-badge { box-sizing: border-box; display: inline-flex; align-items: center; flex: none; height: 20px; padding: 0 6px; border: $hair solid $mute; font-size: 12px; line-height: 18px; font-weight: 500; color: $body; white-space: nowrap; }

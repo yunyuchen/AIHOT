@@ -1,4 +1,4 @@
-// 下钻页（条目页、事件页、某期日报页）共用的两种整屏状态：“已下线或不存在”和占位。样子是 page-state 的白卡。
+// 下钻页（条目页、事件页、某期日报页）共用的两种整屏状态：“已下线或不存在”和占位。样子是 page-state 的左对齐状态块。
 import { useEffect } from "react";
 import type { BoardKey } from "../../../config/boards";
 import { boardConfig } from "../../lib/build-config";

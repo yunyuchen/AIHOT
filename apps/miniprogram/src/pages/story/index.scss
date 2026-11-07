@@ -1,262 +1,29 @@
 @use "../../styles/tokens" as *;
 
-.story {
-  padding-bottom: 16px;
-}
-.story-top {
-  height: 0;
-  background: $work;
-}
+.story { padding-bottom: 24px; }
+.story__status { display: block; padding: 24px $page; @include type-meta; }
 
-// ---------- 事件卡 ----------
-.story-card {
-  position: relative;
-  margin: 0;
-  padding: 24px 20px;
-  border-radius: 0;
-  background: $card;
-}
-.story-card__status {
-  display: block;
-  padding: 24px 0;
-  font-size: 13px;
-  line-height: 19px;
-  color: $iron;
-  text-align: center;
-}
-// 来源数量、首报、最新一行，格子之间竖线分隔。
-.story-card__span {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 0;
-}
-.story-echo {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 20px;
-  margin-right: 10px;
-  padding: 0 7px;
-  border-radius: 4px;
-  background: #e7ebe4;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.story-echo__bars {
-  display: flex;
-  margin-right: 6px;
-}
-.story-echo__bar {
-  width: 4px;
-  height: 4px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: $ink;
-  &:first-child {
-    margin-left: 0;
-  }
-}
-.story-fact {
-  padding: 0 10px;
-  border-left: 1px solid $rule;
-  line-height: 18px;
-  white-space: nowrap;
-  &:last-child {
-    padding-right: 0;
-  }
-}
-.story-fact--lead {
-  padding-left: 0;
-  border-left: 0;
-}
-.story-fact__k {
-  font-size: 12px;
-  color: $iron;
-}
-.story-fact__v {
-  margin-left: 5px;
-  font-size: 13px;
-  font-weight: 600;
-}
-// 标题；“AI 摘要”跟在标题最后一个字后面。
-.story-card__title {
-  margin-top: 24px;
-  font-size: 29px;
-  line-height: 43px;
-  font-weight: 700;
-  letter-spacing: 0;
-  overflow-wrap: break-word;
-}
-.story-card__ai {
-  display: inline-block;
-  margin-left: 6px;
-  vertical-align: 3px;
-  line-height: 0;
-  letter-spacing: 0;
-}
+// ---------- 读数行和标题 ----------
+.story-head { padding: 22px $page 0; }
+.story-head__readings { display: flex; flex-wrap: wrap; align-items: baseline; }
+.story-head__reading { margin: 0 20px 6px 0; }
+.story-head__title { margin-top: 8px; @include type-article; }
+// “AI 摘要”跟在标题最后一个字后面。
+.story-head__ai { display: inline-block; margin-left: 6px; vertical-align: 3PX; line-height: 0; }
 
-.story-row {
-  display: flex;
-  align-items: center;
-  min-height: 20px;
-}
-.story-row__badge {
-  display: flex;
-  margin-left: 6px;
-}
-.story-row__gap {
-  flex: 1;
-  min-width: 6px;
-}
-
-// “事件综述”。
-.story-brief {
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 2px solid $accent;
-}
-.story-brief__title {
-  font-size: 19px;
-  line-height: 28px;
-  font-weight: 700;
-}
-.story-brief__text {
-  display: block;
-  margin-top: 16px;
-  font-size: 17px;
-  line-height: 29px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-
-// ---------- 谁在报，怎么说：首报在上，后续往下接 ----------
-.story-reports {
-  margin: 8px 22px 0;
-  padding: 24px 0 0;
-  border-top: 1px solid $rule;
-  border-radius: 0;
-  background: $card;
-}
-.story-reports__title {
-  font-size: 20px;
-  line-height: 29px;
-  font-weight: 700;
-}
-.story-reports__order {
-  font-size: 12px;
-  color: $iron;
-}
-.story-tl {
-  margin-top: 10px;
-}
-.story-rp {
-  position: relative;
-  padding: 0 0 9px 24px;
-  // 这一条到下一条的轴段。
-  &::before {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 9px;
-    bottom: -9px;
-    width: 2px;
-    background: $rail;
-  }
-}
-// 最新一条往下是虚线，接到“接着往下长”那个空心圈。
-.story-rp--latest::before {
-  width: 0;
-  bottom: -17px;
-  background: none;
-  border-left: 2px dashed $rail;
-}
-.story-rp--down {
-  opacity: 0.6;
-}
-.story-rp__dot {
-  position: absolute;
-  z-index: 1;
-  left: 0;
-  top: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: $ink;
-}
-.story-rp--latest .story-rp__dot {
-  background: $star;
-}
-.story-rp__meta {
-  display: flex;
-  align-items: center;
-  min-height: 18px;
-}
-.story-rp__source {
-  min-width: 0;
-  overflow: hidden;
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.story-rp__tag {
-  flex: none;
-  height: 18px;
-  margin-left: 6px;
-  padding: 0 6px;
-  border-radius: 4px;
-  background: #e7ebe4;
-  font-size: 11px;
-  line-height: 18px;
-  font-weight: 600;
-}
-.story-rp__date {
-  flex: none;
-  font-size: 12px;
-  line-height: 18px;
-  color: $iron;
-}
-.story-rp__title {
-  display: block;
-  margin-top: 8px;
-  padding-bottom: 16px;
-  font-size: 17px;
-  line-height: 28px;
-  overflow-wrap: break-word;
-}
-// 没有条目页的报道不能点，标题用正文灰，和能点的分开。
-.story-rp__title--plain {
-  color: $body;
-}
-
-.story-grow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  padding-left: 24px;
-}
-.story-grow__ring {
-  border: 2px solid $rail;
-  box-sizing: border-box;
-  position: absolute;
-  left: 0;
-  top: 17px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: $card;
-}
-.story-grow__text {
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-
-.story-state {
-  position: relative;
-  margin-top: 0;
-}
+// ---------- 事件综述、谁在报 ----------
+.story-block { margin-top: $section; }
+.story-block__body { padding: 14px $page 0; }
+.story-block__text { display: block; @include type-body; }
+.story-reports { padding-top: 8px; }
+// 每条报道整行可点（有条目页时），按下通栏变 $press。不画轴线、圆点和虚线。
+.story-rp { padding: 10px $page; }
+.story-rp--down { background-color: $press; }
+.story-rp__meta { display: flex; align-items: center; min-height: 20px; }
+.story-rp__source { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; @include type(13px, 20px, 600); }
+.story-rp__tag { flex: none; margin-left: 8px; @include type(12px, 20px, 600); }
+.story-rp__date { flex: none; margin-left: auto; padding-left: 12px; @include type-meta; }
+.story-rp__title { display: block; margin-top: 4PX; @include type-line; }
+// 没有条目页的报道不能点，标题用正文色，和能点的分开。
+.story-rp__title--plain { color: $body; }
+.story-grow { display: block; padding: 10px $page 0; @include type(13px, 21px, 400, $mute); }

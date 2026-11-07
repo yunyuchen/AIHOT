@@ -1,15 +1,12 @@
 @use "./styles/tokens" as *;
 
+// 新闻纸是全站唯一底色。page 上挂几种颜色的 CSS 变量，留给运行时的内联样式（现在没有用到）。
 page {
+  --paper: #{$paper};
   --ink: #{$ink};
-  --star: #{$star};
-  --work: #{$work};
-  --card: #{$card};
-  --iron: #{$iron};
-  --fog: #{$fog};
   --body: #{$body};
-  --rail: #{$rail};
-  --tab: #{$tab};
+  --mute: #{$mute};
+  --cobalt: #{$cobalt};
   --c-battery: #{$c-battery};
   --c-storage: #{$c-storage};
   --c-semi: #{$c-semi};
@@ -18,15 +15,17 @@ page {
   --c-policy: #{$c-policy};
   --c-general: #{$c-general};
   min-height: 100%;
-  background: $work;
+  background-color: $paper;
   color: $ink;
   font-family: $font;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  --tab-clearance: 94px;
+  // 贴底 tabBar 52 + 1PX 上沿 + 约 24 的余量；条目页贴底操作条 64 + 1PX 也在这个范围内。
+  --tab-clearance: 76px;
   padding-bottom: calc(var(--tab-clearance) + env(safe-area-inset-bottom));
 }
 
+// 读数用等宽数字；字体、字重、颜色由 num、cond mixin 给。
 .num {
   font-variant-numeric: tabular-nums;
 }

@@ -1,72 +1,16 @@
 @use "../../styles/tokens" as *;
 
-.page-state {
-  margin: 16px;
-  padding: 20px 16px;
-  background: $card;
-  border-radius: 8px;
-  text-align: center;
-}
-.page-state__title {
-  display: block;
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 600;
-}
-.page-state__detail {
-  display: block;
-  margin-top: 6px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $iron;
-}
-.page-state__retry {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 0 20px;
-  height: 44px;
-  line-height: 44px;
-  border-radius: 6px;
-  background: $ink;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-.page-state__retry--down {
-  opacity: 0.75;
-}
-.page-state__retry--ghost {
-  margin-left: 10px;
-  background: #eef0f2;
-  color: $ink;
-}
+// 整屏状态：左对齐的标题、一句说明、按钮行（实心在前，描边在后）。不画线、不加色块、不用钴蓝；失败和空态长得一样，靠文字区分。
+.page-state { margin: 24px $page 0; }
+.page-state__title { display: block; @include type(17px, 24px, 600); }
+.page-state__detail { display: block; margin-top: 6px; @include type(14px, 22px, 400, $body); overflow-wrap: break-word; }
+.page-state__retry { @include btn-ink; display: inline-flex; min-width: 96px; margin-top: 16px; vertical-align: top; }
+.page-state__retry--down { background-color: $ink-press; }
+.page-state__retry--ghost { margin-left: 12px; border: $hair solid $ink; background-color: $paper; color: $ink; }
+.page-state__retry--ghost.page-state__retry--down { background-color: $press; }
 
-// 顶部提示条：贴在深色头部下面，白底，右边“重试”。
-.stale-notice {
-  display: flex;
-  align-items: center;
-  margin: 12px 16px 0;
-  padding: 9px 12px;
-  background: $card;
-  border-radius: 8px;
-  min-height: 44px;
-  box-sizing: border-box;
-}
-.stale-notice--down {
-  opacity: 0.6;
-}
-.stale-notice__text {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 19px;
-  color: $body;
-}
-.stale-notice__retry {
-  flex: none;
-  margin-left: 12px;
-  font-size: 13px;
-  line-height: 19px;
-  font-weight: 600;
-  color: $ink;
-}
+// 有内容（含快照）时刷新失败：通栏一块下沉的纸，整条可点重试。不用钴蓝、不画线。
+.stale-notice { display: flex; align-items: center; min-height: $touch; margin-top: 16px; padding: 10px $page; background-color: $press; }
+.stale-notice--down { background-color: $press-deep; }
+.stale-notice__text { flex: 1; min-width: 0; @include type(13px, 19px, 400, $body); }
+.stale-notice__retry { flex: none; margin-left: 12px; @include type(13px, 19px, 600); }

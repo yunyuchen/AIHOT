@@ -1,5 +1,5 @@
 // 两个板块共用的分类筛选：“全部”固定在左侧，其余分类横向滚动。
-// 分类和顺序来自元信息，圆点颜色来自构建配置（lib/board-feed.ts 的 filterChips）。
+// 分类和顺序来自元信息，方块颜色来自构建配置（lib/board-feed.ts 的 filterChips）。
 import { ScrollView, View } from "@tarojs/components";
 import type { FilterChip } from "../../lib/board-feed";
 import "./index.scss";

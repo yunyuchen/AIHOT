@@ -1,18 +1,20 @@
 @use "../../styles/tokens" as *;
 
-.dash { padding: 16px 20px 24px; background: $work; color: $ink; }
-.dash__brand { display: flex; align-items: center; min-height: 32px; }
-.dash__logo { width: 24px; height: 24px; border-radius: 6px; }
-.dash__title { margin-left: 9px; font-size: 17px; font-weight: 600; }
-.dash__stamp { margin-left: auto; padding-left: 8px; color: $iron; font-size: 12px; }
-.dash__meta { display: flex; align-items: baseline; justify-content: space-between; margin-top: 22px; color: $work; }
-.dash--manufacturing { background: $ink; color: $work; }
-.dash--manufacturing .dash__stamp { color: $fog; }
-.dash__k { font-size: 14px; line-height: 22px; color: $star; }
-.dash__date { font-size: 14px; line-height: 22px; color: $work; }
-.dash--sports { padding-top: 16px; padding-bottom: 22px; background: $work; color: $ink; }
-.dash__reading { margin-top: 24px; }
-.dash__board { display: block; font-size: 38px; line-height: 1.2; font-weight: 700; letter-spacing: -1px; overflow-wrap: anywhere; }
-.dash__cover { position: relative; height: 176px; margin-top: 24px; overflow: hidden; border-radius: 10px; background: $ink; }
-.dash__cover-image { display: block; width: 100%; height: 100%; }
-.dash__cover-caption { position: absolute; right: 10px; bottom: 10px; padding: 4px 7px; border-radius: 3px; color: #fff; background: rgba(21, 31, 33, 0.72); font-size: 10px; line-height: 15px; }
+// ---------- 制造：钴蓝竖排刊头 ----------
+// 色块里只有钴蓝和纸色；logo 不压在色块里（深墨方块在钴蓝上只有 1.80:1，边缘发糊），放在右栏日期行最前面。
+.mast { display: flex; align-items: stretch; }
+// 竖排：每字一个块，34/42，靠顶排。四个字 168 + 上下内边距 38 = 206，min-height 留 208。
+.mast__band { flex: none; display: flex; flex-direction: column; align-items: center; width: $band; min-height: 208px; padding: 20px 0 18px; background-color: $cobalt; }
+.mast__char { display: block; @include type-mast; text-align: center; }
+// 右栏上下撑开：日期贴顶，焦点标题压到色块底边。
+.mast__main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 18px $page 14px $gutter; }
+.mast__date { display: flex; align-items: center; justify-content: space-between; }
+.mast__dayline { display: flex; align-items: center; min-width: 0; margin-right: 12px; }
+.mast__logo { flex: none; display: block; width: 24px; height: 24px; margin-right: 8px; }
+.mast__day { @include type(16px, 24px, 600); white-space: nowrap; }
+.mast__stamp { display: block; margin-top: 4PX; @include type-meta; }
+
+// ---------- 运动健康：栏头 + 栏目配图 ----------
+.dash-sports { padding-top: 16px; }
+.dash-sports__stamp { display: block; margin-top: 8px; padding: 0 $page; @include type-meta; }
+.dash-sports__cover { margin: 16px $page 0; }

@@ -1,20 +1,5 @@
 @use "../../styles/tokens" as *;
 
-.category-tag {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  height: 20px;
-  padding: 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: $accent;
-  white-space: nowrap;
-}
-.category-tag__dot {
-  flex: none;
-  width: 7px;
-  height: 7px;
-  margin-right: 5px;
-  border-radius: 50%;
-}
+// 分类：8×8 方块（分类色，1PX 墨边，靠墨边在新闻纸上看得见）加分类名，字一律正文色，不用分类色写字。
+.category-tag { display: inline-flex; align-items: center; flex: none; height: 20px; @include type-label; white-space: nowrap; }
+.category-tag__dot { @include swatch; margin-right: 6px; }

@@ -1,29 +1,27 @@
 @use "../../styles/tokens" as *;
 
-.feed-list__surface { padding-top: 10px; background: $work; color: $ink; }
-.feed-list__axis { position: relative; padding: 0 20px 24px; background: $work; color: $ink; }
-.feed-period { position: relative; }
-.feed-period__head { position: relative; z-index: 1; display: flex; align-items: center; min-height: 44px; padding-left: 0; }
-.feed-period__head--gap { margin-top: 18px; }
-.feed-period__name { font-size: 16px; line-height: 22px; font-weight: 700; }
-.feed-period__range { margin-left: 8px; font-size: 12px; line-height: 17px; color: $iron; }
-.feed-period__count { margin-left: auto; font-size: 12px; line-height: 17px; color: $iron; }
-.feed-card { position: relative; z-index: 1; margin: 0; border-bottom: 1px solid $rule; background: $work; }
-.feed-card--first { margin-top: 8px; }
-.feed-card__body { min-height: 44px; padding: 18px 2px; background: $work; }
-.feed-card__body--down { opacity: 0.85; }
-.feed-card__row { display: flex; align-items: center; }
-.feed-card__time { flex: none; margin-right: 8px; font-size: 12px; line-height: 20px; font-weight: 700; color: $iron; }
-.feed-card__gap { flex: 1; min-width: 6px; }
-.feed-card__title { margin-top: 8px; font-size: 19px; line-height: 29px; font-weight: 700; overflow-wrap: break-word; }
-.feed-card__title--read { color: $body; }
-.feed-card__summary { margin-top: 8px; font-size: 15px; line-height: 24px; color: $iron; overflow-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.feed-card__foot { display: flex; align-items: center; min-height: 20px; margin-top: 9px; }
-.feed-card__src { flex: 1; min-width: 0; font-size: 12px; line-height: 17px; color: $iron; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feed-card__echo { display: inline-flex; align-items: center; flex: none; height: 20px; margin-left: 8px; padding: 0; background: transparent; font-size: 12px; font-weight: 600; white-space: nowrap; color: $accent; }
-.feed-card__bars { display: none; margin-right: 6px; }
-.feed-card__bar { width: 4px; height: 4px; margin-left: 2px; border-radius: 50%; background: $ink; &:first-child { margin-left: 0; } }
-.feed-list__status { display: block; padding: 16px 16px 24px; font-size: 12px; line-height: 17px; color: $iron; text-align: center; }
-.feed-list__status--foot { padding-top: 0; }
-.feed-list__status--retry { color: $ink; font-weight: 600; }
-.feed-list__status--down { opacity: 0.6; }
+// 段：钴蓝栏头（components/head-tab）下面是卡片。第一段离筛选条 16（和原型 .period 一样）；
+// 段与段之间：上一段最后一张卡的下内边距 8 + 外边距 14 + 24 = 46。
+.feed-period { margin-top: 16px; }
+.feed-period + .feed-period { margin-top: 24px; }
+.feed-period__cards { padding-top: 12px; }
+// 整张卡可点：按下时通栏变 $press（从屏幕左缘到右缘）。卡与卡之间只留空：上下内边距 8 + 外边距 14，内容之间 30。
+.feed-entry { display: flex; padding: 8px $page; margin-bottom: 14px; }
+.feed-entry--down { background-color: $press; }
+// 索引栏：北京时刻，钴蓝 DIN Condensed 22。安卓回落到 Roboto Condensed 时“18:27”约 49 宽，放得进 52。
+.feed-entry__time { flex: none; width: $index; margin-right: $gutter; @include cond(22px, 22px); white-space: nowrap; }
+.feed-entry__main { flex: 1; min-width: 0; }
+.feed-entry__meta { display: flex; align-items: center; min-height: 20px; margin-bottom: 6px; }
+.feed-entry__gap { flex: 1; min-width: 8px; }
+.feed-entry__title { @include type-card; }
+.feed-entry__title--read { color: $body; }
+.feed-entry__summary { margin-top: 6px; @include type-summary; @include clamp(3); }
+.feed-entry__foot { display: flex; align-items: baseline; margin-top: 8px; }
+.feed-entry__src { flex: 1; min-width: 0; @include type-meta; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-entry__echo { flex: none; margin-left: 12px; }
+
+// 底部状态：加载中、没有更早的了（次要色）；续页失败（墨色 600，整行可点、按下变 $press）。
+.feed-list__status { display: block; padding: 16px $page 24px; @include type-meta; }
+.feed-list__status--indent { padding-left: $content-x; }
+.feed-list__status--retry { display: flex; align-items: center; min-height: $touch; margin-bottom: 16px; padding-top: 0; padding-bottom: 0; @include type(13px, 20px, 600); }
+.feed-list__status--down { background-color: $press; }

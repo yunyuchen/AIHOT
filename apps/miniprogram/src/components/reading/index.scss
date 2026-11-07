@@ -1,0 +1,10 @@
+@use "../../styles/tokens" as *;
+
+.reading { display: inline-flex; align-items: baseline; flex: none; white-space: nowrap; }
+.reading__num { @include num(18px, 22px); }
+.reading--s .reading__num { font-size: 16px; line-height: 20px; }
+.reading--l .reading__num { font-size: 20px; line-height: 24px; }
+.reading__unit { @include type-meta; }
+.reading__unit--body { color: $body; }
+.reading__unit--before { margin-right: 4PX; }
+.reading__unit--after { margin-left: 3PX; }

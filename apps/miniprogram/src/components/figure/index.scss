@@ -1,0 +1,10 @@
+@use "../../styles/tokens" as *;
+
+// 外边距由调用方给。图还没出来时先是一块下沉的纸。
+.figure__img { display: block; width: 100%; height: 246px; background-color: $press; }
+.figure--plate .figure__img { height: 258px; }
+.figure--cover .figure__img { height: 176px; }
+.figure__cap { display: flex; justify-content: space-between; margin-top: 8px; @include type-meta; }
+.figure--plate .figure__cap { padding: 0 $page; }
+.figure__name { flex: 1; min-width: 0; color: $ink; }
+.figure__src { flex: none; margin-left: 12px; color: $mute; }

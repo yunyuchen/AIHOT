@@ -1,9 +1,11 @@
 @use "../../styles/tokens" as *;
 
-.filter-bar { position: relative; display: flex; margin: 0; padding: 0 16px; background: $work; border-bottom: 1px solid $rule; }
+// “全部”固定在左，后面的分类横着滑。选中项墨色 600 加一根 2PX 墨线；分类名前 8px 方块。不画底线、不加底色。
+// 左右内边距 10 + 每项内边距 10：第一个字从 x=20 起。
+.filter-bar { display: flex; margin-top: 16px; padding: 0 10px; }
 .filter-bar__scroll { flex: 1; min-width: 0; white-space: nowrap; }
-.filter-seg { display: inline-flex; align-items: center; justify-content: center; height: 44px; margin-left: 2px; padding: 0 12px; font-size: 14px; font-weight: 500; color: $ink; white-space: nowrap; vertical-align: top; }
-.filter-seg--all { flex: none; width: 52px; margin-left: 0; padding: 0; }
-.filter-seg--on { background: transparent; color: $accent; font-weight: 600; border-bottom: 2px solid $accent; }
-.filter-seg--down { background: $work; }
-.filter-seg__dot { flex: none; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; }
+.filter-seg { @include chip; }
+.filter-seg--all { flex: none; }
+.filter-seg--on { @include chip-on; }
+.filter-seg--down { background-color: $press; }
+.filter-seg__dot { @include swatch; margin-right: 6px; }

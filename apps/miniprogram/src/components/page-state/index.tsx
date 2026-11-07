@@ -10,7 +10,7 @@ interface Props {
   onRetry?: () => void;
   /** 重试以外的按钮（条目已下线时“回到精选”），样子和重试一样。 */
   action?: { text: string; onClick: () => void };
-  /** 第二个按钮，浅灰底，排在后面（收藏过的条目已下线时，“从收藏移除”后面的“回到精选”）。 */
+  /** 第二个按钮，描边，排在后面（收藏过的条目已下线时，“从收藏移除”后面的“回到精选”）。 */
   secondary?: { text: string; onClick: () => void };
 }
 

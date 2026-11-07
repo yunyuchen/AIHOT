@@ -1,0 +1,9 @@
+@use "../../styles/tokens" as *;
+
+.head-tab { display: flex; align-items: center; min-height: 30px; padding-right: $page; }
+.head-tab__block { @include head-tab; }
+.head-tab__aside { display: flex; align-items: center; flex-wrap: wrap; min-width: 0; margin-left: 12px; @include type-meta; }
+.head-tab__item { display: flex; align-items: center; }
+.head-tab__item--next { margin-left: 12px; }
+// plain 也带 .head-tab 类：清掉 .head-tab 的 30 最小高，功能栏头就是一行 22 高（和原型 .head--plain 一样）。
+.head-tab--plain { display: block; min-height: 0; @include head-plain; }

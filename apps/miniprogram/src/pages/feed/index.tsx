@@ -1,4 +1,4 @@
-// 制造板块的编辑式精选流；请求、快照、分页与运动健康共用。
+// 制造板块的精选流（钴蓝竖排刊头）；请求、快照、分页与运动健康共用。
 import { BoardFeed } from "../../components/board-feed";
 import { useTabShare } from "../../lib/use-share";
 import { useActiveTab } from "../../lib/use-active-tab";

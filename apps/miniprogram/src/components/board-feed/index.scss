@@ -1,6 +1,0 @@
-@use "../../styles/tokens" as *;
-
-.board-feed--focus { background: $ink; }
-.board-reading { position: relative; z-index: 2; background: $work; padding-top: 24px; }
-.board-feed--focus .board-reading { margin-top: -18px; border-radius: 28px 28px 0 0; }
-.board-reading__heading { display: block; margin: 0 22px 16px; color: $ink; font-size: 24px; line-height: 33px; font-weight: 700; }

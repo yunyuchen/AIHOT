@@ -1,44 +1,6 @@
 @use "../../styles/tokens" as *;
 
-// 收藏状态和点击行为独立于页面布局；item 位于底部操作条，daily 在头条下方。
-.save-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  border-radius: 6px;
-  color: $ink;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.save-btn--down {
-  opacity: 0.75;
-}
-
-// 条目页操作条内保留足够触控宽度。
-.save-btn--item {
-  flex: 0 0 98px;
-  background: transparent;
-  color: $work;
-}
-.save-btn--item .save-btn__icon {
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-}
-.save-btn--item .save-btn__icon { filter: brightness(0) invert(1); }
-
-// 日报按钮行可换行，提醒文案不挤占收藏/分享。
-.save-btn--daily {
-  flex: none;
-  height: 46px;
-  padding: 0 12px;
-  background: #e7ebe4;
-}
-.save-btn--daily .save-btn__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-}
+// 描边按钮：墨线、纸底、墨字、墨色书签（PNG 本身是墨色，不用 filter）。收藏以后换实心书签；条目页的字变“已收藏”，日报的字一直是“收藏”。
+.save-btn { @include btn-line; flex: 1; min-width: 0; }
+.save-btn--down { background-color: $press; }
+.save-btn__icon { flex: none; display: block; width: 18px; height: 18px; margin-right: 6px; }

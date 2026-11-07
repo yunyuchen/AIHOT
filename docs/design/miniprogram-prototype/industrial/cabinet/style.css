@@ -1,0 +1,219 @@
+/* 机柜灰 · 设备期刊。
+   机柜灰做页面底和面板之间的缝，白面板是阅读面，炭灰是导航栏、tabBar、刊头和铭牌；信号黄只做指示灯。
+   只用类选择器（少量后代选择器），零圆角、零阴影；圆只给指示灯。
+   色值挂在根上（小程序里挂在 page 上），页面内容和贴底的 tabBar、操作条都取得到。 */
+:root {
+  --cab: #d3d6d2;      /* 机柜灰 RAL 7035：页面底、面板之间的缝 */
+  --panel: #ffffff;    /* 面板白：阅读面 */
+  --inset: #eef0ed;    /* 面板里的读数条底 */
+  --seam: #e2e5e1;     /* 面板里的分隔线 */
+  --plate: #353b3f;    /* 炭灰 RAL 7016：导航栏、tabBar、刊头、铭牌、实心按钮 */
+  --plate-down: #24292c;
+  --plate-sub: #b9bfc3;/* 炭灰上的次要字 */
+  --plate-off: #23282b;/* 没亮的灯 */
+  --plate-dim: #80878c;/* 炭灰上的禁用字 */
+  --ink: #1c2023;
+  --body: #394045;
+  --sub: #5a6166;
+  --lamp: #f2b100;     /* 信号黄：只做指示灯 */
+  --off: #f1f2f0;      /* 禁用按钮底 */
+  --off-ink: #7c8388;
+  --cn: -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --din: "DIN Alternate", "Helvetica Neue", Roboto, -apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --dinc: "DIN Condensed", "Helvetica Neue", "sans-serif-condensed", Roboto, sans-serif;
+}
+.cab, .tabs, .bar {
+  font-family: var(--cn);
+  -webkit-font-smoothing: antialiased;
+}
+.cab {
+  display: flow-root; /* 原型展开截图时第一块面板的 8px 缝不和外层 margin 合并；小程序页面本身就是滚动容器，不需要 */
+  min-height: 100%;
+  background: var(--cab);
+  color: var(--ink);
+  font-family: var(--cn);
+  font-size: 15px;
+  line-height: 24px;
+}
+/* 标签重置只用元素选择器，权重低于类，各角色自己的 margin 才生效。 */
+p, h2, h3, figure { margin: 0; font-weight: inherit; }
+.grow { flex: 1; min-width: 0; }
+.din { font-family: var(--din); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- 面板：整宽贴边，之间 8px 机柜灰缝 ---------- */
+.panel { margin-top: 8px; padding: 0 16px 20px; background: var(--panel); }
+/* 列表面板（精选的时段、日报的分节）：上面的 8px 缝画在面板头上，跟着面板头一起吸顶。 */
+.panel--list { margin-top: 0; padding: 0 0 4px; }
+.panel--list .head { padding: 0 16px; }
+/* 面板头：铭牌从面板上沿挂下来（贴着上面的缝），右边的分类、AI 标记、条数和铭牌文字落在同一条中线上。 */
+.head { display: flex; align-items: center; gap: 10px; height: 30px; }
+/* 吸顶的面板头：滚过面板时铭牌挂在导航栏下沿，直到下一块面板顶上来。
+   缝跟着走，吸住时铭牌和炭灰导航栏之间仍隔着 8px 机柜灰，不会连成一片。 */
+.head--stick { position: sticky; top: 0; z-index: 2; height: 38px; border-top: 8px solid var(--cab); background: var(--panel); }
+
+/* ---------- 铭牌：炭灰底 13px 白字，数字 DIN Alternate；贴面板上沿挂着。整套界面里炭灰实心的小牌子只有它 ---------- */
+.plate { flex: none; align-self: flex-start; display: inline-flex; align-items: center; height: 30px; padding: 0 11px 0 12px; background: var(--plate); color: #fff;
+  font-family: var(--din); font-size: 13px; line-height: 30px; font-weight: 500; letter-spacing: 1px; white-space: nowrap; }
+.plate__f { margin-left: 10px; padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, 0.24); font-family: var(--din); font-size: 13px; line-height: 13px; color: var(--plate-sub); }
+/* 铭牌里的分类方块装在一块 12px 白色小窗里，方块本身和白面板、筛选条上的完全一样。 */
+.plate__win { flex: none; display: flex; align-items: center; justify-content: center; width: 12px; height: 12px; margin-right: 7px; background: #fff; }
+
+/* ---------- 指示灯：信号黄小圆灯，只标“现在在哪” ---------- */
+.lamp { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--lamp);
+  box-shadow: 0 0 0 2px rgba(242, 177, 0, 0.16), 0 0 6px rgba(242, 177, 0, 0.65); }
+.plate .lamp { margin-right: 7px; }
+/* 白面板上的灯：装在一小块炭灰方座上（灯永远在炭灰上亮），不画成圆环，免得像单选框。 */
+.lamp--seat { width: 14px; height: 14px; border-radius: 0; box-shadow: none;
+  background: radial-gradient(circle, #f2b100 0, #f2b100 3px, rgba(242, 177, 0, 0.35) 3.6px, rgba(242, 177, 0, 0) 5.5px), var(--plate); }
+
+/* ---------- 分类：8px 方形指示灯 + 1px 深色边 ---------- */
+.cat { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink); white-space: nowrap; }
+.ind { flex: none; width: 8px; height: 8px; border: 1px solid var(--ink); }
+
+/* ---------- AI 摘要：白底描边的两格标记，不做炭灰实心，免得和铭牌混成同一种部件 ---------- */
+.ai { flex: none; display: inline-flex; align-items: stretch; height: 18px; border: 1px solid var(--sub); background: #fff; white-space: nowrap; }
+.ai__a { display: flex; align-items: center; padding: 0 4px; border-right: 1px solid var(--sub); color: var(--ink); font-family: var(--din); font-size: 11px; line-height: 16px; font-weight: 700; }
+.ai__b { display: flex; align-items: center; padding: 0 5px; color: var(--ink); font-size: 11px; line-height: 16px; font-weight: 400; }
+
+/* ---------- 按钮：44 高，直角；黄色不做按钮 ---------- */
+.btn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 44px; margin: 0; padding: 0 16px;
+  border: 1px solid var(--plate); border-radius: 0; background: var(--panel); color: var(--ink); font-family: var(--cn);
+  font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; box-sizing: border-box; }
+.btn--solid { background: var(--plate); color: #fff; }
+.btn--light { background: #fff; border-color: #fff; color: var(--ink); }
+.btn--ondark { background: transparent; border-color: rgba(255, 255, 255, 0.5); color: #fff; }
+.btn--off { background: var(--off); border-color: var(--cab); color: var(--off-ink); }
+.btn--wide { flex: 1; }
+.btn--block { display: flex; width: 100%; }
+.ico { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+.ico--s { width: 16px; height: 16px; }
+
+/* ---------- 读数条：浅灰底的一排读数，末端可以接一块炭灰按键 ---------- */
+.spec { display: flex; align-items: stretch; margin-top: 18px; background: var(--inset); }
+.spec__cell { padding: 10px 14px 11px; }
+.spec__cell--line { border-left: 1px solid var(--panel); }
+.spec__k { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: var(--sub); white-space: nowrap; }
+.spec__v { margin-top: 4px; font-family: var(--din); font-size: 22px; line-height: 24px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.spec--even .spec__cell { flex: 1; }
+.spec__u { margin-left: 3px; font-family: var(--cn); font-size: 13px; font-weight: 500; }
+.spec__key { margin-left: auto; display: flex; align-items: center; justify-content: center; min-width: 108px; padding: 0 18px;
+  background: var(--plate); color: #fff; font-size: 15px; font-weight: 600; white-space: nowrap; }
+
+/* ---------- 精选：刊头 ---------- */
+.mast { display: flex; align-items: center; gap: 12px; height: 76px; padding: 12px 16px 20px; background: var(--plate); color: #fff; }
+.mast__logo { flex: none; width: 44px; height: 44px; display: block; }
+.mast__name { font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: 2px; }
+.mast__read { margin-left: auto; text-align: right; }
+.mast__date { font-family: var(--din); font-size: 15px; line-height: 20px; font-weight: 500; }
+.mast__week { margin-top: 2px; font-family: var(--din); font-size: 12px; line-height: 16px; color: var(--plate-sub); }
+
+/* ---------- 精选：今日焦点（精选页的封面：标题放大，摘要不截断，来源名做署名行） ---------- */
+.focus__title { margin-top: 16px; font-size: 26px; line-height: 36px; font-weight: 600; color: var(--ink); }
+.focus__sum { margin-top: 12px; font-size: 15px; line-height: 25px; color: var(--body); }
+.focus__src { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--sub); }
+.focus .spec { margin-top: 16px; }
+
+/* ---------- 精选：分类筛选（控制条，不挂铭牌） ---------- */
+.filter { margin-top: 8px; padding: 6px 0; background: var(--panel); overflow: hidden; }
+.filter__row { display: flex; padding: 0 16px; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 12px; font-size: 14px; line-height: 20px; color: var(--ink); white-space: nowrap; }
+/* 选中项像拨档开关的档位：白底墨字，下沿一条 3px 炭灰横条。炭灰实心只留给铭牌和 44px 的按钮。 */
+.chip--on { padding-top: 3px; border-bottom: 3px solid var(--plate); font-weight: 600; }
+
+/* ---------- 精选：卡片行 ---------- */
+.card { padding: 16px; border-top: 1px solid var(--seam); }
+.card--first { margin-top: 4px; border-top: 0; }
+.card__meta { display: flex; align-items: center; gap: 12px; height: 18px; }
+.card__time { font-family: var(--din); font-size: 15px; line-height: 18px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.card__title { margin-top: 10px; font-size: 17px; line-height: 25px; font-weight: 600; color: var(--ink); }
+.card__sum { margin-top: 6px; font-size: 14px; line-height: 22px; color: var(--body);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.card__foot { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 12px; line-height: 16px; color: var(--sub); }
+.card__echo { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; color: var(--ink); font-weight: 500; white-space: nowrap; }
+.card__echo .din { font-size: 13px; }
+
+/* ---------- tabBar：炭灰控制条，选中项上方亮灯 ---------- */
+.tabs { display: flex; height: 94px; padding: 0 4px 34px; background: var(--plate); box-sizing: border-box; }
+.tab { flex: 1; min-width: 0; height: 60px; padding-top: 8px; display: flex; flex-direction: column; align-items: center; color: var(--plate-sub); box-sizing: border-box; }
+/* 没亮的灯：比控制条深一档的圆，带一圈浅边，像没通电的指示灯。 */
+.tab__lamp { width: 7px; height: 7px; margin-bottom: 6px; border-radius: 50%; background: var(--plate-off); border: 1px solid #4b5257; box-sizing: border-box; }
+.tab__ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: square; stroke-linejoin: miter; }
+.tab__label { margin-top: 3px; font-size: 11px; line-height: 14px; font-weight: 500; white-space: nowrap; }
+.tab--on { color: #fff; }
+.tab--on .tab__lamp { border-color: var(--lamp); background: var(--lamp); box-shadow: 0 0 0 2px rgba(242, 177, 0, 0.16), 0 0 7px 1px rgba(242, 177, 0, 0.6); }
+.tab--on .tab__label { font-weight: 600; }
+
+/* ---------- 日报 ---------- */
+.pager { display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 4px 4px; background: var(--plate); color: #fff; }
+.pager__btn { display: inline-flex; align-items: center; gap: 2px; height: 44px; padding: 0 12px; font-size: 14px; line-height: 20px; font-weight: 500; color: #fff; }
+.pager__btn--off { color: var(--plate-dim); }
+.pager__date { font-size: 16px; line-height: 22px; font-weight: 600; }
+.issue__row { display: flex; align-items: flex-end; gap: 12px; margin-top: 14px; }
+.issue__title { font-size: 26px; line-height: 34px; font-weight: 600; letter-spacing: 1px; }
+.issue__window { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--sub); }
+.issue__day { flex: none; margin-left: auto; margin-bottom: -8px; font-family: var(--dinc); font-size: 80px; line-height: 72px; font-weight: 700; color: var(--ink); }
+.issue .spec { margin-top: 16px; }
+.lead__title { margin-top: 16px; font-size: 21px; line-height: 30px; font-weight: 600; }
+.lead__text { margin-top: 10px; font-size: 15px; line-height: 26px; color: var(--body); }
+.acts { display: flex; gap: 8px; margin-top: 18px; }
+.sec__count { flex: none; font-family: var(--din); font-size: 13px; line-height: 16px; color: var(--sub); white-space: nowrap; }
+.entry { padding: 12px 16px 13px; border-top: 1px solid var(--seam); }
+.entry--first { margin-top: 6px; border-top: 0; }
+.entry__title { font-size: 15px; line-height: 23px; font-weight: 500; color: var(--ink); }
+.entry__src { margin-top: 3px; font-size: 12px; line-height: 16px; color: var(--sub); }
+.foot-note { display: flex; align-items: flex-start; gap: 8px; padding: 14px 16px 6px; font-size: 12px; line-height: 18px; color: var(--body); }
+
+/* ---------- 条目详情 ---------- */
+.art__title { margin-top: 16px; font-size: 23px; line-height: 32px; font-weight: 600; }
+.art__by { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 13px; line-height: 18px; }
+.art__src { font-weight: 500; color: var(--ink); }
+.art__date { font-family: var(--din); font-size: 13px; color: var(--sub); }
+.art__sum { margin-top: 16px; font-size: 16px; line-height: 28px; color: var(--ink); }
+.why__text { margin-top: 14px; font-size: 15px; line-height: 26px; color: var(--body); }
+.src__row { display: flex; align-items: baseline; gap: 12px; margin-top: 14px; }
+.src__name { font-size: 16px; line-height: 22px; font-weight: 600; }
+.src__date { font-family: var(--din); font-size: 14px; color: var(--sub); }
+.src__btn { margin-top: 14px; }
+.small { margin-top: 10px; font-size: 12px; line-height: 18px; color: var(--sub); }
+.story { padding-bottom: 4px; }
+.story__title { margin-top: 14px; font-size: 17px; line-height: 25px; font-weight: 600; }
+/* 其他来源名单独一行，下面一行才是动作，来源名在哪里结束一眼分得清。整块可点。 */
+.story__others { margin-top: 6px; font-size: 13px; line-height: 20px; color: var(--sub); }
+.story__go { display: flex; align-items: center; min-height: 44px; margin-top: 12px; border-top: 1px solid var(--seam); font-size: 15px; line-height: 20px; font-weight: 500; color: var(--ink); }
+.story__go .ico { margin-left: auto; color: var(--ink); }
+.bar { display: flex; gap: 8px; height: 94px; padding: 8px 16px 42px; background: var(--plate); box-sizing: border-box; }
+
+/* ---------- 锐奇 ---------- */
+.hero { padding: 14px 16px 22px; background: var(--plate); color: #fff; }
+.hero__id { display: flex; align-items: center; gap: 14px; }
+.hero__logo { flex: none; width: 56px; height: 56px; display: block; }
+.hero__name { font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: 2px; }
+.hero__lead { margin-top: 14px; font-size: 15px; line-height: 24px; color: #dde0e2; }
+.hero .btn { margin-top: 18px; }
+.fig { margin: 16px -16px 0; }
+.fig__img { display: block; width: 100%; height: 220px; object-fit: cover; background: var(--inset); }
+.fig__img--photo { height: 250px; }
+.fig__cap { display: flex; align-items: baseline; gap: 12px; padding: 8px 16px 0; font-size: 12px; line-height: 18px; color: var(--sub); }
+.fig__name { color: var(--ink); font-weight: 500; }
+.prod { padding: 14px 0; border-top: 1px solid var(--seam); }
+.prod--first { margin-top: 14px; border-top: 0; padding-top: 4px; }
+.prod__name { font-size: 16px; line-height: 24px; font-weight: 600; }
+.prod__text { margin-top: 4px; font-size: 14px; line-height: 22px; color: var(--body); }
+.prod__use { color: var(--ink); font-weight: 500; }
+.about { margin-top: 12px; font-size: 15px; line-height: 26px; color: var(--body); }
+.about--first { margin-top: 14px; }
+.kv { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--seam); }
+.kv--first { margin-top: 8px; border-top: 0; }
+.kv__body { flex: 1; min-width: 0; }
+.kv__k { font-size: 12px; line-height: 16px; color: var(--sub); }
+.kv__v { margin-top: 2px; font-size: 15px; line-height: 22px; color: var(--ink); word-break: break-all; }
+.kv__v--num { font-family: var(--din); font-size: 18px; line-height: 24px; font-weight: 700; letter-spacing: 0.3px; }
+.kv__v--todo { color: var(--sub); }
+.kv__note { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--sub); }
+.kv .btn { min-width: 68px; padding: 0 14px; }
+.doc { display: flex; align-items: center; min-height: 52px; border-top: 1px solid var(--seam); font-size: 15px; line-height: 22px; }
+.doc--first { margin-top: 8px; border-top: 0; }
+.doc .ico { margin-left: auto; color: var(--sub); }
+.intro { margin-top: 14px; font-size: 14px; line-height: 22px; color: var(--body); }
+.legal { margin-top: 12px; font-size: 13px; line-height: 21px; color: var(--body); }
+.legal--first { margin-top: 14px; }

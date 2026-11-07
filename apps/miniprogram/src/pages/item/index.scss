@@ -1,331 +1,53 @@
 @use "../../styles/tokens" as *;
 
-.item {
-  padding-bottom: 24px;
-}
-.item-top {
-  height: 0;
-  background: $work;
-}
+.item { padding-bottom: 24px; }
+.item__status { display: block; padding: 24px $page; @include type-meta; }
 
-// ---------- 正文主卡 ----------
-.item-main {
-  position: relative;
-  margin: 0;
-  padding: 30px 22px;
-  border-radius: 0;
-  background: $card;
-}
-.item-main__status {
-  display: block;
-  padding: 24px 0;
-  font-size: 13px;
-  line-height: 19px;
-  color: $iron;
-  text-align: center;
-}
-.item-main__row {
-  display: flex;
-  align-items: center;
-  min-height: 20px;
-}
-.item-main__gap {
-  flex: 1;
-  min-width: 6px;
-}
-.item-main__title {
-  display: block;
-  margin-top: 24px;
-  font-size: 29px;
-  line-height: 43px;
-  font-weight: 750;
-  letter-spacing: -0.5px;
-  overflow-wrap: break-word;
-}
-.item-main__byline {
-  display: block;
-  margin-top: 20px;
-  font-size: 12px;
-  line-height: 21px;
-  color: $iron;
-}
-.item-main__summary {
-  display: block;
-  margin-top: 28px;
-  font-size: 18px;
-  line-height: 33px;
-  color: $body;
-  overflow-wrap: break-word;
-}
+// ---------- 正文 ----------
+.item-art { padding: 22px $page 0; }
+.item-art__meta { display: flex; align-items: center; min-height: 20px; }
+.item-art__gap { flex: 1; min-width: 8px; }
+.item-art__title { display: block; margin-top: 12px; @include type-article; }
+.item-art__by { display: flex; flex-wrap: wrap; margin-top: 10px; @include type-meta; }
+.item-art__src { margin-right: 16px; }
+.item-art__summary { display: block; margin-top: 18px; @include type-body; }
 
-// 值得看的理由独立于正文，用一道青色细线分区。
-.item-why {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 2px solid $accent;
-}
-.item-why__head {
-  display: flex;
-  align-items: center;
-}
-.item-why__title {
-  font-size: 20px;
-  line-height: 29px;
-  font-weight: 700;
-}
-.item-why__text {
-  display: block;
-  margin-top: 16px;
-  font-size: 16px;
-  line-height: 29px;
-  color: $body;
-  overflow-wrap: break-word;
-}
+// ---------- 栏目：为什么值得看、正文/译文、来源、同一事件（钴蓝栏头贴屏幕左缘，正文在页边内）----------
+.item-block { margin-top: $section; }
+.item-block__body { padding: 14px $page 0; }
+.item-block__text { display: block; @include type-body; }
+// 译文不完整：通栏一块下沉的纸（左右各伸出页边 20）。
+.item-body__hint { display: block; margin: 0 (-$page) 12px; padding: 8px $page; background-color: $press; @include type(13px, 20px, 400, $body); }
+// 站内全文：字号和行高由这里给，段间距和标题、列表、引用、表格的样子在 lib/item.ts 的 bodyNodes 行内样式里（不改）。
+.item-body__text { display: block; font-size: 16px; line-height: 1.75; color: $body; overflow-wrap: break-word; }
 
-.item-acts {
-  position: fixed;
-  left: 14px;
-  right: 14px;
-  bottom: env(safe-area-inset-bottom);
-  margin-bottom: 10px;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  padding: 7px;
-  border-radius: 18px;
-  background: #203132;
-  box-shadow: 0 10px 28px rgba(21, 31, 33, .18);
-}
-// “分享给同事”是原生 button（components/share-button 去掉了它的默认样式），外边距在这里清掉，间隔只由 --solid 给。
-.item-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  height: 48px;
-  margin: 0;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-}
-.item-btn--solid {
-  margin-left: 4px;
-  background: $star;
-  color: $ink;
-}
-.item-btn__icon {
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-}
-.item-btn--solid .item-btn__icon { filter: brightness(0); }
+.item-source { display: flex; align-items: center; }
+.item-source__who { flex: 1; min-width: 0; margin-right: 12px; }
+.item-source__name { display: block; @include type(16px, 24px, 500); overflow-wrap: break-word; }
+.item-source__date { display: flex; align-items: baseline; flex-wrap: wrap; @include type-meta; }
+.item-source__echo { margin-left: 12px; }
+.item-copy { @include btn-line; @include btn-sm; flex: none; }
+.item-copy--down { background-color: $press; }
+.item-source__note { display: block; margin-top: 12px; @include type(13px, 21px, 400, $mute); }
 
-// ---------- 来源卡、正文、事件入口 ----------
-.item-panel {
-  margin: 0 22px;
-  padding: 24px 0;
-  border-top: 1px solid $rule;
-  border-radius: 0;
-}
-.item-source {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.item-source__who {
-  flex: 1;
-  min-width: 140px;
-}
-.item-source__name {
-  display: block;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-  overflow-wrap: break-word;
-}
-.item-source__date {
-  display: block;
-  margin-top: 1px;
-  font-size: 12px;
-  line-height: 17px;
-  color: $iron;
-}
-.item-copy {
-  display: flex;
-  align-items: center;
-  flex: none;
-  height: 44px;
-  padding: 0 12px;
-  border-radius: 6px;
-  background: #e7ebe4;
-  color: $ink;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.item-copy--down {
-  opacity: 0.6;
-}
-.item-copy__icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-}
-.item-source__note {
-  display: block;
-  margin-top: 10px;
-  padding-top: 9px;
-  border-top: 1px solid $rule;
-  font-size: 12px;
-  line-height: 18px;
-  color: $iron;
-}
+// 同一事件：整块可点，按下通栏变 $press。来源数读数（单位正文色，和原型 .story__count 一样）下面是其他来源一行，不显示事件标题。
+.item-story { display: flex; align-items: center; min-height: $touch; padding: 14px $page 4PX; }
+.item-story--down { background-color: $press; }
+.item-story__main { flex: 1; min-width: 0; margin-right: 12px; }
+.item-story__line { display: block; margin-top: 8px; @include type(14px, 22px, 400, $body); overflow-wrap: break-word; }
+.item-story__go { flex: none; display: block; width: 18px; height: 18px; }
 
-// 站内全文：块标题（“正文”或“译文”）、模型译文时的“AI 摘要”，下面是 rich-text。字号 15、行高 1.7 由这里给，
-// 段间距和标题、列表、引用、表格的样子写在节点的行内样式里（lib/item.ts 的 bodyNodes），图片接口已带 max-width:100%。
-.item-body {
-  padding-bottom: 14px;
-}
-.item-body__head {
-  display: flex;
-  align-items: center;
-  min-height: 20px;
-}
-.item-body__title {
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 700;
-}
-.item-body__hint {
-  display: block;
-  margin-top: 8px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: $work;
-  font-size: 12px;
-  line-height: 18px;
-  color: $iron;
-}
-.item-body__text {
-  display: block;
-  margin-top: 10px;
-  font-size: 17px;
-  line-height: 1.7;
-  color: $ink;
-  overflow-wrap: break-word;
-}
+// ---------- 贴底操作条：新闻纸底，上沿一根 $rule（页面里唯二的线之一）----------
+.item-acts { position: fixed; z-index: 50; left: 0; right: 0; bottom: 0; display: flex; padding: 10px $page calc(10px + env(safe-area-inset-bottom)); background-color: $paper; border-top: $hair solid $rule; }
+// “分享给同事”是原生 button，只写字：两个类压过 share-button 的重置，按下态三个类。
+.item-btn.item-btn--ink { @include btn-ink; flex: 1.6; min-width: 0; margin-left: 12px; }
+.item-btn.item-btn--ink.share-button--down { background-color: $ink-press; }
 
-.item-story {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-}
-.item-story--down {
-  opacity: 0.6;
-}
-.item-story__text {
-  flex: 1;
-  min-width: 0;
-  margin-right: 10px;
-}
-.item-story__head {
-  display: flex;
-  align-items: center;
-}
-.item-story__title {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 700;
-}
-.item-story__bars {
-  display: flex;
-  margin-left: 8px;
-}
-.item-story__bar {
-  width: 6px;
-  height: 6px;
-  margin-left: 3px;
-  border-radius: 50%;
-  background: $star;
-  &:first-child {
-    margin-left: 0;
-  }
-}
-.item-story__line {
-  display: block;
-  margin-top: 3px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $body;
-  overflow-wrap: break-word;
-}
-.item-story__go {
-  flex: none;
-  width: 20px;
-  height: 20px;
-}
-
-.item-state {
-  position: relative;
-  margin-top: 0;
-}
-
-// ---------- 剪切板写不进时的兜底弹层 ----------
-.link-sheet {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px;
-  background: rgba(19, 25, 28, 0.55);
-}
-.link-sheet__card {
-  width: 100%;
-  padding: 18px 16px 16px;
-  border-radius: 8px;
-  background: $card;
-}
-.link-sheet__title {
-  display: block;
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 600;
-}
-.link-sheet__hint {
-  display: block;
-  margin-top: 6px;
-  font-size: 13px;
-  line-height: 19px;
-  color: $iron;
-}
-.link-sheet__url {
-  display: block;
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: $work;
-  font-size: 13px;
-  line-height: 20px;
-  color: $ink;
-  word-break: break-all;
-}
-.link-sheet__close {
-  margin-top: 14px;
-  height: 44px;
-  line-height: 44px;
-  border-radius: 6px;
-  background: $ink;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-}
-.link-sheet__close--down {
-  opacity: 0.75;
-}
+// ---------- 复制失败弹层 ----------
+.link-sheet { position: fixed; z-index: 100; left: 0; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 0 $page; background-color: $overlay; }
+.link-sheet__card { width: 100%; padding: 20px; background-color: $paper; }
+.link-sheet__title { display: block; @include type(17px, 24px, 600); }
+.link-sheet__hint { display: block; margin-top: 6px; @include type-meta; }
+.link-sheet__url { display: block; margin-top: 12px; padding: 10px 12px; background-color: $press; @include type(13px, 20px, 400); word-break: break-all; }
+.link-sheet__close { @include btn-ink; margin-top: 16px; }
+.link-sheet__close--down { background-color: $ink-press; }

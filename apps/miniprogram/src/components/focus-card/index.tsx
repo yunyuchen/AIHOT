@@ -1,42 +1,63 @@
-// 今日焦点只由接口给出，摘要入口打开真实条目。
+// 今日焦点（只在制造板块，只由接口给出）。上半截 FocusHead 放在刊头右栏底部：钴蓝“今日焦点”、分类和“AI 摘要”（行尾，即右上角）、
+// 焦点标题（最多 4 行，色块跟着标题长高）。下半截 FocusCard 在色块下面通栏：摘要（截 4 行，全文在条目页）、来源名（按首报先后）、
+// 来源数（≥ 2 才有）和最新报道时刻两个读数、墨底“读摘要”（打开真实条目）。不出名次和热度，不硬配产品图。
 import { Text, View } from "@tarojs/components";
 import type { MiniprogramFocus } from "@aihot/contracts/miniprogram";
-import { categoryChip, focusFoot, showAiBadge } from "../../lib/card";
+import { Reading } from "../reading";
+import { stampParts } from "../reading/derive";
 import { AiBadge } from "../ai-badge";
 import { CategoryTag } from "../category-tag";
+import { categoryChip, focusFoot, showAiBadge } from "../../lib/card";
 import "./index.scss";
 
-interface Props {
+interface HeadProps {
   focus: MiniprogramFocus;
   /** 分类 key → 分类名，来自元信息。 */
   labels: Readonly<Record<string, string>>;
-  /** 分类 key → 色标颜色，来自构建配置。 */
+  /** 分类 key → 方块颜色，来自构建配置。 */
   colors: Readonly<Record<string, string>>;
-  onOpen: (id: string) => void;
 }
 
-export function FocusCard({ focus, labels, colors, onOpen }: Props) {
+export function FocusHead({ focus, labels, colors }: HeadProps) {
   const chip = categoryChip(focus.category, labels, colors);
+  const ai = showAiBadge(focus.ai);
+  return (
+    <View className="focus-head">
+      <Text className="focus-head__kicker">今日焦点</Text>
+      {(chip || ai) && (
+        <View className="focus-head__meta">
+          {chip && <CategoryTag chip={chip} />}
+          <View className="focus-head__gap" />
+          {ai && <AiBadge />}
+        </View>
+      )}
+      <View className="focus-head__title">{focus.title}</View>
+    </View>
+  );
+}
+
+export function FocusCard({ focus, onOpen }: { focus: MiniprogramFocus; onOpen: (id: string) => void }) {
   const foot = focusFoot(focus);
+  const latest = stampParts(focus.latestAt, Date.now());
   return (
     <View className="focus-card">
-      <View className="focus-card__row">
-        <View className="focus-card__flag">
-          今日焦点
-        </View>
-        {chip && <CategoryTag chip={chip} />}
-        <View className="focus-card__gap" />
-        {showAiBadge(focus.ai) && <AiBadge />}
-      </View>
-      <View className="focus-card__title">{focus.title}</View>
       {focus.summary && <View className="focus-card__summary">{focus.summary}</View>}
-      <View className="focus-card__actions">
+      <View className="focus-card__sources">{foot.sources}</View>
+      <View className="focus-card__bar">
+        {foot.echo && (
+          <View className="focus-card__reading">
+            <Reading value={foot.echo.count} after="家来源" size="l" />
+          </View>
+        )}
+        {latest && (
+          <View className="focus-card__reading">
+            <Reading value={latest.clock} before={latest.day ? `最新 ${latest.day}` : "最新"} size="l" />
+          </View>
+        )}
         <View className="focus-card__read" hoverClass="focus-card__read--down" onClick={() => onOpen(focus.id)} ariaRole="button" ariaLabel={`阅读摘要：${focus.title}`}>
-          <Text>读摘要</Text><Text className="focus-card__arrow">↗</Text>
+          读摘要
         </View>
-        {foot.echo && <View className="focus-card__echo"><Text className="focus-card__count num">{foot.echo.count}</Text><Text className="focus-card__label-text">家来源</Text></View>}
       </View>
-      <View className="focus-card__sources">{foot.sources}{foot.latest && ` · ${foot.latest.clock} ${foot.latest.day}`}</View>
     </View>
   );
 }

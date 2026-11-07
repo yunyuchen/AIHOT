@@ -1,49 +1,30 @@
 @use "../../styles/tokens" as *;
 
-.saved {
-  display: flex;
-  flex-direction: column;
-  background: $work;
-  color: $ink;
-}
-.saved-head {
-  padding: 32px 24px 20px;
-  background: $work;
-}
-.saved-head__k { display: block; color: $iron; font-size: 13px; line-height: 20px; }
-.saved-head__reading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-top: 24px; }
-.saved-head__title { display: block; white-space: pre-line; font-size: 34px; line-height: 47px; font-weight: 750; letter-spacing: -.6px; }
-.saved-head__local { display: flex; align-items: center; margin-top: 18px; color: $iron; font-size: 12px; line-height: 18px; }
-.saved-head__device { width: 14px; height: 14px; margin-right: 6px; }
-.saved-filters {
-  display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  margin: 0 24px;
-  border-bottom: 1px solid $rule;
-  white-space: nowrap;
-}
-.saved-filter { flex: none; padding: 12px 0; color: $iron; font-size: 14px; line-height: 22px; min-height: 46px; border-bottom: 2px solid transparent; }
-.saved-filter--selected { color: $ink; font-weight: 700; border-bottom-color: $accent; }
-.saved-list { padding: 0 24px; }
-.saved-card { padding: 26px 0; }
-.saved-card + .saved-card { border-top: 1px solid $rule; }
-.saved-card--down { opacity: .72; }
-.saved-card__row { display: flex; align-items: center; margin-bottom: 8px; }
-.saved-card__gap { flex: 1; }
-.saved-card__kind { display: inline-flex; align-items: center; color: $accent; font-size: 12px; font-weight: 600; }
-.saved-card__kind-icon { width: 14px; height: 14px; margin-right: 5px; }
-.saved-card__title { display: block; font-size: 20px; line-height: 29px; font-weight: 600; overflow-wrap: break-word; }
-.saved-card__day { margin-left: 6px; color: $iron; }
-.saved-card__lead { margin-top: 5px; color: $iron; font-size: 14px; line-height: 23px; }
-.saved-card__foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 0; min-height: 20px; margin-top: 14px; }
-.saved-card__src { flex: 1; min-width: 0; color: $iron; font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.saved-card__echo { display: inline-flex; align-items: center; flex: none; margin-left: 8px; color: $iron; font-size: 11px; }
-.saved-card__bars { display: flex; margin-right: 6px; }
-.saved-card__bar { width: 4px; height: 4px; margin-left: 2px; border-radius: 50%; background: $accent; }
-.saved-card__on { display: inline-flex; align-items: center; flex: none; margin-left: 10px; color: $iron; font-size: 11px; }
-.saved-card__on-icon { width: 12px; height: 12px; margin-right: 4px; }
-.saved-note { display: flex; margin: auto 24px 20px; padding: 18px 0; }
-.saved-note__icon { flex: none; width: 16px; height: 16px; margin: 2px 9px 0 0; }
-.saved-note__text { flex: 1; min-width: 0; color: $iron; font-size: 12px; line-height: 19px; }
+.saved { padding-bottom: 8px; }
+.saved-head { padding-top: 16px; }
+.saved-head__sub { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 10px; padding: 0 $page; @include type-meta; }
+.saved-head__local { margin-right: 12px; }
+// 板块筛选：样子同分类筛选（chip），第一个字从 x=20 起。原来的 flex gap 去掉（老安卓不认）。
+.saved-filters { display: flex; margin-top: 8px; padding: 0 10px; }
+.saved-filter { @include chip; }
+.saved-filter--on { @include chip-on; }
+.saved-filter--down { background-color: $press; }
+// 卡片：整张可点，按下通栏变 $press；卡与卡之间只留空（8 + 14 + 8 = 30），不画分隔线。
+.saved-list { padding-top: 12px; }
+.saved-card { display: block; padding: 8px $page; margin-bottom: 14px; }
+.saved-card--down { background-color: $press; }
+.saved-card__meta { display: flex; align-items: center; min-height: 20px; margin-bottom: 6px; }
+.saved-card__gap { flex: 1; min-width: 8px; }
+.saved-card__kind { display: inline-flex; align-items: center; @include type-label; }
+.saved-card__kind-icon { flex: none; display: block; width: 13px; height: 13px; margin-right: 6px; }
+// 标题和日报头条都不截断（HEAD 也不截；原型没画这一页，不新增截断）。
+.saved-card__title { @include type-card; }
+.saved-card__day { margin-left: 6px; font-weight: 400; color: $mute; }
+.saved-card__lead { margin-top: 6px; @include type-summary; }
+.saved-card__foot { display: flex; align-items: baseline; margin-top: 8px; }
+.saved-card__src { flex: 1; min-width: 0; @include type-meta; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-card__echo { flex: none; margin-left: 12px; }
+.saved-card__on { flex: none; margin-left: 12px; @include type-meta; }
+.saved-note { margin: $section $page 0; }
+.saved-note__text { display: block; @include type(13px, 21px, 400, $mute); }
 .saved-note__em { color: $ink; font-weight: 600; }

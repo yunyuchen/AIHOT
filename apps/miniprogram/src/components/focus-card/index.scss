@@ -1,17 +1,16 @@
 @use "../../styles/tokens" as *;
 
-.focus-card { position: relative; z-index: 1; margin: 0; padding: 20px 24px 44px; color: $work; text-align: center; background: $ink; }
-.focus-card__row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
-.focus-card__flag { display: inline-flex; align-items: center; color: $star; font-size: 13px; font-weight: 600; letter-spacing: .5px; }
-.focus-card__gap { flex: 0; }
-.focus-card__title { margin-top: 22px; font-size: 29px; line-height: 1.38; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
-.focus-card__summary { margin-top: 18px; font-size: 15px; line-height: 26px; color: $fog; overflow-wrap: anywhere; }
-.focus-card__actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
-.focus-card__read { display: inline-flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 6px; background: $star; color: $ink; font-size: 16px; font-weight: 700; }
-.focus-card__read--down { opacity: .8; }
-.focus-card__arrow { font-size: 20px; }
-.focus-card__echo { display: inline-flex; align-items: baseline; gap: 5px; padding: 11px 14px; border: 1px solid $iron; border-radius: 6px; color: $work; }
-.focus-card__count { font-size: 18px; font-weight: 700; }
-.focus-card__label-text { font-size: 13px; }
-.focus-card__sources { margin-top: 18px; color: $fog; font-size: 12px; line-height: 19px; overflow-wrap: anywhere; }
-.focus-card .ai-badge, .focus-card .category-tag { color: $star; }
+// 刊头右栏里的上半截。
+.focus-head__kicker { display: block; margin-top: 22px; @include type-kicker; }
+.focus-head__meta { display: flex; align-items: center; min-height: 20px; margin-top: 10px; }
+.focus-head__gap { flex: 1; min-width: 8px; }
+.focus-head__title { margin-top: 8px; @include type-headline; @include clamp(4); }
+
+// 色块下面通栏的下半截。
+.focus-card { padding: 20px $page 0; }
+.focus-card__summary { @include type-body; @include clamp(4); }
+.focus-card__sources { margin-top: 10px; @include type-meta; overflow-wrap: anywhere; }
+.focus-card__bar { display: flex; align-items: center; margin-top: 12px; }
+.focus-card__reading { flex: none; margin-right: 20px; }
+.focus-card__read { @include btn-ink; flex: none; margin-left: auto; }
+.focus-card__read--down { background-color: $ink-press; }

@@ -1,18 +1,32 @@
-// 编辑式阅读：深墨封面、暖纸阅读面、青色交互重点。
-// 页面样式 @use 这个文件用 $变量；app.scss 另把它们挂成 page 上的 CSS 变量，给运行时的内联样式用。
-// 星青只做图形、线条、底色和深底上的大数字，不做白底小字。
+// 双色套印 · 技术期刊（2026-11-07 选定，规格见 docs/design/miniprogram-duotone.md）。
+// 新闻纸上只印两色：墨印正文；钴蓝（专色）只印四类地方：刊头和栏头的色块、读数类数字（时刻、日数、周次、条数、来源数）、
+// 配图（钴蓝印在图片文件里）、刊头里的“今日焦点”四个字。链接、按钮、选中态、电话号码都不用钴蓝。
+// 靠色块和留白分区，页面里不画分隔线：只有 tabBar 和条目页操作条的上沿各一根 $rule。按钮只有墨底实心和墨线描边两种，直角。
+// 钴蓝色块都从屏幕左缘印进来（出血），字从 x=20 起。
+// 页面样式 @use 这个文件用 $变量和 mixin；除了这个文件，任何 scss 里都不写色值。钴蓝只经 num、cond、head-tab、type-kicker 取用。
+// 单位是 390 设计稿的 px，Taro 换算成 rpx；不超过 4 的值一律写大写 PX（不换算），不然 360dp 安卓上 1 像素的线会时有时无。
+//
+// 对比度（WCAG 2.x 相对亮度公式；正文对比度要求 ≥ 4.5）：
+//   新闻纸上：$ink 14.15、$body 8.69、$mute 5.53、$cobalt 8.09、$off 2.85（只给禁用态）
+//   纸色字：在 $cobalt 上 8.09、在 $ink 上 14.15、在 $ink-press 上 9.37
+//   $press 上：$ink 12.52、$body 7.68、$mute 4.89、$cobalt 7.15；$press-deep 上：$ink 11.01、$body 6.76
+//   logo 的深墨方块 #13191c：在新闻纸上 14.56，在钴蓝上只有 1.80，所以 logo 不压在钴蓝色块里。
 
-$ink: #151f21;
-$star: #62f2e5; // 青色只用于深底文字、图形和按钮底色
-$work: #f7f6f2;
-$card: #f7f6f2;
-$iron: #657171;
-$fog: #b9c7c4;
-$body: #394643;
-$rail: #dcded8;
-$tab: #b9c7c4;
+// ---------- 颜色 ----------
+$paper: #e9e9e3;      // 新闻纸：全站唯一底色，也是导航栏、tabBar、操作条的底；钴蓝和墨底上的反白字
+$ink: #1b1b19;        // 墨：标题、选中态、实心按钮底、描边按钮的线和字、分类方块的边、页面图标
+$body: #3f3f3a;       // 正文：摘要、正文、分类名、AI 摘要标记的字、已读的标题
+$mute: #5c5c55;       // 次要：来源名、日期、说明、读数单位、未选中的 tab、AI 摘要标记的边
+$cobalt: #1b3f8b;     // 专色钴蓝：刊头和栏头色块、读数数字、“今日焦点”
+$off: #8a8a83;        // 禁用的字：日报“后一天”、占位的联系方式、已订阅
+$off-line: #b4b4ad;   // 禁用按钮的边
+$rule: #c8c8c0;       // 只给 tabBar 和条目页操作条的上沿
+$press: #dcdcd5;      // 下沉的纸：纸面元素按下；提示条、译文不完整、文档事实表和引用块、链接框的底
+$press-deep: #cfcfc7; // $press 底上的元素按下
+$ink-press: #3a3a36;  // 墨底按钮按下
+$overlay: rgba(27, 27, 25, 0.55); // 复制失败弹层的遮罩
 
-// 分类色标：只做小圆点和浅底，字一律墨色。运行时按分类 key 取色走构建配置的配色表（config/boards.ts），这里留一份给静态样式。
+// 分类色：值不改（运行时按分类 key 取色走构建配置 config/boards.ts，被测试锁定）。页面上只画 8×8 方块，带 1PX 墨边，字一律 $body。
 $c-battery: #ff7a45;
 $c-storage: #1fb57a;
 $c-semi: #3b7bf6;
@@ -21,8 +35,95 @@ $c-inspect: #2ce2e8;
 $c-policy: #131416;
 $c-general: #8a959e;
 
-// 系统字体；数字用等宽数字（.num）。
-$font: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+// ---------- 字体 ----------
+// 中文一律系统字体，字重只用 400/500/600。DIN 只放数字（700）：DIN Condensed 只有粗体，安卓回落到 Roboto（Condensed）。
+$font: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+$font-num: "DIN Alternate", "Helvetica Neue", Roboto, sans-serif;
+$font-cond: "DIN Condensed", "DIN Alternate", "sans-serif-condensed", "Roboto Condensed", "Helvetica Neue", sans-serif;
 
-$accent: #087268;
-$rule: #dcded8;
+// ---------- 栅格 ----------
+$page: 20px;      // 页边
+$index: 52px;     // 索引栏：精选卡的时刻、日报的日数
+$gutter: 16px;    // 索引栏和内容栏之间
+$indent: 68px;    // $index + $gutter
+$content-x: 88px; // 内容栏左缘 = $page + $indent
+$band: 72px;      // 刊头色块宽 = $page + $index；栏头色块最短也是它
+$section: 34px;   // 节与节之间（栏头上方）
+$entry: 30px;     // 卡与卡之间
+$touch: 44px;     // 最小触控高度、按钮高度
+$tabbar-h: 52px;  // tabBar 不含安全区的高度
+$hair: 1PX;       // 细线：描边按钮、AI 摘要标记、热线框、分类方块的边、tabBar 和操作条的上沿
+$mark: 2PX;       // 选中项下面的墨线
+
+// ---------- 文字 ----------
+@mixin pretty { text-wrap: pretty; }
+@mixin clamp($lines) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: $lines; overflow: hidden; }
+@mixin type($size, $line, $weight: 400, $color: $ink) { font-size: $size; line-height: $line; font-weight: $weight; color: $color; }
+
+@mixin type-mast { @include type(34px, 42px, 600, $paper); }
+@mixin type-article { @include type(23px, 33px, 600); @include pretty; overflow-wrap: break-word; }
+@mixin type-issue { @include type(26px, 34px, 600); overflow-wrap: break-word; }
+@mixin type-headline { @include type(22px, 31px, 600); @include pretty; overflow-wrap: break-word; }
+@mixin type-lead { @include type(21px, 30px, 600); @include pretty; overflow-wrap: break-word; }
+@mixin type-card { @include type(17px, 26px, 600); @include pretty; overflow-wrap: break-word; }
+@mixin type-line { @include type(16px, 25px, 500); @include pretty; overflow-wrap: break-word; }
+@mixin type-body { @include type(16px, 28px, 400, $body); overflow-wrap: break-word; }
+@mixin type-summary { @include type(15px, 24px, 400, $body); overflow-wrap: break-word; }
+@mixin type-legal { @include type(14px, 24px, 400, $body); overflow-wrap: break-word; }
+@mixin type-kicker { @include type(15px, 22px, 600, $cobalt); letter-spacing: 2PX; }
+@mixin type-meta { @include type(13px, 20px, 400, $mute); }
+@mixin type-label { @include type(13px, 20px, 400, $body); }
+
+// 读数：DIN 700、等宽数字，默认钴蓝。电话号码也用它，但传 $ink（号码不是读数）。
+@mixin num($size, $line: $size, $color: $cobalt) {
+  font-family: $font-num; font-size: $size; line-height: $line; font-weight: 700; color: $color; font-variant-numeric: tabular-nums;
+}
+@mixin cond($size, $line: $size, $color: $cobalt) {
+  font-family: $font-cond; font-size: $size; line-height: $line; font-weight: 700; color: $color; font-variant-numeric: tabular-nums;
+}
+
+// ---------- 栏头 ----------
+// 内容栏头：钴蓝实心色块，纸色 15/600，高 30，最短 72（和刊头色块同宽），左内边 20，从屏幕左缘印进来（放在没有左内边距的容器里）。
+@mixin head-tab {
+  flex: none; box-sizing: border-box; display: inline-flex; align-items: center;
+  min-width: $band; height: 30px; margin: 0; padding: 0 14px 0 $page;
+  background-color: $cobalt; color: $paper; font-size: 15px; line-height: 30px; font-weight: 600; letter-spacing: 1PX; white-space: nowrap;
+}
+// 功能栏头（锐奇页的文档、反馈与侵权投诉、声明）：纸底墨字，不加色块、不加线。
+@mixin head-plain { display: block; padding: 0 $page; font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: 1PX; color: $ink; }
+
+// ---------- 按钮：墨底实心、墨线描边两种，44 高，直角 ----------
+@mixin btn {
+  box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  height: $touch; margin: 0; padding: 0 18px; border-radius: 0;
+  font-size: 15px; line-height: 20px; font-weight: 500; white-space: nowrap;
+}
+@mixin btn-ink { @include btn; background-color: $ink; color: $paper; }
+@mixin btn-line { @include btn; border: $hair solid $ink; background-color: $paper; color: $ink; }
+@mixin btn-off { border-color: $off-line; color: $off; }
+@mixin btn-sm { min-width: 64px; padding: 0 14px; }
+
+// ---------- 小件 ----------
+// 分类方块：8×8，1PX 墨边，底色由调用处的内联样式给（分类色）。
+@mixin swatch { flex: none; display: block; box-sizing: border-box; width: 8px; height: 8px; border: $hair solid $ink; }
+// 筛选项（分类筛选条、收藏页板块筛选）：44 高，左右 10；选中墨色 600，下面一根 2PX 墨线（左右各缩 10）。
+@mixin chip {
+  position: relative; flex: none; box-sizing: border-box; display: inline-flex; align-items: center;
+  height: $touch; padding: 0 10px; font-size: 15px; line-height: 20px; font-weight: 400; color: $body; white-space: nowrap; vertical-align: top;
+}
+@mixin chip-on {
+  color: $ink; font-weight: 600;
+  &::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 5px; height: $mark; background-color: $ink; }
+}
+
+// ---------- 旧变量名 → 新变量名（10-29 编辑式版的名字全部删掉，不留别名；构建报 “Undefined variable” 就是还有没改完的地方）----------
+// 左边的旧名不带 $，免得验收时查旧变量的 grep 命中这段注释。
+// ink    #151f21 → $ink #1b1b19（同名，值变了）         body  #394643 → $body #3f3f3a（同名，值变了）
+// work   → $paper                                       card  → $paper（不再有卡片底）
+// iron   → $mute                                        tab   → $mute（未选中的 tab）
+// fog    → 深底上的次要字，新版没有深底：禁用的字 $off，其余 $mute
+// rail   → 事件页时间轴，新版不画线：删掉；禁用按钮的边用 $off-line
+// star   → 深底上的亮青，新版不用：删掉（不是换成 $cobalt，钴蓝只给四类地方）
+// accent → 按用途换：分类名 $body；AI 摘要的字 $body、边 $mute；选中态、链接、动作词 $ink
+// rule   #dcded8 → $rule #c8c8c0（同名，只给 tabBar 和条目页操作条的上沿）
+// font   → $font（同名）；新增 $font-num、$font-cond。$c-* 不变。

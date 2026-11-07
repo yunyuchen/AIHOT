@@ -1,14 +1,14 @@
-// 两个板块共用真实精选流、分类、分页和快照；制造焦点使用深墨封面，列表与运动健康使用暖纸阅读面。
+// 两个板块共用：真实精选流、分类、分页和快照；制造顶上是钴蓝竖排刊头和今日焦点，运动健康顶上是钴蓝栏头和栏目配图。
 // 占位或失败时保留状态与重试；热线仍从板块元信息读取。
 // 只请求这个板块自己的行业实例：状态、请求、快照都按板块分开（lib/meta-store.ts、lib/use-feed.ts），另一个板块挂了不影响这里。
 import { useEffect, useRef, useState } from "react";
 import Taro, { useDidHide, useDidShow, usePullDownRefresh, useReachBottom } from "@tarojs/taro";
-import { Text, View } from "@tarojs/components";
+import { View } from "@tarojs/components";
 import type { BoardKey } from "../../../config/boards";
 import { Dashboard } from "../dashboard";
 import { FeedList } from "../feed-list";
 import { FilterBar } from "../filter-bar";
-import { FocusCard } from "../focus-card";
+import { FocusCard, FocusHead } from "../focus-card";
 import { failureText, PageState, StaleNotice } from "../page-state";
 import { activeCategory, filterChips } from "../../lib/board-feed";
 import { boardConfig, buildConfig } from "../../lib/build-config";
@@ -19,7 +19,6 @@ import { openPage } from "../../lib/open-page";
 import { itemPage } from "../../lib/page-stack";
 import { snapshotStamp, staleNotice } from "../../lib/screen";
 import { useFeed } from "../../lib/use-feed";
-import "./index.scss";
 
 export function BoardFeed({ board, cover }: { board: BoardKey; cover?: string }) {
   const config = boardConfig(board);
@@ -105,20 +104,22 @@ export function BoardFeed({ board, cover }: { board: BoardKey; cover?: string })
   const colors = config.categoryColors;
   const stamp = screen.kind === "content" && screen.snapshotAt ? snapshotStamp(screen.snapshotAt, now) : null;
   const focus = visibleFocus(screen, feed.state, config.focusCard);
+  // 焦点只画在制造的竖排刊头里。FocusCard 里是模型写的摘要，它自己不带“AI 摘要”，标识在 FocusHead 里，两个必须成对出现。
+  // 按天看的板块没有竖排刊头，以后就算在 config/boards.ts 打开 focusCard，也不画焦点，列表里也不去掉那张卡。
+  const headed = focus && !boardHeader ? focus : null;
   const filter = config.filterBar && meta && meta.categories.length > 0 ? filterChips(meta.categories, colors) : null;
   const open = (id: string) => openPage(itemPage(board, id));
   return (
-    <View className={focus ? "board-feed board-feed--focus" : "board-feed"}>
+    <View>
       <Dashboard
         title={title}
         date={meta?.readings.date ?? null}
         stamp={stamp}
         board={boardHeader}
         cover={cover}
+        focus={headed ? <FocusHead focus={headed} labels={labels} colors={colors} /> : null}
       />
-      {focus && <FocusCard focus={focus} labels={labels} colors={colors} onOpen={open} />}
-      <View className="board-reading">
-      <Text className="board-reading__heading">{config.byDay ? "生活精选" : "行业精选"}</Text>
+      {headed && <FocusCard focus={headed} onOpen={open} />}
       {filter && <FilterBar chips={filter} active={category} onPick={setPicked} />}
       {screen.kind === "failed" && <PageState title="加载失败" detail={failureText(screen.failure)} onRetry={retry} />}
       {screen.kind === "empty" &&
@@ -133,14 +134,13 @@ export function BoardFeed({ board, cover }: { board: BoardKey; cover?: string })
           state={feed.state}
           labels={labels}
           colors={colors}
-          focusId={focus?.id ?? null}
+          focusId={headed?.id ?? null}
           onOpen={open}
           onRetry={feed.retry}
           byDay={config.byDay}
           hotline={meta?.notice.hotline ?? null}
         />
       )}
-      </View>
     </View>
   );
 }

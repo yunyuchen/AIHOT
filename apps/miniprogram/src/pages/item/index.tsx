@@ -1,6 +1,6 @@
 // 条目页：下钻页，参数 board（请求哪个行业实例）和 id。两个板块共用；路由和参数名上线后不改（分享出去的卡片一直留在会话里）。
-// 暖纸阅读正文、独立来源区与固定收藏/分享条；只在来源允许时展示站内全文。
-// 这个板块元信息的 notice.hotline 指定的分类（运动健康的睡眠与心理），主卡下面一张心理援助热线卡，点了拨号。
+// 新闻纸上的正文、钴蓝栏头分出的“为什么值得看”“来源”“同一事件”，贴底的收藏和分享条；只在来源允许时展示站内全文。
+// 这个板块元信息的 notice.hotline 指定的分类（运动健康的睡眠与心理），“为什么值得看”下面一条心理援助热线，点了拨号。
 // 整屏状态（已下线或不存在、占位、加载失败、加载中、内容）见 lib/item.ts。不写本机快照。
 // 从分享卡片直接进来（栈里没有上一页）时，原生导航栏左上角是微信自带的回首页按钮（回到 app.config 的第一个页面，即精选），
 // 有上一页时是返回，不用自己画。“分享给同事”和右上角菜单走同一个分享回调（lib/share.ts 的 itemShare），拿到内容后预检一次分享图。
@@ -9,7 +9,8 @@ import Taro, { useRouter } from "@tarojs/taro";
 import { Image, RichText, Text, View } from "@tarojs/components";
 import type { BoardKey } from "../../../config/boards";
 import chevronIcon from "../../assets/item/chevron.png";
-import copyIcon from "../../assets/item/copy.png";
+import { HeadTab } from "../../components/head-tab";
+import { Reading } from "../../components/reading";
 import { AiBadge } from "../../components/ai-badge";
 import { CategoryTag } from "../../components/category-tag";
 // hotline 排在 drill-state（它带进 page-state）前面：样式在公共 chunk 里的先后要和精选流（feed-list 带进 hotline，再 page-state）一致，
@@ -19,6 +20,7 @@ import { MissingState, PausedState } from "../../components/drill-state";
 import { failureText, PageState } from "../../components/page-state";
 import { SaveButton } from "../../components/save-button";
 import { ShareButton } from "../../components/share-button";
+import { sourceTotal } from "../../components/reading/derive";
 import { hotlineFor } from "../../lib/board-feed";
 import { boardConfig, buildConfig } from "../../lib/build-config";
 import { itemScreen, itemView } from "../../lib/item";
@@ -46,19 +48,10 @@ export default function ItemPage() {
   if (screen.kind === "content") return <ItemContent board={target!.board} item={screen.item} />;
   return (
     <View className="item">
-      <View className="item-top" />
-      {screen.kind === "loading" && (
-        <View className="item-main">
-          <Text className="item-main__status">加载中…</Text>
-        </View>
-      )}
-      {screen.kind !== "loading" && (
-        <View className="item-state">
-          {screen.kind === "missing" && <MissingState board={target?.board ?? null} saved={target} />}
-          {screen.kind === "placeholder" && <PausedState board={target!.board} />}
-          {screen.kind === "failed" && <PageState title="加载失败" detail={failureText(screen.failure)} onRetry={retry} />}
-        </View>
-      )}
+      {screen.kind === "loading" && <Text className="item__status">加载中…</Text>}
+      {screen.kind === "missing" && <MissingState board={target?.board ?? null} saved={target} />}
+      {screen.kind === "placeholder" && <PausedState board={target!.board} />}
+      {screen.kind === "failed" && <PageState title="加载失败" detail={failureText(screen.failure)} onRetry={retry} />}
     </View>
   );
 }
@@ -77,89 +70,97 @@ function ItemContent({ board, item }: { board: BoardKey; item: MiniprogramItem }
       .catch(() => setFallbackUrl(item.originalUrl));
   };
 
+  // 没归进事件、同一事实 ≥ 2 家时，来源栏的发布日期后面跟来源数（view.echo 只在这时有值）。
+  const echoCount = view.echo !== null ? item.sourceCount : null;
   return (
     <View className="item">
-      <View className="item-top" />
-      <View className="item-main">
+      <View className="item-art">
         {(view.chip || view.aiBadge) && (
-          <View className="item-main__row">
+          <View className="item-art__meta">
             {view.chip && <CategoryTag chip={view.chip} />}
-            <View className="item-main__gap" />
+            <View className="item-art__gap" />
             {view.aiBadge && <AiBadge />}
           </View>
         )}
-        <Text className="item-main__title" userSelect>
+        <Text className="item-art__title" userSelect>
           {item.title}
         </Text>
-        <Text className="item-main__byline">{item.source.name} · {view.published}</Text>
+        <View className="item-art__by">
+          <Text className="item-art__src">{item.source.name}</Text>
+          {view.published && <Text>{view.published}</Text>}
+        </View>
         {item.summary && (
-          <Text className="item-main__summary" userSelect>
+          <Text className="item-art__summary" userSelect>
             {item.summary}
           </Text>
         )}
-        {view.reason && (
-          <View className="item-why">
-            <View className="item-why__head">
-              <Text className="item-why__title">为什么值得看</Text>
-              <View className="item-main__gap" />
-              {view.reason.ai && <AiBadge />}
-            </View>
-            <Text className="item-why__text" userSelect>
+      </View>
+
+      {view.reason && (
+        <View className="item-block">
+          <HeadTab label="为什么值得看" aside={view.reason.ai ? <AiBadge /> : null} />
+          <View className="item-block__body">
+            <Text className="item-block__text" userSelect>
               {view.reason.text}
             </Text>
           </View>
-        )}
-        {/* 收藏按钮自己管收藏和取消（components/save-button）；“分享给同事”走页面的分享回调（lib/use-share.ts）。 */}
-        <View className="item-acts">
-          <SaveButton draft={itemDraft(board, item)} variant="item" />
-          <ShareButton label="分享给同事" className="item-btn item-btn--solid" iconClassName="item-btn__icon" />
         </View>
-      </View>
+      )}
 
       {help && <Hotline hotline={help} panel />}
 
       {view.body && (
-        <View className="item-panel item-body">
-          <View className="item-body__head">
-            <Text className="item-body__title">{view.body.label}</Text>
-            <View className="item-main__gap" />
-            {view.body.ai && <AiBadge />}
+        <View className="item-block">
+          <HeadTab label={view.body.label} aside={view.body.ai ? <AiBadge /> : null} />
+          <View className="item-block__body">
+            {view.body.incomplete && <Text className="item-body__hint">译文还不完整，完整内容请复制来源链接查看原文</Text>}
+            <RichText className="item-body__text" nodes={view.body.nodes} userSelect />
           </View>
-          {view.body.incomplete && <Text className="item-body__hint">译文还不完整，完整内容请复制来源链接查看原文</Text>}
-          <RichText className="item-body__text" nodes={view.body.nodes} userSelect />
         </View>
       )}
 
-      <View className="item-panel">
-        <View className="item-source">
-          <View className="item-source__who">
-            <Text className="item-source__name">{item.source.name}</Text>
-            <Text className="item-source__date num">{view.echo ? `${view.published} · ${view.echo}` : view.published}</Text>
-          </View>
-          <View className="item-copy" ariaRole="button" ariaLabel="复制来源链接" hoverClass="item-copy--down" onClick={copyLink}>
-            <Image className="item-copy__icon" src={copyIcon} />
-            复制来源链接
-          </View>
-        </View>
-        <Text className="item-source__note">{view.sourceNote}</Text>
-      </View>
-
-      {view.story && (
-        <View className="item-panel item-story" ariaRole="button" ariaLabel={view.story.title} hoverClass="item-story--down" onClick={() => openPage(storyPage(board, view.story!.id))}>
-          <View className="item-story__text">
-            <View className="item-story__head">
-              <Text className="item-story__title">{view.story.title}</Text>
-              <View className="item-story__bars">
-                {Array.from({ length: view.story.dots }, (_, i) => (
-                  <View key={i} className="item-story__bar" />
-                ))}
+      <View className="item-block">
+        <HeadTab label="来源" />
+        <View className="item-block__body">
+          <View className="item-source">
+            <View className="item-source__who">
+              <Text className="item-source__name">{item.source.name}</Text>
+              <View className="item-source__date">
+                <Text>{view.published}</Text>
+                {echoCount !== null && (
+                  <View className="item-source__echo">
+                    <Reading value={echoCount} after="家来源" size="s" />
+                  </View>
+                )}
               </View>
             </View>
-            <Text className="item-story__line">{view.story.line}</Text>
+            <View className="item-copy" ariaRole="button" ariaLabel="复制来源链接" hoverClass="item-copy--down" onClick={copyLink}>
+              复制来源链接
+            </View>
           </View>
-          <Image className="item-story__go" src={chevronIcon} />
+          <Text className="item-source__note">{view.sourceNote}</Text>
+        </View>
+      </View>
+
+      {item.story && view.story && (
+        <View className="item-block">
+          <HeadTab label="同一事件" />
+          {/* 只写事件层级的来源数和其他来源，不显示事件标题：标题是模型写的，用户协议第 3 节没列这个位置。读屏读 lib 给的“同一事件，N 家来源”。 */}
+          <View className="item-story" ariaRole="button" ariaLabel={view.story.title} hoverClass="item-story--down" onClick={() => openPage(storyPage(board, view.story!.id))}>
+            <View className="item-story__main">
+              <Reading value={sourceTotal(item.story.sourceCount)} after="家来源" size="m" body />
+              <Text className="item-story__line">{view.story.line}</Text>
+            </View>
+            <Image className="item-story__go" src={chevronIcon} />
+          </View>
         </View>
       )}
+
+      {/* 收藏按钮自己管收藏和取消（components/save-button）；“分享给同事”走页面的分享回调（lib/use-share.ts）。 */}
+      <View className="item-acts">
+        <SaveButton draft={itemDraft(board, item)} variant="item" />
+        <ShareButton label="分享给同事" className="item-btn item-btn--ink" />
+      </View>
 
       {fallbackUrl && <LinkSheet url={fallbackUrl} onClose={() => setFallbackUrl(null)} />}
     </View>
