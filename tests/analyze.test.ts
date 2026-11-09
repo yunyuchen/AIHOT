@@ -31,10 +31,12 @@ interface Req { step: Step; marker: string; system: string; user: string; body: 
 const requests: Req[] = [];
 const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "TITLED", "VAGUE", "THIN", "SENSITIVE", "BANNED", "REASONED", "LEAKED", "NOTED", "HEDGED", "推文"];
 // Scores around the T1 threshold (every test source is T1) and the floor for the selected-style writing.
+// RESCUE sums to 2 × FLOOR + 2: above the floor and, with a pack's threshold at least 2 over its floor
+// (a temporary threshold can sit that close), still below the threshold.
 const T1 = SELECTION.thresholds.T1!;
 const FLOOR = SELECTION.understandFloor;
 const scoreAnswers: Record<string, number[]> = {
-  CLEAR: [T1 + 8, T1 + 2], RESCUE: [FLOOR + 3, FLOOR + 1], LOW: [FLOOR - 5, FLOOR - 10], THIN: [T1 + 5, T1 + 5], SENSITIVE: [T1 + 5, T1 + 5],
+  CLEAR: [T1 + 8, T1 + 2], RESCUE: [FLOOR + 2, FLOOR], LOW: [FLOOR - 5, FLOOR - 10], THIN: [T1 + 5, T1 + 5], SENSITIVE: [T1 + 5, T1 + 5],
   推文: [FLOOR - 10, FLOOR - 10], BARE: [FLOOR - 20, FLOOR - 16], VAGUE: [T1, T1 + 2], TITLED: [T1 + 5, T1 + 5],
   BANNED: [T1 + 5, T1 + 5], REASONED: [T1 + 5, T1 + 5], LEAKED: [T1 + 5, T1 + 5], NOTED: [T1 + 5, T1 + 5], HEDGED: [T1 + 5, T1 + 5],
 };
@@ -149,14 +151,15 @@ test("a selected item: prefilter, two scores, the content understanding and the 
   assert.deepEqual([score.body.temperature, score.body.reasoning_effort, score.body.max_tokens], [1, "high", 65536]);
   const understand = requests.find((q) => q.marker === "CLEAR" && q.step === "understand")!;
   assert.ok(understand.user.startsWith("请按系统规则理解以下单篇材料，一次返回全部六个字段。"));
-  assert.ok(understand.system.includes("【摘要答案前置规则") && understand.system.includes("【标题自洽规则"));
+  // The pack names its rules as it likes; the content understanding carries both rule files whole.
+  assert.ok(understand.system.includes(promptText("rules-answer-first-summary").trim()) && understand.system.includes(promptText("rules-self-contained-title").trim()));
   const prefilter = requests.find((q) => q.marker === "CLEAR" && q.step === "prefilter")!;
   assert.ok(JSON.parse(prefilter.user).includes("【材料质量】"), "the material context, sent as a JSON string");
 });
 
 test("a near-selected item is written like a selected one; below the floor it is translated", async () => {
   const near = await analyzeArticle(await article("RESCUE"));
-  assert.deepEqual([near!.output!.selected, near!.output!.reasonZh], [false, "理由 RESCUE"], "(FLOOR + 3) + (FLOOR + 1) > 2 × FLOOR");
+  assert.deepEqual([near!.output!.selected, near!.output!.reasonZh], [false, "理由 RESCUE"], "2 × FLOOR < (FLOOR + 2) + FLOOR < 2 × T1");
   const lowId = await article("LOW");
   const low = await analyzeArticle(lowId);
   assert.deepEqual([low!.output!.selected, low!.output!.titleZh, low!.output!.reasonZh], [false, "翻译标题 LOW", null]);

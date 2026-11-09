@@ -48,7 +48,9 @@ process.env.GROUP_REVIEW_MODEL = "deepseek-flash";
 let storyId: number;
 let factId: number;
 
-const randomText = () => Array.from({ length: 16 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+// Rare CJK (Extension A), not A–Z: recall without embeddings counts shared character pairs, and a pack's
+// short Latin names in other tests' reports (CATL, KLA) shared enough of them to make a candidate.
+const randomText = () => Array.from({ length: 16 }, () => String.fromCharCode(0x3400 + Math.floor(Math.random() * 0x19c0))).join("");
 
 async function report(suffix: string, title = FACT_TITLE, summary = "摘要", publishedAt = new Date()) {
   const { articleId } = await upsertMaterial({
